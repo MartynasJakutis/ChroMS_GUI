@@ -1,0 +1,4 @@
+# Name                    Version                   Build 
+matplotlib                3.9.2           py312haa95532_0
+numpy                     1.26.4          py312hfd52020_0
+tk                        8.6.14               h0416ee5_0
