@@ -1,3 +1,1 @@
-C:/Users/marty/Desktop/ChroMS python project/ChroMS/data/2024.08.09 gryninimai
-C:/Users/marty/Desktop/ChroMS python project/ChroMS/data
-C:/Users/marty/Desktop/ChroMS python project/ChroMS/data/2024.07.30 gryninimai
+C:/Users/marty/Desktop/ChroMS_GUI/ChroMS/data

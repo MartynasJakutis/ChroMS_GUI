@@ -1,9 +1,11 @@
+import tkinter as tk
+
 from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 from matplotlib.pyplot import style
-from tkinter import IntVar, BOTH
+
 
 NONE_TUPLE = (None, None, None, None)
 
@@ -74,7 +76,7 @@ class Diagram(object):
         self.canvas = FigureCanvasTkAgg(self.fig, master = self.master_labelframe)
         toolbar = NavigationToolbar2Tk(self.canvas, self.master_labelframe)
         toolbar.update()
-        toolbar.pack(fill = BOTH)
+        toolbar.pack(fill = tk.BOTH)
         self.canvas.get_tk_widget().pack()
 
     def add_subplots(self, subplot_name_list, subplot_indexes_list):
@@ -223,14 +225,14 @@ class HPLC_Diagram(Diagram):
     def plotting_term_state_heat(self, subplot):
         """Method for HPLC 3D heatmap drawing when Diagram has 'not_initial' state."""
         vmin = 0
-        vmax = 1#000      
+        vmax = 1      
         heatmap = subplot.pcolormesh(self.data_rt, self.data_wv_all, self.data_ab_all, cmap = 'hot', vmin = vmin, vmax = vmax)
         self.set_labels_1st_subplot(subplot = subplot)
         subplot.set_ylim(max(self.data_wv_all), min(self.data_wv_all))
         cbar = self.fig.colorbar(heatmap)
         cbar.set_label(label = self.colorbar_label, weight = self.colorbar_weight,
                        fontsize = self.colorbar_fontsize, color = self.colorbar_text_color,
-                       rotation = 90, loc = "center") #rotation=270, loc = "center"
+                       rotation = 90, loc = "center")
     
     def plotting_term_state_chrom(self, subplot):
         """Method for chromatogram drawing when Diagram has 'not_initial' state."""
@@ -307,13 +309,6 @@ class MS_Diagram(Diagram):
                                  va = "center", fontsize = 77, color = "k")
                     return
             super().plotting_init_state(subplot = subplot)
-
-        #if any([type(x) != int for x in[self.data_mz1, self.data_mz2]])
-        #x_ticks = subplot.get_xticks()
-        #y_ticks = subplot.get_yticks()
-        #x_pos = x_ticks.mean()
-        #y_pos = y_ticks.mean()
-
     
     def plotting_term_state_ms(self, subplot, data_mz, data_inten):
         """Shared plotting algorithm for both subplots."""
