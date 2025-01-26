@@ -55,7 +55,15 @@ class OutputPlotManagerBackbone(object):
         self.label_params = self.label_params_func(plot_opt_lf = self.labelframes["plot_opt"])
         if self.purpose == "chrom":                                                       
             self.label_params.update({"label2" : {"master" : self.labelframes["plot_opt"], "text" : "Wavelength, nm: ", 
-                                                  "row" : 1, "column" : 0, "sticky" : tk.W}})
+                                                  "row" : 1, "column" : 0, "sticky" : tk.W},
+                                      "label3" : {"master" : self.frames["wavelength"], "text" : "\tIntensity, AU: ", 
+                                                  "row" : 0, "column" : 1, "sticky" : tk.W},
+                                      "label4" : {"master" : self.frames["wavelength"], "text" : "min", 
+                                                  "row" : 0, "column" : 2, "sticky" : tk.W},
+                                      "label5" : {"master" : self.frames["wavelength"], "text" : "max", 
+                                                  "row" : 0, "column" : 4, "sticky" : tk.W}})
+            
+            
         for label in self.label_params.keys():
             self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = "SystemButtonFace",
                                             style = "Normal.TLabel", **self.label_params[label]).create()
@@ -72,9 +80,18 @@ class OutputPlotManagerBackbone(object):
             self.wv_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
                                        font = ("TkDefaultFont", 12, "normal"), width = 5, 
                                        row = 0, column = 0, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
-            self.wv_entry.create()
+            self.inten_min_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
+                                       font = ("TkDefaultFont", 12, "normal"), width = 8, 
+                                       row = 0, column = 3, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+            self.inten_max_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
+                                       font = ("TkDefaultFont", 12, "normal"), width = 8, 
+                                       row = 0, column = 5, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+            for entry in [self.wv_entry, self.inten_min_entry, self.inten_max_entry]:
+                entry.create()
             self.wv_entry.entry.insert(index = 0, string = mgp.DEFAULT_WAVELENGTH)
             self.wv_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.wv_entry))
+            self.inten_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_max_entry))
+            self.inten_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_min_entry))
             wmf.maintain_four_digit_integer(entry_object = self.wv_entry, is_startup = True)
         else:
             pass

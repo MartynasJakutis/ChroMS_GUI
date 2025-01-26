@@ -179,7 +179,7 @@ def get_txt_file_path(combobox_object, listbox_object, purpose = "chrom"):
 def get_nearest_wvs(possible_wavelengths, sq_differences, num = 10):
     nearest_wvs = []
     for i in range(num):
-        nearest = possible_wavelengths[sq_differences == sq_differences.min()]    
+        nearest = possible_wavelengths[sq_differences == sq_differences.min()]
         
         nearest = nearest.min() if len(nearest) != 1 else nearest[0]
         
@@ -190,28 +190,37 @@ def get_nearest_wvs(possible_wavelengths, sq_differences, num = 10):
     return sorted(nearest_wvs)
 
 def check_wv_presence(hplc_3d_data_object, entry_object, output_object, plot_object, purpose):
-    wavelength = int(entry_object.entry.get())
+    wavelength = entry_object.entry.get()
+    if wavelength != "":
+        wavelength = int(wavelength)
+    else:
+        errorkey, wv, compared_to_wvs, wv_min, wv_max = ("Empty", None, None, 
+                                                         int(hplc_3d_data_object.wavelengths.min()),
+                                                         int(hplc_3d_data_object.wavelengths.max()))
+        outputs_dict = tof.set_wavelength_warnings(wv, compared_to_wvs, wv_min, wv_max)
+        warning_output(outputs_dict = outputs_dict, key = errorkey,
+                       output_object = output_object, plot_object = plot_object, purpose = purpose)
+        return False
+    
     if wavelength > hplc_3d_data_object.wavelengths.max() or wavelength < hplc_3d_data_object.wavelengths.min():
         compared_to_wavelengths = {wavelength > hplc_3d_data_object.wavelengths.max() : "too high",
                                    wavelength < hplc_3d_data_object.wavelengths.min() : "too low"}
-        outputs_dict = tof.set_wavelength_warnings(wavelength, compared_to_wavelengths[True],
-                                                   int(hplc_3d_data_object.wavelengths.min()), 
-                                                   int(hplc_3d_data_object.wavelengths.max()))
-        warning_output(outputs_dict = outputs_dict, key = "Outside range",
-                       output_object = output_object, plot_object = plot_object, purpose = purpose)
-        result = False
+        errorkey, compared_to_wvs, result = "Outside range", compared_to_wavelengths[True], False
+
     elif wavelength not in hplc_3d_data_object.wavelengths:
         possible_wavelengths = hplc_3d_data_object.wavelengths.copy()
         sq_differences = (hplc_3d_data_object.wavelengths - wavelength) ** 2
         nearest_values = get_nearest_wvs(possible_wavelengths, sq_differences, num = 10)
-        outputs_dict = tof.set_wavelength_warnings(wavelength, str(nearest_values),
-                                                   int(hplc_3d_data_object.wavelengths.min()), 
-                                                   int(hplc_3d_data_object.wavelengths.max()))
-        warning_output(outputs_dict = outputs_dict, key = "Not found",
-                       output_object = output_object, plot_object = plot_object, purpose = purpose)
-        result = False
+        errorkey, compared_to_wvs, result = "Not found", str(nearest_values)[1:-1], False
     else:
         result = True
+
+    if result == False:
+        wv, wv_min, wv_max = (wavelength, int(hplc_3d_data_object.wavelengths.min()), 
+                              int(hplc_3d_data_object.wavelengths.max()))
+        outputs_dict = tof.set_wavelength_warnings(wv, compared_to_wvs, wv_min, wv_max)
+        warning_output(outputs_dict = outputs_dict, key = errorkey,
+                       output_object = output_object, plot_object = plot_object, purpose = purpose)
     return result
 
 def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_object = None):
@@ -303,19 +312,19 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         txt_f_processing_errors = list(outputs_dict.keys())
         txt_f_processing_errors.remove("OtherError")
         txt_f_processing_errors = tuple(txt_f_processing_errors)
-        #txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
-        #                        plot_object = plot_object, output_object = output_object, entry_object = entry_object,
-        #                        purpose = purpose) 
-        try:
-            txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
+        txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
                                 plot_object = plot_object, output_object = output_object, entry_object = entry_object,
-                                purpose = purpose)
-        except txt_f_processing_errors as err:
-            warning_output(outputs_dict = outputs_dict, key = type(err),
-                           output_object = output_object, plot_object = plot_object, purpose = purpose)
-        except:
-            warning_output(outputs_dict = outputs_dict, key = "OtherError",
-                           output_object = output_object, plot_object = plot_object, purpose = purpose)
+                                purpose = purpose) 
+        #try:
+        #    txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
+        #                        plot_object = plot_object, output_object = output_object, entry_object = entry_object,
+        #                        purpose = purpose)
+        #except txt_f_processing_errors as err:
+        #    warning_output(outputs_dict = outputs_dict, key = type(err),
+        #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
+        #except:
+        #    warning_output(outputs_dict = outputs_dict, key = "OtherError",
+        #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
 
 
 def select_subplots(plot_object, listbox_object, purpose):
@@ -326,13 +335,63 @@ def select_subplots(plot_object, listbox_object, purpose):
         plot_object.redraw_diagram(purpose = purpose)
     focus_and_activate_listbox(listbox_object)
 
+def change_entry_text(entry_object, change_to):
+    entry_object.entry.delete(0, tk.END)
+    entry_object.entry.insert(0, change_to)
+
 def maintain_four_digit_integer(entry_object, is_startup = False):
-    def change_entry_text(change_to):
-        entry_object.entry.delete(0, tk.END)
-        entry_object.entry.insert(0, change_to)
     string = entry_object.entry.get()
+    cursor_ind = entry_object.entry.index(tk.INSERT)        
     if is_startup and not string.isdigit():
-        change_entry_text(change_to = "254")
+        change_entry_text(entry_object = entry_object, change_to = "254")
         return
-    if len(string) > 4 or not string.isdigit():
-        change_entry_text(change_to = string[:-1])
+    if not string.isdigit():
+        change_entry_text(entry_object = entry_object, change_to = string[ : cursor_ind - 1] + string[cursor_ind : ])
+        entry_object.entry.icursor(cursor_ind - 1)
+    elif string.startswith("0") and len(string) > 1:
+        while string.startswith("0") and len(string) != 1:
+            string = string.replace("0", "", 1)
+        change_entry_text(entry_object = entry_object, change_to = string)
+        entry_object.entry.icursor(cursor_ind - 1)
+    elif len(string) > 4:
+        ind = len(string) - 1 if cursor_ind > len(string) - 1 else cursor_ind
+        change_entry_text(entry_object = entry_object, change_to = string[: ind] + string[ind + 1: ])
+        entry_object.entry.icursor(ind)
+    else:
+        string = str(int(string))
+        change_entry_text(entry_object = entry_object, change_to = string)
+        entry_object.entry.icursor(cursor_ind)
+    
+
+def maintain_pos_neg_float(entry_object, is_startup = False):
+    string = entry_object.entry.get()
+    cursor_ind = entry_object.entry.index(tk.INSERT)  
+    
+    no_sep_minus = string.replace(".", "").replace("-", "")
+    allowed_not_digits = ["", ".", "-", "-."]
+    if not no_sep_minus.isdigit() and no_sep_minus not in allowed_not_digits:
+        change_entry_text(entry_object = entry_object, change_to = string[: cursor_ind - 1] + string[cursor_ind : ])
+        entry_object.entry.icursor(cursor_ind - 1)
+    elif string.count("-") == 1:
+        change_entry_text(entry_object = entry_object, change_to = "-" + string.replace("-", ""))
+        entry_object.entry.icursor(cursor_ind)
+    elif string.count("-") > 1:
+        change_entry_text(entry_object = entry_object, change_to = string.replace("-", ""))
+        entry_object.entry.icursor(cursor_ind - 2)
+    if string.count(".") > 1:
+        first_sep_ind = string.index(".")
+        last_sep_ind = string.index(".", first_sep_ind + 1)
+        init_cursor_ind = cursor_ind - 1
+        print(f"1st :{first_sep_ind}, lst: {last_sep_ind}, cur: {init_cursor_ind}")
+        if init_cursor_ind == 0 and "-" in string:
+            change_entry_text(entry_object = entry_object, change_to = string.replace(".", "", 1))
+        elif init_cursor_ind == first_sep_ind:
+            change_entry_text(entry_object = entry_object, change_to = string[::-1].replace(".", "", 1)[::-1])
+        else:
+            change_entry_text(entry_object = entry_object, change_to = string.replace(".", "", 1))        
+        entry_object.entry.icursor(cursor_ind - 1)
+    elif "." in string and len(string.split(".")[1]) > 5:
+        ind = len(string) - 1 if cursor_ind > len(string) - 1 else cursor_ind
+        change_entry_text(entry_object = entry_object, change_to = string[: ind] + string[ind + 1: ])
+        entry_object.entry.icursor(ind)
+    

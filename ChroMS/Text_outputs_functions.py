@@ -25,4 +25,6 @@ set_wavelength_warnings = lambda wv, compared_to_wvs, wv_min, wv_max : {"Outside
                                                                                            f"Wavelength range {wv_min}–{wv_max} nm."),
                                                                         "Not found" : ("warning", "The selected wavelength:\n" +\
                                                                         f"{wv} nm is not found in the range {wv_min}–{wv_max} nm. " +\
-                                                                        f"Did You mean one of these values:\n{compared_to_wvs[1:-1]}?")}
+                                                                        f"Did You mean one of these values:\n{compared_to_wvs}?"),
+                                                                        "Empty" : ("warning", "There is no provided wavelength.\n" +\
+                                                                        f"Use the provided wavelength range: {wv_min}–{wv_max} nm.")}

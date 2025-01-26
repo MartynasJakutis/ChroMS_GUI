@@ -256,6 +256,14 @@ class MultifunctionalBackbone(object):
 
     def create_ffm_multifunc_widgets(self, ffm, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
+        if self.purpose == "chrom":
+            entry_object = self.opm.wv_entry
+        else:
+            entry_object = None
+        select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,
+                                 "plot_object" : self.opm.graph, "output_object" : self.opm.output,
+                                 "entry_object" : entry_object, "purpose" : ffm.purpose}
+
         ffm.browse_btn = ctwc.Button(master = ffm.labelframes["file_input"], text = "Browse", 
                                      command = lambda : wmf.folder_search(combobox_object = ffm.combobox,
                                                                           listbox_object = ffm.listbox,
@@ -284,18 +292,8 @@ class MultifunctionalBackbone(object):
 
         ffm.listbox_binds = {"<Right>" : lambda event : ffm.listbox.going_up_down(direction = "down"),
                              "<Left>"  : lambda event : ffm.listbox.going_up_down(direction = "up"),
-                             "<<ListboxSelect>>" : lambda event : wmf.select_file(combobox_object = ffm.combobox,
-                                                                                  listbox_object = ffm.listbox, 
-                                                                                  plot_object = self.opm.graph, 
-                                                                                  output_object = self.opm.output,
-                                                                                  entry_object = self.opm.wv_entry,
-                                                                                  purpose = ffm.purpose),
-                             "<Return>" : lambda event : wmf.select_file(combobox_object = ffm.combobox,
-                                                                         listbox_object = ffm.listbox, 
-                                                                         plot_object = self.opm.graph,
-                                                                         output_object = self.opm.output,
-                                                                         entry_object = self.opm.wv_entry,
-                                                                         purpose = ffm.purpose)}
+                             "<<ListboxSelect>>" : lambda event : wmf.select_file(**select_file_args_dict),
+                             "<Return>" : lambda event : wmf.select_file(**select_file_args_dict)}
         ffm.file_search_entry_binds = {"<Return>" : lambda event : wmf.focus_and_activate_listbox(listbox_object = ffm.listbox)}
         
         widgets = [ffm.combobox, ffm.listbox, ffm.file_search_entry]
