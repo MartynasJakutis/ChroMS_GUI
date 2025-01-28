@@ -93,6 +93,7 @@ class OutputPlotManagerBackbone(object):
             self.inten_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_max_entry))
             self.inten_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_min_entry))
             wmf.maintain_four_digit_integer(entry_object = self.wv_entry, is_startup = True)
+
         else:
             pass
         self.output.create()

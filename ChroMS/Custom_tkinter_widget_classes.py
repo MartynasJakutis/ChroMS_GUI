@@ -95,7 +95,24 @@ class Entry(Hauptwidget_Grid):
         
     def create_file_name_filter(self):
         self.FILE_NAME_FILTER = ""
+
+    def change_entry_text(self, change_to):
+        self.entry.delete(0, tk.END)
+        self.entry.insert(0, change_to)
+
+    def paste(self, max_len = 4, num_type = "int"):
+        cursor_ind = self.entry.index(tk.INSERT)
+        try: s = self.entry.clipboard_get()
+        except: s = ''
+        self.entry.clipboard_clear()
+        entry_text = self.entry.get()
+        len_sum = len(entry_text) + len(s)
+        if num_type == "int" and len_sum <= max_len:
+            self.change_entry_text(change_to = entry_text[: cursor_ind] + s + entry_text[cursor_ind :])
+            self.entry.icursor(cursor_ind + len(s))
+        self.entry.after(20, lambda: self.entry.clipboard_append(s))
         
+
     def bind_key_or_event(self, key_or_event, func):
         self.entry.bind(key_or_event, func)
         

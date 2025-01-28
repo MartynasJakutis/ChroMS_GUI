@@ -233,6 +233,10 @@ class MultifunctionalBackbone(object):
     def create_opm_with_widgets(self):
         self.opm = self.create_output_plot_man()
         self.create_radiobuttons()
+        if self.purpose == "chrom":
+            self.opm.wv_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.wv_entry))
+            self.opm.inten_max_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.inten_max_entry))
+            self.opm.inten_min_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.inten_min_entry))
         self.create_graph()
     
     def concatenate_backbones(self):
