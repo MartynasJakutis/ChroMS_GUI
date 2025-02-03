@@ -6,6 +6,8 @@ import Custom_tkinter_widget_classes as ctwc
 
 import Widget_manipulation_functions as wmf
 
+import Main_GUI_parameters as mgp
+
 class MultifunctionalBackbone(object):
     """Class which has methods to create Output and Plot, File and Folder managers (opm, ffm), concatenate 
     them and provide additional functionality for them"""
@@ -234,9 +236,15 @@ class MultifunctionalBackbone(object):
         self.opm = self.create_output_plot_man()
         self.create_radiobuttons()
         if self.purpose == "chrom":
-            self.opm.wv_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.wv_entry))
-            self.opm.inten_max_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.inten_max_entry))
-            self.opm.inten_min_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.inten_min_entry))
+            self.opm.wv_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.wv_entry,
+                                                                                                                     max_len = mgp.LEN_4_DIGIT_INT, 
+                                                                                                                     num_type = "int"))
+            self.opm.inten_max_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.inten_max_entry, 
+                                                                                                                     max_len = mgp.LEN_5_DIGIT_FLOAT, 
+                                                                                                                     num_type = "float"))
+            self.opm.inten_min_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.inten_min_entry,
+                                                                                                                     max_len = mgp.LEN_5_DIGIT_FLOAT, 
+                                                                                                                     num_type = "float"))
         self.create_graph()
     
     def concatenate_backbones(self):

@@ -86,13 +86,23 @@ class OutputPlotManagerBackbone(object):
             self.inten_max_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
                                        font = ("TkDefaultFont", 12, "normal"), width = 8, 
                                        row = 0, column = 5, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
-            for entry in [self.wv_entry, self.inten_min_entry, self.inten_max_entry]:
+            for entry, const in zip([self.wv_entry, self.inten_min_entry, self.inten_max_entry],
+                                    [mgp.DEFAULT_WAVELENGTH, mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY]):
                 entry.create()
-            self.wv_entry.entry.insert(index = 0, string = mgp.DEFAULT_WAVELENGTH)
-            self.wv_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.wv_entry))
-            self.inten_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_max_entry))
-            self.inten_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_min_entry))
-            wmf.maintain_four_digit_integer(entry_object = self.wv_entry, is_startup = True)
+                entry.entry.insert(index = 0, string = const)
+            self.wv_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.wv_entry,
+                                                                                            max_len = mgp.LEN_4_DIGIT_INT))
+            self.inten_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_max_entry,
+                                                                                              max_len = mgp.LEN_5_DIGIT_FLOAT))
+            self.inten_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_min_entry,
+                                                                                              max_len = mgp.LEN_5_DIGIT_FLOAT))
+
+            wmf.maintain_four_digit_integer(entry_object = self.wv_entry, is_startup = True, 
+                                            max_len = mgp.LEN_4_DIGIT_INT, default_value = "254")
+            wmf.maintain_pos_neg_float(entry_object = self.inten_min_entry, is_startup = True,
+                                       max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "0.00000")
+            wmf.maintain_pos_neg_float(entry_object = self.inten_max_entry, is_startup = True,
+                                       max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "1.00000")
 
         else:
             pass

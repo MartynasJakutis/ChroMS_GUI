@@ -69,20 +69,20 @@ class ChroMS_Application(object):
                                                      "font" : ("TkDefaultFont", 12, "underline"),
                                                      "foreground" : "green"},
                               "TEntry" : {"font": ("TkDefaultFont", 16, "bold")},
-                              "NoSelect.TEntry" : {"font": ("TkDefaultFont", 16, "bold")},
+                              #"NoSelect.TEntry" : {"font": ("TkDefaultFont", 16, "bold")},
                               "TButton" : {"background" : "green", 
                                            "font" : ("TkDefaultFont", 12, "normal")},
                               "TCheckbutton" : {"background" : "SystemButtonFace"},
                               "TRadiobutton" : {"background" : "SystemButtonFace"}
                             }
-        self.widget_dynamic_styles = {"NoSelect.TEntry" : {"selectbackground" : [("focus", "white"), ("!focus", "white")],
-                                                           "selectforeground" : [("focus", "black"), ("!focus", "black")],
-                                                           "selectborderwidth" : [("focus", 0), ("!focus", 0)]}}
+        #self.widget_dynamic_styles = {"NoSelect.TEntry" : {"selectbackground" : [("focus", "white"), ("!focus", "white")],
+        #                                                   "selectforeground" : [("focus", "black"), ("!focus", "black")],
+        #                                                   "selectborderwidth" : [("focus", 0), ("!focus", 0)]}}
 
         for style in self.widget_styles.keys():
             self.tk_styles.configure(style = style, **self.widget_styles[style])
-        for dynamic_style in self.widget_dynamic_styles.keys():
-            self.tk_styles.map(style = dynamic_style, ** self.widget_dynamic_styles[dynamic_style])
+        #for dynamic_style in self.widget_dynamic_styles.keys():
+        #    self.tk_styles.map(style = dynamic_style, ** self.widget_dynamic_styles[dynamic_style])
         
     def create_notebook(self):
         self.notebook = ttk.Notebook(master = self.window, style = "NewNotebook.TNotebook")

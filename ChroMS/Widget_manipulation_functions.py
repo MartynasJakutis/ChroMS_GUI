@@ -335,79 +335,66 @@ def select_subplots(plot_object, listbox_object, purpose):
         plot_object.redraw_diagram(purpose = purpose)
     focus_and_activate_listbox(listbox_object)
 
-def maintain_four_digit_integer(entry_object, is_startup = False):
+#def eliminate_first_zeros(entry_object, cursor_ind, string):
+#    if "-" in string and "." in string:
+#        temp_string = string[1 : ]
+#        while temp_string.startswith("0") and not temp_string.startswith("."):
+#            temp_string = temp_string.replace("0", "", 1)
+#        
+#    
+#    else:
+#        while string.startswith("0") and len(string) != 1:
+#            string = string.replace("0", "", 1)
+#        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+        
+
+def maintain_four_digit_integer(entry_object, is_startup = False, max_len = 4, default_value = "254"):    
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)        
-    if is_startup and not string.isdigit():
-        entry_object.change_entry_text(change_to = "254")
+    if is_startup and not string.isdecimal():
+        entry_object.change_entry_text(change_to = default_value)
+        entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "int")
         return
 
-    #is_not_digit = (not string.isdigit()) and string != ""
-    #starting_0 = string.startswith("0") and len(string) > 1
-    #more_than_4_sym = len(string) > 4
-    #while is_not_digit or starting_0 or more_than_4_sym:
-    #    is_not_digit = (not string.isdigit()) and string != ""
-    #    starting_0 = string.startswith("0") and len(string) > 1
-    #    more_than_4_sym = len(string) > 4
-    #    if is_not_digit:
-    #        string = string[ : cursor_ind - 1] + string[cursor_ind : ]
-    #        change_entry_text(entry_object = entry_object, change_to = string)
-    #        entry_object.entry.icursor(cursor_ind - 1)
-    #    elif starting_0:
-    #        while string.startswith("0") and len(string) != 1:
-    #            string = string.replace("0", "", 1)
-    #        change_entry_text(entry_object = entry_object, change_to = string)
-    #        entry_object.entry.icursor(cursor_ind - 1)
-    #    elif more_than_4_sym:
-    #        ind = len(string) - 1 if cursor_ind > len(string) - 1 else cursor_ind
-    #        string = string[: ind] + string[ind + 1: ]
-    #        change_entry_text(entry_object = entry_object, change_to = string)
-    #        entry_object.entry.icursor(ind)
-    #    else:
-    #        string = str(int(string)) if string != "" else ""
-    #        change_entry_text(entry_object = entry_object, change_to = string)
-    #        entry_object.entry.icursor(cursor_ind)
-
-    if not string.isdigit():
+    if not string.isdecimal():
         string = string[ : cursor_ind - 1] + string[cursor_ind : ]
-        entry_object.change_entry_text(change_to = string)
-        entry_object.entry.icursor(cursor_ind - 1)
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
     elif string.startswith("0") and len(string) > 1:
-        while string.startswith("0") and len(string) != 1:
-            string = string.replace("0", "", 1)
-        entry_object.change_entry_text(change_to = string)
-        entry_object.entry.icursor(cursor_ind - 1)
-    elif len(string) > 4:
-        ind = len(string) - 1 if cursor_ind > len(string) - 1 else cursor_ind
-        string = string[: ind] + string[ind + 1: ]
-        entry_object.change_entry_text(change_to = string)
-        entry_object.entry.icursor(ind)
+        eliminate_first_zeros(entry_object = entry_object, cursor_ind = cursor_ind, string = string)
+    elif len(string) > max_len:
+        entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "int")
     else:
         string = str(int(string))
-        entry_object.change_entry_text(change_to = string)
-        entry_object.entry.icursor(cursor_ind)
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
     
 
-def maintain_pos_neg_float(entry_object, is_startup = False):
+def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, default_value = "1.00000"):
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)  
-    
+    if is_startup:
+        condition1 = not string.replace("-", "", 1).replace(".", "", 1).isdecimal()
+        condition2 = string.find("-") not in [-1, 0]
+        condition3 = string.find(".") < string.find("-") if string.find(".") != -1 else False
+        if any([condition1, condition2, condition3]):
+            entry_object.change_entry_text(change_to = default_value)
+            entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "float")
+            return    
+
     no_sep_minus = string.replace(".", "").replace("-", "")
     allowed_not_digits = ["", ".", "-", "-."]
-    if not no_sep_minus.isdigit() and no_sep_minus not in allowed_not_digits:
-        entry_object.change_entry_text(change_to = string[: cursor_ind - 1] + string[cursor_ind : ])
-        entry_object.entry.icursor(cursor_ind - 1)
+    if not no_sep_minus.isdecimal() and no_sep_minus not in allowed_not_digits:
+        string = string[: cursor_ind - 1] + string[cursor_ind : ]
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
     elif string.count("-") == 1:
-        entry_object.change_entry_text(change_to = "-" + string.replace("-", ""))
-        entry_object.entry.icursor(cursor_ind)
+        string = "-" + string.replace("-", "")
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
     elif string.count("-") > 1:
-        entry_object.change_entry_text(change_to = string.replace("-", ""))
-        entry_object.entry.icursor(cursor_ind - 2)
+        string = string.replace("-", "")
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 2)
     if string.count(".") > 1:
         first_sep_ind = string.index(".")
         last_sep_ind = string.index(".", first_sep_ind + 1)
         init_cursor_ind = cursor_ind - 1
-        print(f"1st :{first_sep_ind}, lst: {last_sep_ind}, cur: {init_cursor_ind}")
         if init_cursor_ind == 0 and "-" in string:
             entry_object.change_entry_text(change_to = string.replace(".", "", 1))
         elif init_cursor_ind == first_sep_ind:
@@ -415,7 +402,8 @@ def maintain_pos_neg_float(entry_object, is_startup = False):
         else:
             entry_object.change_entry_text(change_to = string.replace(".", "", 1))        
         entry_object.entry.icursor(cursor_ind - 1)
-    elif "." in string and len(string.split(".")[1]) > 5:
-        ind = len(string) - 1 if cursor_ind > len(string) - 1 else cursor_ind
-        entry_object.change_entry_text(change_to = string[: ind] + string[ind + 1: ])
-        entry_object.entry.icursor(ind)
+    elif "." in string and len(string.split(".")[1]) > max_len:
+        entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "float")
+    else:
+        string = str(float(string))
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)

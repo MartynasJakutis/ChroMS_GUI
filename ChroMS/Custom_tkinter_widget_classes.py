@@ -99,19 +99,113 @@ class Entry(Hauptwidget_Grid):
     def change_entry_text(self, change_to):
         self.entry.delete(0, tk.END)
         self.entry.insert(0, change_to)
+    
+    def get_clipboard(self):
+        try: 
+           self.clipboard = self.entry.clipboard_get()
+        except: 
+           self.clipboard = ''   
+
+    def replace_selection(self, num_type = "int"):
+        entry_text = self.entry.get()
+        selection = self.entry.selection_get()
+        start_ind = self.entry.index("sel.first")
+        end_ind = self.entry.index("sel.last")
+        if num_type == "int":
+            if len(self.clipboard) <= len(selection):
+                entry_text = entry_text[: start_ind] + self.clipboard + entry_text[end_ind :]
+                self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(self.clipboard))
+            else: 
+                truncated_clipboard = self.clipboard[:end_ind - start_ind]
+                entry_text = entry_text[: start_ind] + truncated_clipboard + entry_text[end_ind :]
+                self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(truncated_clipboard))
+        elif num_type == "float":
+            if "." or "-" in self.clipboard:
+                entry_text = self.clipboard
+                self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = len(self.clipboard)) 
+            else:
+                entry_text = entry_text[ : start_ind] + self.clipboard + entry_text[end_ind : ]
+                self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(self.clipboard)) 
+    
+    def change_entry_text_and_icursor(self, entry_text, cursor_ind):
+        self.change_entry_text(change_to = entry_text)
+        self.entry.icursor(cursor_ind)
+
+    def maintain_entry_len(self, max_len, cursor_ind, num_type = "int"):
+        entry_text = self.entry.get()        
+        def get_condition():
+            conditions = {"int" : len(entry_text) > max_len,
+                          "float" : "." in entry_text and len(entry_text.split(".")[1]) > max_len}
+            condition = conditions.get(num_type)
+            return condition
+        
+        condition = get_condition()
+        while get_condition():
+            ind = len(entry_text) - 1 if cursor_ind > len(entry_text) - 1 else cursor_ind
+            entry_text = entry_text[: ind] + entry_text[ind + 1: ]
+            self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = ind)
 
     def paste(self, max_len = 4, num_type = "int"):
+
+        def replace_with_cb(clipboard_string):
+            self.change_entry_text_and_icursor(entry_text = clipboard_string, cursor_ind = len(clipboard_string))
+
+        def remove_first_zeros(string, allow_minus = False):
+
+            def get_str_without_0(starting_index, string):
+                for i in range(starting_index, len(string)):
+                    if not string[i : ].startswith("0"):
+                        string = string[i : ]
+                        return string
+                return string
+      
+            if string.startswith("0") and len(string) > 1:
+                mod_string = get_str_without_0(starting_index = 1, string = string)
+            elif string.startswith("-") and string.find("0") == 1 and len(string) > 2 and allow_minus:
+                mod_string = get_str_without_0(starting_index = 2, string = string)
+            else:
+                mod_string = string
+            return mod_string
+
         cursor_ind = self.entry.index(tk.INSERT)
-        try: s = self.entry.clipboard_get()
-        except: s = ''
-        self.entry.clipboard_clear()
         entry_text = self.entry.get()
-        len_sum = len(entry_text) + len(s)
-        if num_type == "int" and len_sum <= max_len:
-            self.change_entry_text(change_to = entry_text[: cursor_ind] + s + entry_text[cursor_ind :])
-            self.entry.icursor(cursor_ind + len(s))
-        self.entry.after(20, lambda: self.entry.clipboard_append(s))
+        self.get_clipboard()
+
+        self.entry.clipboard_clear()
         
+        len_sum = len(entry_text) + len(self.clipboard)
+        if num_type == "int" and self.clipboard.isdecimal():
+            if self.entry.selection_present():
+                self.replace_selection(num_type = num_type)
+            else:
+                if len(self.clipboard) >= 3:
+                    replace_with_cb(clipboard_string = self.clipboard)
+                elif len_sum <= max_len:
+                    entry_text = entry_text[: cursor_ind] + self.clipboard + entry_text[cursor_ind :]
+                    self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
+                else:
+                    replace_with_cb(clipboard_string = self.clipboard)
+
+        elif num_type == "float" and self.clipboard.replace(".", "", 1).replace("-", "", 1).isdecimal():
+            if self.entry.selection_present():
+                self.replace_selection(num_type = num_type)
+            else:
+                if self.clipboard.find("-") == 0 and (self.clipboard.find(".") > self.clipboard.find("-")):
+                    replace_with_cb(clipboard_string = self.clipboard)
+
+                elif "-" in self.clipboard and self.clipboard.index("-") == 0:
+                    replace_with_cb(clipboard_string = self.clipboard)
+                else:
+                    if "." in self.clipboard:
+                        condition = entry_text.find(".") <= cursor_ind and entry_text.find(".") != -1
+                        cursor_ind -= 1 if condition else cursor_ind
+                        entry_text = entry_text.replace(".", "")
+                    entry_text = entry_text[: cursor_ind] + self.clipboard + entry_text[cursor_ind :]
+                    self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
+
+        self.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = num_type)
+
+        self.entry.after(20, lambda: self.entry.clipboard_append(self.clipboard))
 
     def bind_key_or_event(self, key_or_event, func):
         self.entry.bind(key_or_event, func)
