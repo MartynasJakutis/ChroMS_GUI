@@ -173,6 +173,7 @@ class MultifunctionalBackbone(object):
                                                              var = opm.radiobutton_variable, 
                                                              command = lambda : wmf.select_subplots(plot_object = opm.graph, 
                                                                                            listbox_object = self.ffm1.listbox,
+                                                                                           output_object = opm.output,
                                                                                            purpose = self.ffm1.purpose),
                                                              **opm.radiobutton_pars[radiobutton])
             opm.radiobuttons[radiobutton].create()
@@ -269,12 +270,14 @@ class MultifunctionalBackbone(object):
     def create_ffm_multifunc_widgets(self, ffm, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
         if self.purpose == "chrom":
-            entry_object = self.opm.wv_entry
+            entry_objects = {"wv" : self.opm.wv_entry,
+                             "inten_min" : self.opm.inten_min_entry,
+                             "inten_max" : self.opm.inten_max_entry}
         else:
-            entry_object = None
+            entry_objects = None
         select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,
                                  "plot_object" : self.opm.graph, "output_object" : self.opm.output,
-                                 "entry_object" : entry_object, "purpose" : ffm.purpose}
+                                 "entry_objects" : entry_objects, "purpose" : ffm.purpose}
 
         ffm.browse_btn = ctwc.Button(master = ffm.labelframes["file_input"], text = "Browse", 
                                      command = lambda : wmf.folder_search(combobox_object = ffm.combobox,

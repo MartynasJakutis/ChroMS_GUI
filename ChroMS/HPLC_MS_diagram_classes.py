@@ -152,7 +152,7 @@ class Diagram(object):
                          1 : "subplot1",
                          2 : "subplot2"}
         showed_subplots = subplots_dict.get(self.radiobutton_var.get())
-
+        self.selected_subplots = showed_subplots
         style.use(self.matplotlib_style1)
         
         possible_subplots = {subplots_dict[0] : (lambda : self.add_subplots(["subplot1", "subplot2"], [211, 212])),
@@ -200,7 +200,7 @@ class HPLC_Diagram(Diagram):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_rt, data_ab, data_wv_all, data_ab_all,
-                 data_wave_nm,
+                 data_wave_nm, intensity_min, intensity_max,
                  colorbar_label, colorbar_text_color, colorbar_weight, colorbar_fontsize,
                  radiobutton_var, screenheight, screenwidth):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
@@ -217,16 +217,18 @@ class HPLC_Diagram(Diagram):
         self.data_ab_all = data_ab_all
         self.data_wv_all = data_wv_all
         self.data_wave_nm = data_wave_nm
+        self.intensity_min = intensity_min
+        self.intensity_max = intensity_max
+
         self.colorbar_label = colorbar_label
         self.colorbar_text_color = colorbar_text_color
         self.colorbar_weight = colorbar_weight
         self.colorbar_fontsize = colorbar_fontsize
         
     def plotting_term_state_heat(self, subplot):
-        """Method for HPLC 3D heatmap drawing when Diagram has 'not_initial' state."""
-        vmin = 0
-        vmax = 1      
-        heatmap = subplot.pcolormesh(self.data_rt, self.data_wv_all, self.data_ab_all, cmap = 'hot', vmin = vmin, vmax = vmax)
+        """Method for HPLC 3D heatmap drawing when Diagram has 'not_initial' state."""    
+        heatmap = subplot.pcolormesh(self.data_rt, self.data_wv_all, self.data_ab_all, cmap = 'hot', 
+                                     vmin = self.intensity_min, vmax = self.intensity_max)
         self.set_labels_1st_subplot(subplot = subplot)
         subplot.set_ylim(max(self.data_wv_all), min(self.data_wv_all))
         cbar = self.fig.colorbar(heatmap)

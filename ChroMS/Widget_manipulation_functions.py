@@ -223,7 +223,7 @@ def check_wv_presence(hplc_3d_data_object, entry_object, output_object, plot_obj
                        output_object = output_object, plot_object = plot_object, purpose = purpose)
     return result
 
-def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_object = None):
+def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
     redraw_diagram_method_args = {}
@@ -244,6 +244,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         if not wv_exists:
            return
         data.get_ab_intensity_of_wv(wave_nm = int(entry_object.entry.get()))
+        
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
         data.read()
@@ -296,7 +297,7 @@ def set_ms_plot_state_to_initial(plot_object, purpose):
     plot_object.set_main_param_values(state = "initial", **arg_dictionary)
     plot_object.redraw_diagram(purpose = purpose)
 
-def select_file(combobox_object, listbox_object, plot_object, output_object, entry_object, purpose = "chrom"):
+def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom"):
     """Selects file and removes 2 space symbols. Selected file is used for data processing. If thats not possible, will be
     raised exceptions and provided respective text output."""
     selected_file_dtype = {"chrom" : "HPLC 3D"}.get(purpose, "MS 2D")
@@ -313,11 +314,11 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         txt_f_processing_errors.remove("OtherError")
         txt_f_processing_errors = tuple(txt_f_processing_errors)
         txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
-                                plot_object = plot_object, output_object = output_object, entry_object = entry_object,
+                                plot_object = plot_object, output_object = output_object, entry_objects = entry_objects,
                                 purpose = purpose) 
         #try:
         #    txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
-        #                        plot_object = plot_object, output_object = output_object, entry_object = entry_object,
+        #                        plot_object = plot_object, output_object = output_object, entry_objects = entry_objects,
         #                        purpose = purpose)
         #except txt_f_processing_errors as err:
         #    warning_output(outputs_dict = outputs_dict, key = type(err),
@@ -327,25 +328,41 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
 
 
-def select_subplots(plot_object, listbox_object, purpose):
+def select_subplots(plot_object, listbox_object, output_object, purpose):
     """Changes number of shown subplots by redrawing diagram."""
+    only_drawing_and_time_output(plot_object, output_object, purpose)
+    focus_and_activate_listbox(listbox_object)
+
+def only_drawing_and_time_output(plot_object, output_object, purpose):
+    start_time_calc = time.time()
+    data_calc_text = f"""\n Calc time: {time.time() - start_time_calc :.3f} s\n"""
+    start_time_draw = time.time()
     if purpose == "chrom":
         plot_object.redraw_diagram()
     else:
         plot_object.redraw_diagram(purpose = purpose)
-    focus_and_activate_listbox(listbox_object)
+    data_draw_text = f"Draw time: {time.time() - start_time_draw :.3f} s"
+    first_line = f"""Selection of subplots was changed to "{plot_object.selected_subplots}":"""
+    output_object.insert_text(text = first_line + data_calc_text + data_draw_text,
+                              output_type = "success")
 
-#def eliminate_first_zeros(entry_object, cursor_ind, string):
-#    if "-" in string and "." in string:
-#        temp_string = string[1 : ]
-#        while temp_string.startswith("0") and not temp_string.startswith("."):
-#            temp_string = temp_string.replace("0", "", 1)
-#        
-#    
-#    else:
-#        while string.startswith("0") and len(string) != 1:
-#            string = string.replace("0", "", 1)
-#        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+def eliminate_first_zeros(entry_object, cursor_ind, string):
+    if "." in string:
+        temp_string = string[1 : ] if "-" in string else string
+        while temp_string.startswith("0") and temp_string.find(".") != 1:
+            temp_string = temp_string.replace("0", "", 1)
+            string = "-" + temp_string if "-" in string else temp_string
+            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+    elif "-" in string:
+        temp_string = string[1 : ]
+        while temp_string.startswith("0") and len(temp_string) != 1:
+            temp_string = temp_string.replace("0", "", 1)
+            string = "-" + temp_string
+            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+    else:
+        while string.startswith("0") and len(string) != 1:
+            string = string.replace("0", "", 1)
+            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
         
 
 def maintain_four_digit_integer(entry_object, is_startup = False, max_len = 4, default_value = "254"):    
@@ -396,14 +413,16 @@ def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, defaul
         last_sep_ind = string.index(".", first_sep_ind + 1)
         init_cursor_ind = cursor_ind - 1
         if init_cursor_ind == 0 and "-" in string:
-            entry_object.change_entry_text(change_to = string.replace(".", "", 1))
+            string = string.replace(".", "", 1)
         elif init_cursor_ind == first_sep_ind:
-            entry_object.change_entry_text(change_to = string[::-1].replace(".", "", 1)[::-1])
+            string = string[::-1].replace(".", "", 1)[::-1]
         else:
-            entry_object.change_entry_text(change_to = string.replace(".", "", 1))        
+            string = string.replace(".", "", 1)
+        entry_object.change_entry_text(change_to = string)        
         entry_object.entry.icursor(cursor_ind - 1)
     elif "." in string and len(string.split(".")[1]) > max_len:
         entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "float")
-    else:
-        string = str(float(string))
-        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
+        string = entry_object.entry.get()
+
+    if (string.startswith("0") or string.startswith("-0")) and len(string.split(".")[0]) > 1:
+        eliminate_first_zeros(entry_object = entry_object, cursor_ind = cursor_ind, string = string)

@@ -436,7 +436,7 @@ class Outputwidget(Hauptwidget_Grid):
         current_time = time.strftime("%Y/%m/%d   %H:%M:%S")
         time_str = "{0:{1}<{2}}\n".format(current_time, symbol, self.width)
         term_text = symbol_line + "\n" + current_time + "\n" + text + "\n" + symbol_line
-        self.text_out.insert(tk.INSERT, term_text)
+        self.text_out.insert(tk.END, term_text)
         self.enable_modifications(value = False)
         self.text_out.yview_moveto(fraction = 1)
         
