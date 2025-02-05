@@ -28,3 +28,13 @@ set_wavelength_warnings = lambda wv, compared_to_wvs, wv_min, wv_max : {"Outside
                                                                         f"Did You mean one of these values:\n{compared_to_wvs}?"),
                                                                         "Empty" : ("warning", "There is no provided wavelength.\n" +\
                                                                         f"Use the provided wavelength range: {wv_min}–{wv_max} nm.")}
+
+set_intensity_warnings = lambda provided, default, recommended : {"min" : ("warning", "The selected min intensity value is not valid:\n" +\
+                                                                                      f"Used value: '{provided}' Use appropriate min intensity value:\n" +\
+                                                                                      f"Default: '{default}' (Recommended: '{recommended}')"),
+                                                                  "max" : ("warning", "The selected max intensity value is not valid:\n" +\
+                                                                                      f"Used value: '{provided}' Use appropriate max intensity value:\n" +\
+                                                                                      f"Default: '{default}' (Recommended: '{recommended}')"),
+                                                                  "both" : ("warning", "The selected min and max intensity values are not valid:\n" +\
+                                                                                       f"Used values: '{provided}' Use appropriate min and max intensity values:\n" +\
+                                                                                       f"Default: '{default}' (Recommended: '{recommended}')")}

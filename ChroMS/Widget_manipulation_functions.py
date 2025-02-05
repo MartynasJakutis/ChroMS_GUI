@@ -223,6 +223,28 @@ def check_wv_presence(hplc_3d_data_object, entry_object, output_object, plot_obj
                        output_object = output_object, plot_object = plot_object, purpose = purpose)
     return result
 
+def check_inten_min_max(entry_min, entry_max, output_object, plot_object, purpose):
+    not_numbers = ["-", ".", "-.", ""]
+    min_intensity, max_intensity = entry_min.entry.get(), entry_max.entry.get()
+    min_isnum, max_isnum = min_intensity not in not_numbers, max_intensity not in not_numbers
+    recommended_min, recommended_max = 0.00000, 1.00000
+    if min_isnum and max_isnum:
+        return True
+    elif min_isnum:
+        errorkey, provided, default, recommended = ("max", max_intensity, 
+                                                    mgp.DEFAULT_MAX_INTENSITY, recommended_max)
+    elif max_isnum:
+        errorkey, provided, default, recommended = ("min", min_intensity, 
+                                                    mgp.DEFAULT_MIN_INTENSITY, recommended_min)
+    else:
+        errorkey, provided, default, recommended = ("both", [min_intensity, max_intensity], 
+                                                    [mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY], 
+                                                    [recommended_min, recommended_max])
+    outputs_dict = tof.set_intensity_warnings(provided, default, recommended)
+    warning_output(outputs_dict = outputs_dict, key = errorkey,
+                   output_object = output_object, plot_object = plot_object, purpose = purpose)
+    return False
+
 def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
@@ -239,11 +261,11 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     if Data_Class == HPLC_3D_Data:
         data = Data_Class(**data_class_args)
         data.read()
-        wv_exists = check_wv_presence(hplc_3d_data_object = data, entry_object = entry_object, output_object = output_object,
+        wv_exists = check_wv_presence(hplc_3d_data_object = data, entry_object = entry_objects["wv"], output_object = output_object,
                                       plot_object = plot_object, purpose = purpose)
         if not wv_exists:
            return
-        data.get_ab_intensity_of_wv(wave_nm = int(entry_object.entry.get()))
+        data.get_ab_intensity_of_wv(wave_nm = int(entry_objects["wv"].entry.get()))
         
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
@@ -252,9 +274,17 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     data_calc_text = f"""File: '{path}'\n Calc time: {time.time() - start_time_calc :.3f} s\n"""
     main_param_dict = {"state" : "not_initial"}
     if Data_Class == HPLC_3D_Data:
+        inten_min_max_are_num = check_inten_min_max(entry_min = entry_objects["inten_min"], entry_max = entry_objects["inten_max"],
+                                                    output_object = output_object, plot_object = plot_object, purpose = purpose)
+        if not inten_min_max_are_num:
+            return
+        intensity_min = float(entry_objects["inten_min"].entry.get())
+        intensity_max = float(entry_objects["inten_max"].entry.get())
         dict_update = {"data_rt" : data.retention_time, "data_ab" : data.ab_intensity,
                        "data_wv_all" : data.wavelengths, "data_ab_all" : data.all_ab_intensities,
-                       "data_wave_nm" : data.wave_nm, file_title : truncated_file_name}
+                       "data_wave_nm" : data.wave_nm,
+                       "intensity_min" : intensity_min, "intensity_max" : intensity_max, 
+                       file_title : truncated_file_name}
     else:
         num = purpose[2]
         dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.absolute_intensity,
@@ -349,16 +379,17 @@ def only_drawing_and_time_output(plot_object, output_object, purpose):
 def eliminate_first_zeros(entry_object, cursor_ind, string):
     if "." in string:
         temp_string = string[1 : ] if "-" in string else string
+        cursor_ind = cursor_ind if "-" in string else cursor_ind - 1
         while temp_string.startswith("0") and temp_string.find(".") != 1:
             temp_string = temp_string.replace("0", "", 1)
             string = "-" + temp_string if "-" in string else temp_string
-            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
     elif "-" in string:
         temp_string = string[1 : ]
         while temp_string.startswith("0") and len(temp_string) != 1:
             temp_string = temp_string.replace("0", "", 1)
             string = "-" + temp_string
-            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
     else:
         while string.startswith("0") and len(string) != 1:
             string = string.replace("0", "", 1)

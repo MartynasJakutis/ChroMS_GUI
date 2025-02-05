@@ -70,6 +70,7 @@ class MultifunctionalBackbone(object):
         for radiobutton in opm.radiobuttons.keys():
             opm.radiobuttons[radiobutton].radiobutton.config(command = lambda : wmf.select_subplots(plot_object = opm.graph,
                                                                                                     listbox_object = ffm_to_show.listbox,
+                                                                                                    output_object = opm.output,
                                                                                                     purpose = ffm_to_show.purpose))
     def change_listbox_focus(self, ffm_to_show):
         """Sets focus on listbox widget."""
@@ -101,8 +102,8 @@ class MultifunctionalBackbone(object):
         self.opm.radiobuttons[rbtn_to_activate].enable()
         if opm_deact_radiobtn_val == current_radiobtn_val:
             self.opm.radiobutton_variable.set(self.opm.radiobuttons[rbtn_to_activate].onvalue)
-            wmf.select_subplots(plot_object = self.opm.graph, listbox_object = ffm_to_show.listbox,
-                            purpose = ffm_to_show.purpose)
+            wmf.select_subplots(plot_object = self.opm.graph, output_object = self.opm.output,
+                                listbox_object = ffm_to_show.listbox, purpose = ffm_to_show.purpose)
         
     def create_checkbuttons(self, ffm, hist_file_name):
         """Creates checkbuttons for file filtering by their extensions."""
@@ -173,7 +174,7 @@ class MultifunctionalBackbone(object):
                                                              var = opm.radiobutton_variable, 
                                                              command = lambda : wmf.select_subplots(plot_object = opm.graph, 
                                                                                            listbox_object = self.ffm1.listbox,
-                                                                                           output_object = opm.output,
+                                                                                           output_object = self.opm.output,
                                                                                            purpose = self.ffm1.purpose),
                                                              **opm.radiobutton_pars[radiobutton])
             opm.radiobuttons[radiobutton].create()
@@ -201,7 +202,8 @@ class MultifunctionalBackbone(object):
                            "ylabel1" : "EMS bangos ilgis\nλ, nm", "ylabel2" : "Sugerties intensyvumas, AU",
                            "colorbar_label" : "Intensyvumas, AU", "colorbar_text_color" : "k",
                            "colorbar_weight" : "bold", "colorbar_fontsize" : 14,
-                           "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0}
+                           "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0,
+                           "intensity_min" : 0, "intensity_max" : 1}
             Used_Diagram = HPLC_Diagram
             
         elif self.purpose == "ms":
