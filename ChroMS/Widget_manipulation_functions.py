@@ -457,3 +457,17 @@ def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, defaul
 
     if (string.startswith("0") or string.startswith("-0")) and len(string.split(".")[0]) > 1:
         eliminate_first_zeros(entry_object = entry_object, cursor_ind = cursor_ind, string = string)
+
+def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, default_value = "1.00000"):
+    string = entry_object.entry.get()
+    cursor_ind = entry_object.entry.index(tk.INSERT)
+    if not string.replace(",", "").replace(".", "").isdecimal():
+        string = string[: cursor_ind - 1] + string[cursor_ind : ]
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+    else:
+        values = string.split(",")
+        for value in values:
+            if value.count(".") > 1:
+                string = string[: cursor_ind - 1] + string[cursor_ind : ]
+                entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+                

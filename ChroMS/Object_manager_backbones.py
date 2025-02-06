@@ -47,7 +47,9 @@ class OutputPlotManagerBackbone(object):
         self.frame_params = self.frame_params_func(plot_opt_lf = self.labelframes["plot_opt"])
         if self.purpose == "chrom":
             self.frame_params.update({"wavelength" : {"master" : self.labelframes["plot_opt"], 
-                                                      "row" : 1, "column" : 1}})
+                                                      "row" : 1, "column" : 1},
+                                      "find_peaks" : {"master" : self.labelframes["plot_opt"], 
+                                                      "row" : 2, "column" : 1}})
         for frame in self.frame_params.keys():
             self.frames[frame] = ctwc.Frame(style = "NewCusFrame.TFrame", sticky = tk.E + tk.W, 
                                             **self.frame_params[frame]).create()
@@ -56,12 +58,18 @@ class OutputPlotManagerBackbone(object):
         if self.purpose == "chrom":                                                       
             self.label_params.update({"label2" : {"master" : self.labelframes["plot_opt"], "text" : "Wavelength, nm: ", 
                                                   "row" : 1, "column" : 0, "sticky" : tk.W},
-                                      "label3" : {"master" : self.frames["wavelength"], "text" : "\tIntensity, AU: ", 
+                                      "label3" : {"master" : self.labelframes["plot_opt"], "text" : "Find peaks: ", 
+                                                  "row" : 2, "column" : 0, "sticky" : tk.W},
+                                      "label4" : {"master" : self.frames["wavelength"], "text" : "\tIntensity, AU: ", 
                                                   "row" : 0, "column" : 1, "sticky" : tk.W},
-                                      "label4" : {"master" : self.frames["wavelength"], "text" : "min", 
+                                      "label5" : {"master" : self.frames["wavelength"], "text" : "min", 
                                                   "row" : 0, "column" : 2, "sticky" : tk.W},
-                                      "label5" : {"master" : self.frames["wavelength"], "text" : "max", 
-                                                  "row" : 0, "column" : 4, "sticky" : tk.W}})
+                                      "label6" : {"master" : self.frames["wavelength"], "text" : "max", 
+                                                  "row" : 0, "column" : 4, "sticky" : tk.W},
+                                      "label7" : {"master" : self.frames["find_peaks"], "text" : "±", 
+                                                  "row" : 0, "column" : 1, "sticky" : tk.W},
+                                      "label8" : {"master" : self.frames["find_peaks"], "text" : "min.", 
+                                                  "row" : 0, "column" : 3, "sticky" : tk.W}})
             
             
         for label in self.label_params.keys():
@@ -79,15 +87,22 @@ class OutputPlotManagerBackbone(object):
         if self.purpose == "chrom":
             self.wv_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
                                        font = ("TkDefaultFont", 12, "normal"), width = 5, 
-                                       row = 0, column = 0, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+                                       row = 0, column = 0, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             self.inten_min_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
                                        font = ("TkDefaultFont", 12, "normal"), width = 8, 
-                                       row = 0, column = 3, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+                                       row = 0, column = 3, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             self.inten_max_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
                                        font = ("TkDefaultFont", 12, "normal"), width = 8, 
-                                       row = 0, column = 5, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
-            for entry, const in zip([self.wv_entry, self.inten_min_entry, self.inten_max_entry],
-                                    [mgp.DEFAULT_WAVELENGTH, mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY]):
+                                       row = 0, column = 5, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
+            self.peak_value_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
+                                       font = ("TkDefaultFont", 12, "normal"), width = 15, 
+                                       row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+            self.peak_dev_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
+                                       font = ("TkDefaultFont", 12, "normal"), width = 8, 
+                                       row = 0, column = 2, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+            for entry, const in zip([self.wv_entry, self.inten_min_entry, self.inten_max_entry, 
+                                     self.peak_value_entry, self.peak_dev_entry],
+                                    [mgp.DEFAULT_WAVELENGTH, mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY, "5", "0.25"]):
                 entry.create()
                 entry.entry.insert(index = 0, string = const)
             self.wv_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.wv_entry,
@@ -96,6 +111,10 @@ class OutputPlotManagerBackbone(object):
                                                                                               max_len = mgp.LEN_5_DIGIT_FLOAT))
             self.inten_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_min_entry,
                                                                                               max_len = mgp.LEN_5_DIGIT_FLOAT))
+            self.peak_value_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_float_seq(entry_object = self.peak_value_entry,
+                                                                                              max_len = mgp.LEN_TIME_AFTER_DEC))
+            self.peak_dev_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_float_seq(entry_object = self.peak_dev_entry,
+                                                                                             max_len = mgp.LEN_TIME_AFTER_DEC))
 
             wmf.maintain_four_digit_integer(entry_object = self.wv_entry, is_startup = True, 
                                             max_len = mgp.LEN_4_DIGIT_INT, default_value = "254")
