@@ -248,6 +248,12 @@ class MultifunctionalBackbone(object):
             self.opm.inten_min_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.inten_min_entry,
                                                                                                                      max_len = mgp.LEN_5_DIGIT_FLOAT, 
                                                                                                                      num_type = "float"))
+            self.opm.peak_value_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.peak_value_entry,
+                                                                                                                     max_len = mgp.LEN_TIME_AFTER_DEC, 
+                                                                                                                     num_type = "sequence"))
+            self.opm.peak_dev_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.peak_dev_entry,
+                                                                                                                     max_len = mgp.LEN_TIME_AFTER_DEC, 
+                                                                                                                     num_type = "sequence"))
         self.create_graph()
     
     def concatenate_backbones(self):

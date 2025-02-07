@@ -376,25 +376,26 @@ def only_drawing_and_time_output(plot_object, output_object, purpose):
     output_object.insert_text(text = first_line + data_calc_text + data_draw_text,
                               output_type = "success")
 
-def eliminate_first_zeros(entry_object, cursor_ind, string):
-    if "." in string:
+def eliminate_first_zeros(entry_object, cursor_ind, string, for_seq = False):
+    is_normal_zero_float = string.startswith("0.") or string.startswith("-0.")
+    if is_normal_zero_float:
+        pass
+    elif "." in string:
         temp_string = string[1 : ] if "-" in string else string
-        cursor_ind = cursor_ind if "-" in string else cursor_ind - 1
+        cursor_ind = 1 if ("-" in string and cursor_ind - 1 == 0) else cursor_ind - 1
         while temp_string.startswith("0") and temp_string.find(".") != 1:
             temp_string = temp_string.replace("0", "", 1)
             string = "-" + temp_string if "-" in string else temp_string
-            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
-    elif "-" in string:
-        temp_string = string[1 : ]
+    else: 
+        temp_string = string[1 : ] if "-" in string else string
         while temp_string.startswith("0") and len(temp_string) != 1:
             temp_string = temp_string.replace("0", "", 1)
-            string = "-" + temp_string
-            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
+            string = "-" + temp_string if "-" in string else temp_string
+        cursor_ind = 1 if "-" in string else cursor_ind - 1
+    if for_seq:
+        return string, cursor_ind
     else:
-        while string.startswith("0") and len(string) != 1:
-            string = string.replace("0", "", 1)
-            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
-        
+        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)    
 
 def maintain_four_digit_integer(entry_object, is_startup = False, max_len = 4, default_value = "254"):    
     string = entry_object.entry.get()
@@ -466,8 +467,26 @@ def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, defaul
         entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
     else:
         values = string.split(",")
-        for value in values:
+        total_current_len = 0
+        for i, value in enumerate(values):
             if value.count(".") > 1:
-                string = string[: cursor_ind - 1] + string[cursor_ind : ]
-                entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
-                
+                first_sep_ind = value.index(".")
+                last_sep_ind = value.index(".", first_sep_ind + 1)
+                init_cursor_ind = cursor_ind - 1
+                if init_cursor_ind - total_current_len == first_sep_ind:
+                    value = value[::-1].replace(".", "", 1)[::-1]
+                else:
+                    value = value.replace(".", "", 1)
+                cursor_ind -= 1
+            elif "." in value:
+                while len(value.split(".")[1]) > max_len:
+                    ind = len(value) - 1 if cursor_ind - total_current_len > len(value) - 1 else cursor_ind - total_current_len
+                    value = value[: ind] + value[ind + 1: ]
+                    cursor_ind = ind + total_current_len
+                string = entry_object.entry.get()
+            if value.startswith("0") and len(value.split(".")[0]) > 1:
+                value, cursor_ind = eliminate_first_zeros(entry_object = None, cursor_ind = cursor_ind, string = value, for_seq = True) 
+            values[i] = value
+            string = ",".join(values)
+            total_current_len = total_current_len + len(value) + 1
+            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)            

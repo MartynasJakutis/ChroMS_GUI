@@ -202,6 +202,9 @@ class Entry(Hauptwidget_Grid):
                         entry_text = entry_text.replace(".", "")
                     entry_text = entry_text[: cursor_ind] + self.clipboard + entry_text[cursor_ind :]
                     self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
+        
+        elif num_type == "sequence" and self.clipboard.replace(".", "", 1).replace(",", "",).isdecimal():
+            print("aaa")        
 
         self.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = num_type)
 
