@@ -125,7 +125,10 @@ class Entry(Hauptwidget_Grid):
                 self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = len(self.clipboard)) 
             else:
                 entry_text = entry_text[ : start_ind] + self.clipboard + entry_text[end_ind : ]
-                self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(self.clipboard)) 
+                self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(self.clipboard))
+        elif num_type == "sequence":
+            entry_text = entry_text[ : start_ind] + self.clipboard + entry_text[end_ind : ]
+            self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(self.clipboard))
     
     def change_entry_text_and_icursor(self, entry_text, cursor_ind):
         self.change_entry_text(change_to = entry_text)
@@ -149,23 +152,6 @@ class Entry(Hauptwidget_Grid):
 
         def replace_with_cb(clipboard_string):
             self.change_entry_text_and_icursor(entry_text = clipboard_string, cursor_ind = len(clipboard_string))
-
-        def remove_first_zeros(string, allow_minus = False):
-
-            def get_str_without_0(starting_index, string):
-                for i in range(starting_index, len(string)):
-                    if not string[i : ].startswith("0"):
-                        string = string[i : ]
-                        return string
-                return string
-      
-            if string.startswith("0") and len(string) > 1:
-                mod_string = get_str_without_0(starting_index = 1, string = string)
-            elif string.startswith("-") and string.find("0") == 1 and len(string) > 2 and allow_minus:
-                mod_string = get_str_without_0(starting_index = 2, string = string)
-            else:
-                mod_string = string
-            return mod_string
 
         cursor_ind = self.entry.index(tk.INSERT)
         entry_text = self.entry.get()
@@ -203,8 +189,14 @@ class Entry(Hauptwidget_Grid):
                     entry_text = entry_text[: cursor_ind] + self.clipboard + entry_text[cursor_ind :]
                     self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
         
-        elif num_type == "sequence" and self.clipboard.replace(".", "", 1).replace(",", "",).isdecimal():
-            print("aaa")        
+        elif num_type == "sequence" and (self.clipboard.replace(".", "").replace(",", "").isdecimal()):
+            are_appropriate_num = all([x.count(".") <= 1 for x in entry_text.split(",")])
+            if are_appropriate_num:
+                if self.entry.selection_present():
+                    self.replace_selection(num_type = num_type)
+                else:
+                    entry_text = entry_text[: cursor_ind] + self.clipboard + entry_text[cursor_ind :]
+                    self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
 
         self.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = num_type)
 

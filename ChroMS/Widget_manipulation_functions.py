@@ -462,7 +462,8 @@ def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, defaul
 def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, default_value = "1.00000"):
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)
-    if not string.replace(",", "").replace(".", "").isdecimal():
+    only_dec_point_or_comma = string.replace(",", "").replace(".", "") == ""
+    if not string.replace(",", "").replace(".", "").isdecimal() and not only_dec_point_or_comma:
         string = string[: cursor_ind - 1] + string[cursor_ind : ]
         entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
     else:
