@@ -480,14 +480,14 @@ def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, defaul
                     value = value.replace(".", "", 1)
                 cursor_ind -= 1
             elif "." in value:
-                while len(value.split(".")[1]) > max_len:
-                    ind = len(value) - 1 if cursor_ind - total_current_len > len(value) - 1 else cursor_ind - total_current_len
+                if len(value.split(".")[1]) > max_len:
+                    ind_aft_last = value.find(".") + max_len + 1
+                    ind = ind_aft_last if cursor_ind - total_current_len == len(value) else cursor_ind - total_current_len
                     value = value[: ind] + value[ind + 1: ]
                     cursor_ind = ind + total_current_len
-                string = entry_object.entry.get()
             if value.startswith("0") and len(value.split(".")[0]) > 1:
                 value, cursor_ind = eliminate_first_zeros(entry_object = None, cursor_ind = cursor_ind, string = value, for_seq = True) 
             values[i] = value
+            total_current_len += len(value) + 1
             string = ",".join(values)
-            total_current_len = total_current_len + len(value) + 1
-            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)            
+            entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)

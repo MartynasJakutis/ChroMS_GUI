@@ -128,26 +128,41 @@ class Entry(Hauptwidget_Grid):
                 self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(self.clipboard))
         elif num_type == "sequence":
             entry_text = entry_text[ : start_ind] + self.clipboard + entry_text[end_ind : ]
-            self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(self.clipboard))
+            cursor_ind = start_ind + len(self.clipboard)
+            self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind)
     
     def change_entry_text_and_icursor(self, entry_text, cursor_ind):
         self.change_entry_text(change_to = entry_text)
         self.entry.icursor(cursor_ind)
 
-    def maintain_entry_len(self, max_len, cursor_ind, num_type = "int"):
-        entry_text = self.entry.get()        
-        def get_condition():
-            conditions = {"int" : len(entry_text) > max_len,
-                          "float" : "." in entry_text and len(entry_text.split(".")[1]) > max_len}
-            condition = conditions.get(num_type)
-            return condition
+    def maintain_entry_len(self, max_len, cursor_ind, num_type = "int", string = None, total_current_len = 0):
+        item = string if num_type == "sequence" else self.entry.get()
+        item_len = len(item)
+        cursor_diff = cursor_ind - total_current_len
+        cursor_after_item = cursor_diff == item_len
         
-        condition = get_condition()
-        while get_condition():
-            ind = len(entry_text) - 1 if cursor_ind > len(entry_text) - 1 else cursor_ind
-            entry_text = entry_text[: ind] + entry_text[ind + 1: ]
-            self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = ind)
+        if num_type == "int":
+            condition = item_len > max_len
+            ind = max_len if cursor_after_item else cursor_ind
+            max_ind = max_len + 1
+        elif num_type == "float":
+            condition = len(item.split(".")[1]) > max_len
+            ind = item.find(".") + max_len + 1 if cursor_after_item else cursor_ind
+            max_ind = item.find(".") + max_len + 2
+        elif num_type == "sequence":
+            entry_text = self.entry.get()
+            condition = len(item.split(".")[1]) > max_len
+            ind = item.find(".") + max_len + 1 if cursor_after_item else item.find(".") + max_len + 1
+            max_ind = item.find(".") + max_len + 2
 
+        if condition:
+            item = item[ : ind] + item[ind + 1: max_ind]
+            if num_type in ["int", "float"]:
+                self.change_entry_text_and_icursor(entry_text = item, cursor_ind = ind)
+        if num_type == "sequence":
+            cursor_ind = ind + total_current_len
+            return item, cursor_ind
+    
     def paste(self, max_len = 4, num_type = "int"):
 
         def replace_with_cb(clipboard_string):
@@ -190,15 +205,31 @@ class Entry(Hauptwidget_Grid):
                     self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
         
         elif num_type == "sequence" and (self.clipboard.replace(".", "").replace(",", "").isdecimal()):
-            are_appropriate_num = all([x.count(".") <= 1 for x in entry_text.split(",")])
-            if are_appropriate_num:
+            are_appropriate_nums = all([x.count(".") <= 1 for x in entry_text.split(",")])
+            if are_appropriate_nums:
                 if self.entry.selection_present():
                     self.replace_selection(num_type = num_type)
                 else:
                     entry_text = entry_text[: cursor_ind] + self.clipboard + entry_text[cursor_ind :]
-                    self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
+                    cursor_ind = cursor_ind + len(self.clipboard)
+                    self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind)
 
-        self.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = num_type)
+                values = self.entry.get().split(",")
+                
+                total_current_len = 0
+                for i, value in enumerate(values):
+                    if "." in value:
+                        value, cursor_ind = self.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = num_type, 
+                                                                    string = value, total_current_len = total_current_len)
+                    print(value, cursor_ind)
+                    values[i] = value
+                    total_current_len += len(value) + 1
+                    print(values, total_current_len)
+                    entry_text = ",".join(values)
+                    self.change_entry_text(change_to = entry_text)
+                
+        if num_type in ["int", "float"]:
+            self.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = num_type)
 
         self.entry.after(20, lambda: self.entry.clipboard_append(self.clipboard))
 
