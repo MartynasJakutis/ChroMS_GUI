@@ -486,8 +486,9 @@ def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, defaul
                     value = value[: ind] + value[ind + 1: ]
                     cursor_ind = ind + total_current_len
             if value.startswith("0") and len(value.split(".")[0]) > 1:
-                value, cursor_ind = eliminate_first_zeros(entry_object = None, cursor_ind = cursor_ind, string = value, for_seq = True) 
+                value, cursor_ind = eliminate_first_zeros(entry_object = None, cursor_ind = cursor_ind, string = value, for_seq = True)
             values[i] = value
             total_current_len += len(value) + 1
             string = ",".join(values)
+            #entry_object.change_entry_text(change_to = string)
             entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
