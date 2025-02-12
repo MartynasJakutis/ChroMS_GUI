@@ -400,10 +400,9 @@ def eliminate_first_zeros(entry_object, cursor_ind, string, for_seq = False):
 def maintain_four_digit_integer(entry_object, is_startup = False, max_len = 4, default_value = "254"):    
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)        
-    if is_startup and not string.isdecimal():
-        entry_object.change_entry_text(change_to = default_value)
-        entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "int")
-        return
+    if is_startup:
+        entry_object.paste(max_len = max_len, num_type = "int", is_startup = True,
+                           provided_clip = string, default_value = default_value)
 
     if not string.isdecimal():
         string = string[ : cursor_ind - 1] + string[cursor_ind : ]
@@ -421,13 +420,8 @@ def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, defaul
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)  
     if is_startup:
-        condition1 = not string.replace("-", "", 1).replace(".", "", 1).isdecimal()
-        condition2 = string.find("-") not in [-1, 0]
-        condition3 = string.find(".") < string.find("-") if string.find(".") != -1 else False
-        if any([condition1, condition2, condition3]):
-            entry_object.change_entry_text(change_to = default_value)
-            entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "float")
-            return    
+        entry_object.paste(max_len = max_len, num_type = "float", is_startup = True,
+                           provided_clip = string, default_value = default_value)
 
     no_sep_minus = string.replace(".", "").replace("-", "")
     allowed_not_digits = ["", ".", "-", "-."]
@@ -459,9 +453,25 @@ def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, defaul
     if (string.startswith("0") or string.startswith("-0")) and len(string.split(".")[0]) > 1:
         eliminate_first_zeros(entry_object = entry_object, cursor_ind = cursor_ind, string = string)
 
-def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, default_value = "1.00000"):
+def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, default_value = ""):
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)
+    if is_startup:
+        entry_object.paste(max_len = max_len, num_type = "sequence", is_startup = True,
+                           provided_clip = string, default_value = default_value)
+        return
+    #    items = string.split(",")
+    #    for item in items:
+    #        condition1 = item.replace(".", "", 1).isdigit()
+    #        condition2 = all([not item.startswith(f"0{i}") for i in range(10)])
+    #        result = 1 if condition1 and condition2 else 0
+    #        if "." in item:
+    #            condition3 = not len(item.split(".")[1]) > max_len
+    #            result = 1 if condition3 else 0
+    #    if not result:
+    #        entry_object.change_entry_text(change_to = default_value)
+    #    return
+
     only_dec_point_or_comma = string.replace(",", "").replace(".", "") == ""
     if not string.replace(",", "").replace(".", "").isdecimal() and not only_dec_point_or_comma:
         string = string[: cursor_ind - 1] + string[cursor_ind : ]
@@ -479,6 +489,8 @@ def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, defaul
                 else:
                     value = value.replace(".", "", 1)
                 cursor_ind -= 1
+                if len(value.split(".")[1]) > max_len:
+                    value = value.split(".")[0] + "." + value.split(".")[1][ : max_len]
             elif "." in value:
                 if len(value.split(".")[1]) > max_len:
                     ind_aft_last = value.find(".") + max_len + 1
@@ -490,5 +502,4 @@ def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, defaul
             values[i] = value
             total_current_len += len(value) + 1
             string = ",".join(values)
-            #entry_object.change_entry_text(change_to = string)
             entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)

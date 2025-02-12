@@ -102,9 +102,11 @@ class OutputPlotManagerBackbone(object):
                                        row = 0, column = 2, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
             for entry, const in zip([self.wv_entry, self.inten_min_entry, self.inten_max_entry, 
                                      self.peak_value_entry, self.peak_dev_entry],
-                                    [mgp.DEFAULT_WAVELENGTH, mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY, "5", "0.25"]):
+                                    [mgp.DEFAULT_WAVELENGTH, mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY,
+                                     mgp.DEFAULT_PEAK_POS_SEQ, mgp.DEFAULT_PEAK_DEV_SEQ]):
                 entry.create()
                 entry.entry.insert(index = 0, string = const)
+
             self.wv_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.wv_entry,
                                                                                             max_len = mgp.LEN_4_DIGIT_INT))
             self.inten_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.inten_max_entry,
@@ -122,6 +124,10 @@ class OutputPlotManagerBackbone(object):
                                        max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "0.00000")
             wmf.maintain_pos_neg_float(entry_object = self.inten_max_entry, is_startup = True,
                                        max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "1.00000")
+            wmf.maintain_pos_float_seq(entry_object = self.peak_value_entry, is_startup = True,
+                                       max_len = mgp.LEN_TIME_AFTER_DEC, default_value = "")
+            wmf.maintain_pos_float_seq(entry_object = self.peak_dev_entry, is_startup = True,
+                                       max_len = mgp.LEN_TIME_AFTER_DEC, default_value = "0.25")
 
         else:
             pass
