@@ -376,7 +376,7 @@ def only_drawing_and_time_output(plot_object, output_object, purpose):
     output_object.insert_text(text = first_line + data_calc_text + data_draw_text,
                               output_type = "success")
 
-def eliminate_first_zeros(entry_object, cursor_ind, string, for_seq = False):
+def eliminate_first_zeros(string, cursor_ind):
     is_normal_zero_float = string.startswith("0.") or string.startswith("-0.")
     if is_normal_zero_float:
         pass
@@ -392,48 +392,53 @@ def eliminate_first_zeros(entry_object, cursor_ind, string, for_seq = False):
             temp_string = temp_string.replace("0", "", 1)
             string = "-" + temp_string if "-" in string else temp_string
         cursor_ind = 1 if "-" in string else cursor_ind - 1
-    if for_seq:
-        return string, cursor_ind
-    else:
-        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)    
+    return string, cursor_ind    
+
+def set_startup_num_value(entry_object, max_len, num_type, current_text, provided_clip, default_value):
+    entry_object.change_entry_text_and_icursor(entry_text = "", cursor_ind = 0)
+    if current_text != "":
+        entry_object.paste(max_len = max_len, num_type = num_type, is_startup = True,
+                           provided_clip = provided_clip, default_value = default_value)
 
 def maintain_four_digit_integer(entry_object, is_startup = False, max_len = 4, default_value = "254"):    
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)        
     if is_startup:
-        entry_object.paste(max_len = max_len, num_type = "int", is_startup = True,
-                           provided_clip = string, default_value = default_value)
+        set_startup_num_value(entry_object = entry_object, max_len = max_len, num_type = "int",
+                              current_text = string, provided_clip = string, default_value = default_value)
+        return
 
     if not string.isdecimal():
         string = string[ : cursor_ind - 1] + string[cursor_ind : ]
-        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+        cursor_ind = cursor_ind - 1
     elif string.startswith("0") and len(string) > 1:
-        eliminate_first_zeros(entry_object = entry_object, cursor_ind = cursor_ind, string = string)
+        string, cursor_ind = eliminate_first_zeros(string = string, cursor_ind = cursor_ind)
     elif len(string) > max_len:
         entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "int")
+        string = entry_object.entry.get()
     else:
         string = str(int(string))
-        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
-    
+    entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
 
 def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, default_value = "1.00000"):
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)  
     if is_startup:
-        entry_object.paste(max_len = max_len, num_type = "float", is_startup = True,
-                           provided_clip = string, default_value = default_value)
+        set_startup_num_value(entry_object = entry_object, max_len = max_len, num_type = "float",
+                              current_text = string, provided_clip = string, default_value = default_value)
+        return
 
     no_sep_minus = string.replace(".", "").replace("-", "")
     allowed_not_digits = ["", ".", "-", "-."]
     if not no_sep_minus.isdecimal() and no_sep_minus not in allowed_not_digits:
         string = string[: cursor_ind - 1] + string[cursor_ind : ]
-        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 1)
+        cursor_ind = cursor_ind - 1
     elif string.count("-") == 1:
         string = "-" + string.replace("-", "")
-        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
+        cursor_ind = cursor_ind
     elif string.count("-") > 1:
         string = string.replace("-", "")
-        entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind - 2)
+        cursor_ind = cursor_ind - 2
     if string.count(".") > 1:
         first_sep_ind = string.index(".")
         last_sep_ind = string.index(".", first_sep_ind + 1)
@@ -444,33 +449,25 @@ def maintain_pos_neg_float(entry_object, is_startup = False, max_len = 5, defaul
             string = string[::-1].replace(".", "", 1)[::-1]
         else:
             string = string.replace(".", "", 1)
-        entry_object.change_entry_text(change_to = string)        
-        entry_object.entry.icursor(cursor_ind - 1)
+        
+        if len(string.split(".")[1]) > max_len:
+            string = string.split(".")[0] + "." + string.split(".")[1][ : max_len]
+        cursor_ind = cursor_ind - 1
     elif "." in string and len(string.split(".")[1]) > max_len:
         entry_object.maintain_entry_len(max_len = max_len, cursor_ind = cursor_ind, num_type = "float")
         string = entry_object.entry.get()
 
     if (string.startswith("0") or string.startswith("-0")) and len(string.split(".")[0]) > 1:
-        eliminate_first_zeros(entry_object = entry_object, cursor_ind = cursor_ind, string = string)
+        string, cursor_ind = eliminate_first_zeros(string = string, cursor_ind = cursor_ind)
+    entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
 
 def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, default_value = ""):
     string = entry_object.entry.get()
     cursor_ind = entry_object.entry.index(tk.INSERT)
     if is_startup:
-        entry_object.paste(max_len = max_len, num_type = "sequence", is_startup = True,
-                           provided_clip = string, default_value = default_value)
+        set_startup_num_value(entry_object = entry_object, max_len = max_len, num_type = "sequence",
+                              current_text = string, provided_clip = string, default_value = default_value)
         return
-    #    items = string.split(",")
-    #    for item in items:
-    #        condition1 = item.replace(".", "", 1).isdigit()
-    #        condition2 = all([not item.startswith(f"0{i}") for i in range(10)])
-    #        result = 1 if condition1 and condition2 else 0
-    #        if "." in item:
-    #            condition3 = not len(item.split(".")[1]) > max_len
-    #            result = 1 if condition3 else 0
-    #    if not result:
-    #        entry_object.change_entry_text(change_to = default_value)
-    #    return
 
     only_dec_point_or_comma = string.replace(",", "").replace(".", "") == ""
     if not string.replace(",", "").replace(".", "").isdecimal() and not only_dec_point_or_comma:
@@ -498,7 +495,7 @@ def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, defaul
                     value = value[: ind] + value[ind + 1: ]
                     cursor_ind = ind + total_current_len
             if value.startswith("0") and len(value.split(".")[0]) > 1:
-                value, cursor_ind = eliminate_first_zeros(entry_object = None, cursor_ind = cursor_ind, string = value, for_seq = True)
+                value, cursor_ind = eliminate_first_zeros(string = value, cursor_ind = cursor_ind)
             values[i] = value
             total_current_len += len(value) + 1
             string = ",".join(values)

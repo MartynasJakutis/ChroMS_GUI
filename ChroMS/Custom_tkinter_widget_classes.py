@@ -115,7 +115,6 @@ class Entry(Hauptwidget_Grid):
         selection = self.entry.selection_get()
         start_ind = self.entry.index("sel.first")
         end_ind = self.entry.index("sel.last")
-        print(start_ind, end_ind)
         if num_type == "int":
             if len(self.clipboard) <= len(selection):
                 entry_text = entry_text[ : start_ind] + self.clipboard + entry_text[end_ind : ]
@@ -125,7 +124,7 @@ class Entry(Hauptwidget_Grid):
                 entry_text = entry_text[ : start_ind] + truncated_clipboard + entry_text[end_ind : ]
                 self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = start_ind + len(truncated_clipboard))
         elif num_type == "float":
-            if "." or "-" in self.clipboard:
+            if any([x in self.clipboard for x in [".", "-"]]):
                 entry_text = self.clipboard
                 self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = len(self.clipboard)) 
             else:
@@ -210,7 +209,10 @@ class Entry(Hauptwidget_Grid):
                 elif "-" in self.clipboard and self.clipboard.index("-") == 0:
                     replace_with_cb(clipboard_string = self.clipboard)
                 else:
-                    if "." in self.clipboard and (not "-" in self.clipboard):
+                    if all([x not in self.clipboard for x in [".", "-"]]):
+                        entry_text = entry_text[: cursor_ind] + self.clipboard + entry_text[cursor_ind :]
+                        self.change_entry_text_and_icursor(entry_text = entry_text, cursor_ind = cursor_ind + len(self.clipboard))
+                    elif "." in self.clipboard and (not "-" in self.clipboard):
                         condition = entry_text.find(".") <= cursor_ind and entry_text.find(".") != -1
                         cursor_ind -= 1 if condition else cursor_ind
                         entry_text = entry_text.replace(".", "")
