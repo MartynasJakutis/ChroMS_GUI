@@ -280,7 +280,9 @@ class MultifunctionalBackbone(object):
         if self.purpose == "chrom":
             entry_objects = {"wv" : self.opm.wv_entry,
                              "inten_min" : self.opm.inten_min_entry,
-                             "inten_max" : self.opm.inten_max_entry}
+                             "inten_max" : self.opm.inten_max_entry,
+                             "peak_pos" : self.opm.peak_value_entry,
+                             "peak_dev" : self.opm.peak_dev_entry}
         else:
             entry_objects = None
         select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,

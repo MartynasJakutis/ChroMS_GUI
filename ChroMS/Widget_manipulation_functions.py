@@ -245,6 +245,55 @@ def check_inten_min_max(entry_min, entry_max, output_object, plot_object, purpos
                    output_object = output_object, plot_object = plot_object, purpose = purpose)
     return False
 
+def check_rt_presence(hplc_3d_data_object, entry_pos, entry_min, output_object, plot_object, purpose):
+    rt_pos_str, rt_dev_str = entry_pos.entry.get(), entry_dev.entry.get()
+    if rt_pos_str == "":
+        return
+    else:
+        pos_are_not_num = rt_pos_str.replace(".", "").replace(",", "") == ""
+        dev_are_not_num = rt_dev_str.replace(".", "").replace(",", "") == ""
+
+    if pos_are_not_num and dev_are_not_num:
+        print("there will be an error. pos and dev are not num")
+    elif pos_are_not_num:
+        print("there will be an error. pos are not num")
+    elif dev_are_not_num:
+        print("there will be an error. dev are not num")
+    else:
+        rt_pos_values = rt_pos_str.split(",")
+        rt_dev_values = rt_dev_str.split(",")
+        
+    
+    else:
+        errorkey, wv, compared_to_wvs, wv_min, wv_max = ("Empty", None, None, 
+                                                         int(hplc_3d_data_object.wavelengths.min()),
+                                                         int(hplc_3d_data_object.wavelengths.max()))
+        outputs_dict = tof.set_wavelength_warnings(wv, compared_to_wvs, wv_min, wv_max)
+        warning_output(outputs_dict = outputs_dict, key = errorkey,
+                       output_object = output_object, plot_object = plot_object, purpose = purpose)
+        return False
+    
+    if wavelength > hplc_3d_data_object.wavelengths.max() or wavelength < hplc_3d_data_object.wavelengths.min():
+        compared_to_wavelengths = {wavelength > hplc_3d_data_object.wavelengths.max() : "too high",
+                                   wavelength < hplc_3d_data_object.wavelengths.min() : "too low"}
+        errorkey, compared_to_wvs, result = "Outside range", compared_to_wavelengths[True], False
+
+    elif wavelength not in hplc_3d_data_object.wavelengths:
+        possible_wavelengths = hplc_3d_data_object.wavelengths.copy()
+        sq_differences = (hplc_3d_data_object.wavelengths - wavelength) ** 2
+        nearest_values = get_nearest_wvs(possible_wavelengths, sq_differences, num = 10)
+        errorkey, compared_to_wvs, result = "Not found", str(nearest_values)[1:-1], False
+    else:
+        result = True
+
+    if result == False:
+        wv, wv_min, wv_max = (wavelength, int(hplc_3d_data_object.wavelengths.min()), 
+                              int(hplc_3d_data_object.wavelengths.max()))
+        outputs_dict = tof.set_wavelength_warnings(wv, compared_to_wvs, wv_min, wv_max)
+        warning_output(outputs_dict = outputs_dict, key = errorkey,
+                       output_object = output_object, plot_object = plot_object, purpose = purpose)
+    return result
+
 def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
@@ -493,10 +542,11 @@ def maintain_pos_float_seq(entry_object, is_startup = False, max_len = 5, defaul
                     ind_aft_last = value.find(".") + max_len + 1
                     ind = ind_aft_last if cursor_ind - total_current_len == len(value) else cursor_ind - total_current_len
                     value = value[: ind] + value[ind + 1: ]
-                    cursor_ind = ind + total_current_len
+                    cursor_ind = ind + total_current_len                    
             if value.startswith("0") and len(value.split(".")[0]) > 1:
                 value, cursor_ind = eliminate_first_zeros(string = value, cursor_ind = cursor_ind)
             values[i] = value
             total_current_len += len(value) + 1
             string = ",".join(values)
             entry_object.change_entry_text_and_icursor(entry_text = string, cursor_ind = cursor_ind)
+            print(values)
