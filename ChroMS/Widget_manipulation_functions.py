@@ -245,33 +245,94 @@ def check_inten_min_max(entry_min, entry_max, output_object, plot_object, purpos
                    output_object = output_object, plot_object = plot_object, purpose = purpose)
     return False
 
+create_list_of_clean_values = lambda data_str : [x for x in data_str.split(",") if x != ""]
+
+def calculate_only_dot_values(data_values):
+    number_of_only_dots = 0
+    for data_value in data_values:
+        if data_value == ".":
+            number_of_only_dots += 1
+    return number_of_only_dots
+
+def check_for_not_num_rt(rt_pos_str, rt_dev_str):
+    rts_for_return = lambda rts : rts if len(rts) <= 15 else rts[ : 15] + "..."    
+
+    result = True
+    pos_are_not_num, dev_are_not_num = [x.replace(".", "").replace(",", "") == "" for x in [rt_pos_str, rt_dev_str]]
+    rt_pos_ret, rt_dev_ret = [rts_for_return(x) for x in [rt_pos_str, rt_dev_str]]
+
+    if pos_are_not_num and dev_are_not_num:
+        errorkey, entry_names, entry_values = "both", "peak positions and deviations", f"""'{rt_pos_ret}' and '{rt_dev_ret}'"""
+    elif pos_are_not_num:
+        errorkey, entry_names, entry_values = "one", "peak positions", f"""'{rt_pos_ret}'"""
+    elif dev_are_not_num:
+        errorkey, entry_names, entry_values = "one", "peak deviations", f"""'{rt_dev_ret}'"""
+    else:
+        result, errorkey, entry_names, entry_values = False, None, None, None
+    warning_args = {"entry_names" : entry_names,
+                    "entry_values" : entry_values}
+    return result, errorkey, warning_args
+
+def check_rt_dot_values(rt_pos_values, rt_dev_values, rt_pos_dot_num, rt_dev_dot_num):
+    result = True
+    if rt_pos_dot_num and rt_dev_dot_num:
+        print("there will be an error. dot values in both pos and dev")
+    elif rt_pos_dot_num:
+        print("there will be an error. dot values in pos")
+    elif rt_dev_dot_num:
+        print("there will be an error. dot values in dev")
+    else:
+        result = False
+    return result, rt_pos_values, rt_dev_values, rt_pos_dot_num, rt_dev_dot_num
+
+
+def check_rt_lengths(rt_pos_values, rt_dev_values):
+    result = True
+    len_rt_pos_values = len(rt_pos_values)  
+    len_rt_dev_values = len(rt_dev_values)  
+    if len_rt_dev_values == 1:
+        pass
+    elif len_rt_dev_values != len_rt_pos_values:
+        print("there will be an error. not compatible lengths")
+        result = False
+    return result
+
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_min, output_object, plot_object, purpose):
     rt_pos_str, rt_dev_str = entry_pos.entry.get(), entry_dev.entry.get()
     if rt_pos_str == "":
-        return
+        is_pos_str_not_empty = False
     else:
-        pos_are_not_num = rt_pos_str.replace(".", "").replace(",", "") == ""
-        dev_are_not_num = rt_dev_str.replace(".", "").replace(",", "") == ""
-
-    if pos_are_not_num and dev_are_not_num:
-        print("there will be an error. pos and dev are not num")
-    elif pos_are_not_num:
-        print("there will be an error. pos are not num")
-    elif dev_are_not_num:
-        print("there will be an error. dev are not num")
-    else:
-        rt_pos_values = rt_pos_str.split(",")
-        rt_dev_values = rt_dev_str.split(",")
-        
+        is_pos_str_not_empty = True
     
+    if is_pos_str_not_empty:
+        are_only_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = rt_pos_str, rt_dev_str = rt_dev_str)
     else:
-        errorkey, wv, compared_to_wvs, wv_min, wv_max = ("Empty", None, None, 
-                                                         int(hplc_3d_data_object.wavelengths.min()),
-                                                         int(hplc_3d_data_object.wavelengths.max()))
-        outputs_dict = tof.set_wavelength_warnings(wv, compared_to_wvs, wv_min, wv_max)
-        warning_output(outputs_dict = outputs_dict, key = errorkey,
-                       output_object = output_object, plot_object = plot_object, purpose = purpose)
+        return
+    
+    if not are_only_no_num_found:
+        rt_pos_values, rt_dev_values = [create_list_of_clean_values(data_str = x) for x in [rt_pos_str, rt_dev_str]]
+        rt_pos_dot_num, rt_dev_dot_num = [calculate_only_dot_values(data_values = x) for x in [rt_pos_values, rt_dev_values]]
+        are_dot_values_found, rt_pos_values, rt_dev_values, 
+        rt_pos_dot_num, rt_dev_dot_num = check_rt_dot_values(rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
+                                                             rt_pos_dot_num = rt_pos_dot_num, rt_dev_dot_num = rt_dev_dot_num)
+    else:
         return False
+
+    if not are_dot_values_found:
+        are_normal_rt_len, rt_pos_values, rt_dev_values, 
+        rt_pos_dot_num, rt_dev_dot_num = check_rt_dot_values(rt_pos_str = rt_pos_str, rt_dev_str = rt_dev_str)
+    else:
+        return False
+    
+
+    #else:
+    #    errorkey, wv, compared_to_wvs, wv_min, wv_max = ("Empty", None, None, 
+    #                                                     int(hplc_3d_data_object.wavelengths.min()),
+    #                                                     int(hplc_3d_data_object.wavelengths.max()))
+    #    outputs_dict = tof.set_wavelength_warnings(wv, compared_to_wvs, wv_min, wv_max)
+    #    warning_output(outputs_dict = outputs_dict, key = errorkey,
+    #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
+    #    return False
     
     if wavelength > hplc_3d_data_object.wavelengths.max() or wavelength < hplc_3d_data_object.wavelengths.min():
         compared_to_wavelengths = {wavelength > hplc_3d_data_object.wavelengths.max() : "too high",

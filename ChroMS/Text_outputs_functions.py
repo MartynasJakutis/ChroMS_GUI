@@ -38,3 +38,10 @@ set_intensity_warnings = lambda provided, default, recommended : {"min" : ("warn
                                                                   "both" : ("warning", "The selected min and max intensity values are not valid:\n" +\
                                                                                        f"Used values: '{provided}' Use appropriate min and max intensity values:\n" +\
                                                                                        f"Default: '{default}' (Recommended: '{recommended}')")}
+
+set_peaks_warnings_all_not_num = lambda entry_names, entry_values : {"both" : ("warning", "The provided values in {entry_names} entries are not valid:\n" +\
+                                                                                      f"Used values: {entry_values}\n does not include numbers, only '.' symbols:\n" +\
+                                                                                      f"Use integers and/ or floating point numbers"),
+                                                                     "one" : ("warning", "The provided values in {entry_names} entry are not valid:\n" +\
+                                                                                      f"Used values: {entry_values}\n does not include numbers, only '.' symbols:\n" +\
+                                                                                      f"Use integers and/or floating point numbers")}
