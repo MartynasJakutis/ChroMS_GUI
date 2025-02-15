@@ -247,6 +247,12 @@ def check_inten_min_max(entry_min, entry_max, output_object, plot_object, purpos
 
 create_list_of_clean_values = lambda data_str : [x for x in data_str.split(",") if x != ""]
 
+def rts_for_return(rts):
+    if type(rts) == list:
+        rts = ",".join(rts)
+    rts_mod = rts if len(rts) <= 15 else rts[ : 15] + "..."
+    return rts_mod
+
 def calculate_only_dot_values(data_values):
     number_of_only_dots = 0
     for data_value in data_values:
@@ -254,76 +260,89 @@ def calculate_only_dot_values(data_values):
             number_of_only_dots += 1
     return number_of_only_dots
 
-def check_for_not_num_rt(rt_pos_str, rt_dev_str):
-    rts_for_return = lambda rts : rts if len(rts) <= 15 else rts[ : 15] + "..."    
-
+def check_for_not_num_rt(rt_pos_str, rt_dev_str, rt_pos_values, rt_dev_values):
     result = True
     pos_are_not_num, dev_are_not_num = [x.replace(".", "").replace(",", "") == "" for x in [rt_pos_str, rt_dev_str]]
+    rt_pos_dot_num, rt_dev_dot_num = [calculate_only_dot_values(data_values = x) for x in [rt_pos_values, rt_dev_values]]
     rt_pos_ret, rt_dev_ret = [rts_for_return(x) for x in [rt_pos_str, rt_dev_str]]
 
-    if pos_are_not_num and dev_are_not_num:
-        errorkey, entry_names, entry_values = "both", "peak positions and deviations", f"""'{rt_pos_ret}' and '{rt_dev_ret}'"""
-    elif pos_are_not_num:
-        errorkey, entry_names, entry_values = "one", "peak positions", f"""'{rt_pos_ret}'"""
-    elif dev_are_not_num:
-        errorkey, entry_names, entry_values = "one", "peak deviations", f"""'{rt_dev_ret}'"""
+    both_not_num = pos_are_not_num and dev_are_not_num
+    both_dot_num = rt_pos_dot_num and rt_dev_dot_num
+    pos_not_and_dev_dot = pos_are_not_num and rt_dev_dot_num
+    dev_not_and_pos_dot = dev_are_not_num and rt_pos_dot_num
+
+    if any([both_not_num, both_dot_num, pos_not_and_dev_dot, dev_not_and_pos_dot]):
+        errorkey, entry_names, entry_values, dot_num = ("both", "peak positions and deviations", f"""'{rt_pos_ret}' and '{rt_dev_ret}'""",
+                                                        "[{rt_pos_dot_num} and {rt_dev_dot_num}]")
+    elif any([pos_are_not_num, rt_pos_dot_num]):
+        errorkey, entry_names, entry_values, dot_num = "one", "peak positions", f"""'{rt_pos_ret}'""", "[{rt_pos_dot_num}]"
+    elif any([dev_are_not_num, rt_dev_dot_num]):
+        errorkey, entry_names, entry_values, dot_num = "one", "peak deviations", f"""'{rt_dev_ret}'""", "[{rt_dev_dot_num}]"
     else:
-        result, errorkey, entry_names, entry_values = False, None, None, None
+        result, errorkey, entry_names, entry_values, dot_num = (False,) + (None,) * 4
     warning_args = {"entry_names" : entry_names,
-                    "entry_values" : entry_values}
+                    "entry_values" : entry_values,
+                    "dot_num" : dot_num}
     return result, errorkey, warning_args
-
-def check_rt_dot_values(rt_pos_values, rt_dev_values, rt_pos_dot_num, rt_dev_dot_num):
-    result = True
-    if rt_pos_dot_num and rt_dev_dot_num:
-        print("there will be an error. dot values in both pos and dev")
-    elif rt_pos_dot_num:
-        print("there will be an error. dot values in pos")
-    elif rt_dev_dot_num:
-        print("there will be an error. dot values in dev")
-    else:
-        result = False
-    return result, rt_pos_values, rt_dev_values, rt_pos_dot_num, rt_dev_dot_num
-
 
 def check_rt_lengths(rt_pos_values, rt_dev_values):
     result = True
-    len_rt_pos_values = len(rt_pos_values)  
-    len_rt_dev_values = len(rt_dev_values)  
+    len_rt_pos_values, len_rt_dev_values = len(rt_pos_values), len(rt_dev_values)
     if len_rt_dev_values == 1:
-        pass
+        errorkey, e_pos, e_dev, e_pos_l, e_dev_l = (None,) * 5
     elif len_rt_dev_values != len_rt_pos_values:
-        print("there will be an error. not compatible lengths")
-        result = False
-    return result
+        result, errorkey, e_pos, e_dev, e_pos_l, e_dev_l = (False, "!=", "peak positions", "peak deviations",
+                                                            len_rt_pos_values, len_rt_dev_values)
+    else:
+        errorkey, e_pos, e_dev, e_pos_l, e_dev_l = (None,) * 5
+    warning_args = {"e_pos" : e_pos,
+                    "e_dev" : e_dev,
+                    "e_pos_l" : e_pos_l
+                    "e_dev_l" : e_dev_l} 
+    return result, errorkey, warning_args
+
+def compare_rt_positions(rt_pos_values, hplc_3d_data_object):
+    result = False
+    min_rt, max_rt = hplc_3d_data_object.retention_time.min(), hplc_3d_data_object.retention_time.max()
+    rt_pos_values = list(map(float, rt_pos_values))
+    too_high_rts = [rt_pos_value for rt_pos_value in rt_pos_values if rt_pos_value > max_rt]
+    too_low_rts = [rt_pos_value for rt_pos_value in rt_pos_values if rt_pos_value < min_rt]
+    too_high_rts_ret, too_low_rts_ret = [rts_for_return(rts = x) for x in [too_high_rts, too_low_rts]]
+
+    entry_names, too_high, too_low = "peak positions", too_high_rts_ret, too_low_rts_ret
+    if len(too_high_rts) and len(too_low_rts):
+        errorkey = "both"
+    elif len(too_high_rts):
+        errorkey = "too_high"
+    elif len(too_low_rts):
+        errorkey = "too_low"
+    else:
+        result, errorkey, entry_names, too_high, too_low = (True,) + (None,) * 4
 
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_min, output_object, plot_object, purpose):
     rt_pos_str, rt_dev_str = entry_pos.entry.get(), entry_dev.entry.get()
     if rt_pos_str == "":
-        is_pos_str_not_empty = False
+        is_pos_str_empty = True
     else:
-        is_pos_str_not_empty = True
+        is_pos_str_empty = False
     
-    if is_pos_str_not_empty:
-        are_only_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = rt_pos_str, rt_dev_str = rt_dev_str)
-    else:
+    if is_pos_str_empty:
         return
-    
-    if not are_only_no_num_found:
+    else:
         rt_pos_values, rt_dev_values = [create_list_of_clean_values(data_str = x) for x in [rt_pos_str, rt_dev_str]]
-        rt_pos_dot_num, rt_dev_dot_num = [calculate_only_dot_values(data_values = x) for x in [rt_pos_values, rt_dev_values]]
-        are_dot_values_found, rt_pos_values, rt_dev_values, 
-        rt_pos_dot_num, rt_dev_dot_num = check_rt_dot_values(rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
-                                                             rt_pos_dot_num = rt_pos_dot_num, rt_dev_dot_num = rt_dev_dot_num)
-    else:
-        return False
-
-    if not are_dot_values_found:
-        are_normal_rt_len, rt_pos_values, rt_dev_values, 
-        rt_pos_dot_num, rt_dev_dot_num = check_rt_dot_values(rt_pos_str = rt_pos_str, rt_dev_str = rt_dev_str)
-    else:
-        return False
+        are_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = rt_pos_str, rt_dev_str = rt_dev_str,
+                                                                        rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values)
     
+    if not are_no_num_found:
+        are_compatible_len, errorkey, warning_args = check_rt_lengths(rt_pos_values = rt_pos_values,
+                                                                      rt_dev_values = rt_dev_values)
+    else:
+        result, outputs_dict = False, tof.set_peaks_warnings_not_num(**warning_args)
+
+    if are_compatible_len:
+        pass
+    else:
+        result, outputs_dict = False, tof.set_peaks_warnings_len(**warning_args)
 
     #else:
     #    errorkey, wv, compared_to_wvs, wv_min, wv_max = ("Empty", None, None, 
