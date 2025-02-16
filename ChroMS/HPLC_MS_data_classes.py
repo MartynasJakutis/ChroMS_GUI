@@ -66,6 +66,20 @@ class HPLC_3D_Data(HPLC_MS_Data):
             self.ab_intensity = self.all_ab_intensities[:, wv_index]
             self.all_ab_intensities = np_transpose(self.all_ab_intensities)
 
+    def get_max_ab_intensities_by_rts(self, rt_pos, rt_dev):
+        not_0 = all([x != 0 for x in [rt_pos, rt_dev]])
+        if not_0:
+            len_rt_pos, len_rt_dev = len(rt_pos), len(rt_dev)
+            if len_rt_pos != len_rt_dev:
+                rt_dev = rt_dev * len_rt_pos 
+
+            conditions_inten = [(self.retention_time >= pos - dev) & (self.retention_time <= pos + dev) for pos, dev in zip(rt_pos, rt_dev)]
+            self.max_ab_intensities = [self.ab_intensity[c].max() for c in conditions_inten]
+            self.max_ab_indices = [self.ab_intensity[c].argmax() for c in conditions_inten]
+            self.rts_of_max_intensity = [self.retention_time[c][ind] for c, ind in zip(conditions_inten, self.max_ab_indices)]
+        else:
+            self.max_ab_intensities = 0
+            self.rts_of_max_intensity = 0
 
 class MS_Data(HPLC_MS_Data):
     """For MS 2D data processing (time vs intensity). retention_time, ionization_type - str."""

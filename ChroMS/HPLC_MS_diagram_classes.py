@@ -200,7 +200,7 @@ class HPLC_Diagram(Diagram):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_rt, data_ab, data_wv_all, data_ab_all,
-                 data_wave_nm, intensity_min, intensity_max,
+                 data_wave_nm, intensity_min, intensity_max, peak_intensity, peak_time,
                  colorbar_label, colorbar_text_color, colorbar_weight, colorbar_fontsize,
                  radiobutton_var, screenheight, screenwidth):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
@@ -219,6 +219,9 @@ class HPLC_Diagram(Diagram):
         self.data_wave_nm = data_wave_nm
         self.intensity_min = intensity_min
         self.intensity_max = intensity_max
+
+        self.peak_intensity = peak_intensity
+        self.peak_time = peak_time
 
         self.colorbar_label = colorbar_label
         self.colorbar_text_color = colorbar_text_color
@@ -244,6 +247,7 @@ class HPLC_Diagram(Diagram):
         self.ylabel2 = init_ylabel2
         subplot.plot(self.data_rt, self.data_ab)
         subplot.set_xlim(min(self.data_rt), max(self.data_rt))
+        self.mark_max_ab_intensities(subplot = subplot)
 
     def redraw_diagram(self):
         """Sets Diagram state according to condition if all attributes are integers and redraws the diagram."""
@@ -253,7 +257,12 @@ class HPLC_Diagram(Diagram):
         self.state = "initial" if all(are_main_par_ints) else "not_initial"
         super().redraw_diagram()
         
-
+    def mark_max_ab_intensities(self, subplot):
+        if any([x == 0 for x in [self.peak_time, self.peak_intensity]]):
+            return
+        else:
+            subplot.scatter(self.peak_time, self.peak_intensity, color = "k")
+            
 class MS_Diagram(Diagram):
     def __init__(self, dpi, need_title1, title1, title1_pos, title1_text_color, 
                  title1_weight, title1_fontsize, need_title2, title2, title2_pos, title2_text_color, 

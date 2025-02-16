@@ -39,16 +39,27 @@ set_intensity_warnings = lambda provided, default, recommended : {"min" : ("warn
                                                                                        f"Used values: '{provided}' Use appropriate min and max intensity values:\n" +\
                                                                                        f"Default: '{default}' (Recommended: '{recommended}')")}
 
-set_peaks_warnings_not_num = lambda entry_names, entry_values, dot_num : {"both" : ("warning", "The provided values in {entry_names} entries are not valid:\n" +\
+set_peaks_warnings_not_num = lambda entry_names, entry_values, dot_num : {"both" : ("warning", f"The provided values in {entry_names} entries are not valid:\n" +\
                                                                                       f"Used values: {entry_values}\n" +\
-                                                                                      f"Use integers and/or floating point numbers,\n remove separate '.' values {dot_num}" +\
+                                                                                      f"Use only integers and/or floating point numbers,\nremove separate '.' values {dot_num} " +\
                                                                                       f"and unnecessary ',' symbols."),
-                                                                          "one" : ("warning", "The provided values in {entry_names} entry are not valid:\n" +\
+                                                                          "one" : ("warning", f"The provided values in {entry_names} entry are not valid:\n" +\
                                                                                       f"Used values: {entry_values}\n" +\
-                                                                                      f"Use integers and/or floating point numbers,\n remove separate '.' values {dot_num} " +\
+                                                                                      f"Use only integers and/or floating point numbers,\nremove separate '.' values {dot_num} " +\
                                                                                       f"and unnecessary ',' symbols.")}
 
-set_peaks_warnings_len = lambda e_pos, e_dev, e_pos_l, e_dev_l : {"!=" : ("warning", "The provided sequence length in {e_dev} entry is incorrect.\n" +\
+set_peaks_warnings_len = lambda e_pos, e_dev, e_pos_l, e_dev_l : {"!=" : ("warning", f"The provided sequence length in {e_dev} entry is incorrect.\n" +\
                                                                   f"Length of {e_dev} sequence: {e_dev_l}\n" +\
-                                                                  f"Length of {e_pos} sequence:  {e_pos_l}\n" +\
+                                                                  f"Length of {e_pos}   sequence: {e_pos_l}\n" +\
                                                                   f"Length of {e_dev} sequence must be 1 or equal to length of {e_pos} sequence.")}
+
+set_peaks_warnings_val = lambda entry_names, too_hi, too_lo, lo, hi : {"both" : ("warning", f"The provided sequences in {entry_names} entry\n" +\
+                                                                       f"include values outside the retention time range ({lo} - {hi} min).\n" +\
+                                                                       f"Too high values:  {too_hi}\n" +\
+                                                                       f"Too low  values:  {too_lo}."),
+                                                                       "too_hi" : ("warning", f"The provided sequences in {entry_names} entry\n" +\
+                                                                       f"include values outside the retention time range ({lo} - {hi} min).\n" +\
+                                                                       f"Too high values:  {too_hi}."),
+                                                                       "too_lo" : ("warning", f"The provided sequences in {entry_names} entry\n" +\
+                                                                       f"include values outside the retention time range ({lo} - {hi} min).\n" +\
+                                                                       f"Too low  values:  {too_lo}.")}
