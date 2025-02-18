@@ -200,7 +200,7 @@ class HPLC_Diagram(Diagram):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_rt, data_ab, data_wv_all, data_ab_all,
-                 data_wave_nm, intensity_min, intensity_max, peak_intensity, peak_time,
+                 data_wave_nm, intensity_min, intensity_max, peak_intensity, peak_time, show_peak_values, peak_dec_num,
                  colorbar_label, colorbar_text_color, colorbar_weight, colorbar_fontsize,
                  radiobutton_var, screenheight, screenwidth):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
@@ -222,6 +222,8 @@ class HPLC_Diagram(Diagram):
 
         self.peak_intensity = peak_intensity
         self.peak_time = peak_time
+        self.show_peak_values = show_peak_values
+        self.peak_dec_num = peak_dec_num
 
         self.colorbar_label = colorbar_label
         self.colorbar_text_color = colorbar_text_color
@@ -247,6 +249,9 @@ class HPLC_Diagram(Diagram):
         self.ylabel2 = init_ylabel2
         subplot.plot(self.data_rt, self.data_ab)
         subplot.set_xlim(min(self.data_rt), max(self.data_rt))
+        y_min = self.data_ab.min() - self.data_ab.max() * 0.1
+        y_max = self.data_ab.max() * 1.2
+        subplot.set_ylim(y_min, y_max)
         self.mark_max_ab_intensities(subplot = subplot)
 
     def redraw_diagram(self):
@@ -262,7 +267,16 @@ class HPLC_Diagram(Diagram):
             return
         else:
             subplot.scatter(self.peak_time, self.peak_intensity, color = "k")
-            
+            self.write_peak_text(subplot = subplot)
+
+    def write_peak_text(self, subplot):
+        if self.show_peak_values:
+            for ptime, inten in zip(self.peak_time, self.peak_intensity):
+                str_time  = "{0:.{1}f} min".format(ptime, self.peak_dec_num)
+                y_text = inten + self.data_ab.max() * 0.1 if inten >= 0 else inten - self.data_ab.max() * 0.1
+                subplot.text(ptime, y_text, s = str_time, weight = 'bold', ha = 'center',
+                             va = "center", fontsize = 12, color = "k")
+
 class MS_Diagram(Diagram):
     def __init__(self, dpi, need_title1, title1, title1_pos, title1_text_color, 
                  title1_weight, title1_fontsize, need_title2, title2, title2_pos, title2_text_color, 

@@ -176,18 +176,18 @@ def get_txt_file_path(combobox_object, listbox_object, purpose = "chrom"):
     path = get_path(folder_name, file_name)
     return path, truncated_file_name
 
-def get_nearest_wvs(possible_wavelengths, sq_differences, num = 10):
-    nearest_wvs = []
+def get_nearest_values(possible_values, sq_differences, num = 10, ret_type = int):
+    nearest_values = []
     for i in range(num):
-        nearest = possible_wavelengths[sq_differences == sq_differences.min()]
+        nearest = possible_values[sq_differences == sq_differences.min()]
         
         nearest = nearest.min() if len(nearest) != 1 else nearest[0]
         
-        not_nearest_poss_wvs = possible_wavelengths != nearest
-        sq_differences = sq_differences[not_nearest_poss_wvs]
-        possible_wavelengths = possible_wavelengths[not_nearest_poss_wvs]
-        nearest_wvs.append(int(nearest))
-    return sorted(nearest_wvs)
+        not_nearest_poss_values = possible_values != nearest
+        sq_differences = sq_differences[not_nearest_poss_values]
+        possible_values = possible_values[not_nearest_poss_values]
+        nearest_values.append(ret_type(nearest))
+    return sorted(nearest_values)
 
 def check_wv_presence(hplc_3d_data_object, entry_object, output_object, plot_object, purpose):
     wavelength = entry_object.entry.get()
@@ -210,7 +210,7 @@ def check_wv_presence(hplc_3d_data_object, entry_object, output_object, plot_obj
     elif wavelength not in hplc_3d_data_object.wavelengths:
         possible_wavelengths = hplc_3d_data_object.wavelengths.copy()
         sq_differences = (hplc_3d_data_object.wavelengths - wavelength) ** 2
-        nearest_values = get_nearest_wvs(possible_wavelengths, sq_differences, num = 10)
+        nearest_values = get_nearest_values(possible_wavelengths, sq_differences, num = 10)
         errorkey, compared_to_wvs, result = "Not found", str(nearest_values)[1:-1], False
     else:
         result = True
@@ -252,6 +252,13 @@ def rts_for_return(rts):
         rts = ",".join(rts)
     rts_mod = rts if len(rts) <= 30 else rts[ : 30] + " (first 30 symbols)"
     return rts_mod
+
+def create_pos_pm_dev_output(pos_ind, dev_ind, rt_pos_values, rt_dev_values):
+    out_list = []
+    for pos_i, dev_i in zip(pos_ind, dev_ind):
+        out_list.append(rt_pos_values[pos_i] + "±" + rt_dev_values[dev_i])
+    out_string = f"'{rts_for_return(rts = out_list)}'"
+    return out_string
 
 def calculate_only_dot_values(data_values):
     number_of_only_dots = 0
@@ -301,10 +308,9 @@ def check_rt_lengths(rt_pos_values, rt_dev_values):
                     "e_dev_l" : e_dev_l} 
     return result, errorkey, warning_args
 
-def compare_rt_positions(rt_pos_values, hplc_3d_data_object):
+def compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object):
     result = False
     min_rt, max_rt = hplc_3d_data_object.retention_time.min(), hplc_3d_data_object.retention_time.max()
-    rt_pos_values_fl = list(map(float, rt_pos_values))
     too_hi_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl > max_rt]
     too_lo_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl < min_rt]
     too_hi_rts_ret, too_lo_rts_ret = [f"'{rts_for_return(rts = x)}'" for x in [too_hi_rts, too_lo_rts]]
@@ -326,9 +332,40 @@ def compare_rt_positions(rt_pos_values, hplc_3d_data_object):
 
     return result, errorkey, warning_args
 
+def get_nearest_rt_values(bad_item_ind, rt_pos_values, rt_pos_values_fl, possible_rt_pos_values, num):
+    output_str = ""
+    for ind in bad_item_ind:
+        sq_differences = (possible_rt_pos_values - rt_pos_values_fl[ind]) ** 2
+        nearest_rts = get_nearest_values(possible_rt_pos_values, sq_differences, num = num, ret_type = float)
+        output_str += rt_pos_values[ind] + " : " + str(list(nearest_rts))[1 : -1]
+        output_str = output_str + "\n" if ind != bad_item_ind[-1] else output_str
+    return output_str
+
+def check_for_found_rt(rt_pos_values, rt_dev_values, rt_pos_values_fl, rt_dev_values_fl, hplc_3d_data_object):
+    hplc_3d_data_object.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values_fl, rt_dev = rt_dev_values_fl)
+    attr_list = [hplc_3d_data_object.rt_pos_prob_ind, hplc_3d_data_object.rt_dev_prob_ind]
+    entry_names = "'peak positions'"
+    if all([len(x) == 0 for x in attr_list]):
+        result, errorkey, rt_values_out, nearest_rts = True, None, None, None
+    else:
+        result = False
+        rt_values_out = create_pos_pm_dev_output(pos_ind = attr_list[0], dev_ind = attr_list[1],
+                                                 rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values)
+
+        errorkey = "=1" if all([len(x) == 1 for x in attr_list]) else ">1"
+        num = 5 if all([len(x) == 1 for x in attr_list]) else 5
+        nearest_rts = get_nearest_rt_values(bad_item_ind = attr_list[0], rt_pos_values = rt_pos_values,
+                                            rt_pos_values_fl = rt_pos_values_fl,
+                                            possible_rt_pos_values = hplc_3d_data_object.retention_time, num = num)
+    warning_args = {"entry_names" : entry_names,
+                    "rt_values_out" : rt_values_out,
+                    "nearest_rts" : nearest_rts}
+
+    return result, errorkey, warning_args
+
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
     result, outputs_dict, rt_pos_values, rt_dev_values = False, None, 0, 0
-    is_pos_str_not_empty, are_no_num_found, are_compatible_len, are_values_in_range = False, True, False, False
+    are_no_num_found, is_pos_str_not_empty, are_compatible_len, are_values_in_range, are_all_values_found = (True,) + (False,) * 4
     rt_pos_str, rt_dev_str = entry_pos.entry.get(), entry_dev.entry.get()
     if rt_pos_str == "":
         is_pos_str_not_empty = False
@@ -349,14 +386,23 @@ def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, 
         outputs_dict = tof.set_peaks_warnings_not_num(**warning_args) if not outputs_dict else outputs_dict
 
     if are_compatible_len:
-        are_values_in_range, errorkey, warning_args = compare_rt_positions(rt_pos_values, hplc_3d_data_object)
+        rt_pos_values_fl, rt_dev_values_fl = [list(map(float, x)) for x in [rt_pos_values, rt_dev_values]]
+        are_values_in_range, errorkey, warning_args = compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object)
     else:
         outputs_dict = tof.set_peaks_warnings_len(**warning_args) if not outputs_dict else outputs_dict
 
     if are_values_in_range:
-        result = True
+        are_all_values_found, errorkey, warning_args = check_for_found_rt(rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
+                                                                          rt_pos_values_fl = rt_pos_values_fl, 
+                                                                          rt_dev_values_fl = rt_dev_values_fl,
+                                                                          hplc_3d_data_object = hplc_3d_data_object)
     else:
         outputs_dict = tof.set_peaks_warnings_val(**warning_args) if not outputs_dict else outputs_dict
+
+    if are_all_values_found:
+        result = True
+    else:
+        outputs_dict = tof.set_peaks_warnings_notf(**warning_args) if not outputs_dict else outputs_dict
 
     if result == False:
         warning_output(outputs_dict = outputs_dict, key = errorkey,
@@ -400,9 +446,9 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
             data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         elif not rt_exists:
             return
-        else:
-            rt_pos_values, rt_dev_values = [list(map(float, x)) for x in [rt_pos_values, rt_dev_values]]
-            data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
+        #else:
+            
+            #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
@@ -416,6 +462,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                        "data_wave_nm" : data.wave_nm,
                        "intensity_min" : intensity_min, "intensity_max" : intensity_max,
                        "peak_intensity" : data.max_ab_intensities, "peak_time" : data.rts_of_max_intensity,
+                       "show_peak_values" : True, "peak_dec_num" : 3,
                        file_title : truncated_file_name}
     else:
         num = purpose[2]

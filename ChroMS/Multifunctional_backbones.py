@@ -203,7 +203,8 @@ class MultifunctionalBackbone(object):
                            "colorbar_label" : "Intensyvumas, AU", "colorbar_text_color" : "k",
                            "colorbar_weight" : "bold", "colorbar_fontsize" : 14,
                            "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0,
-                           "intensity_min" : 0, "intensity_max" : 1, "peak_intensity" : 0, "peak_time" : 0}
+                           "intensity_min" : 0, "intensity_max" : 1, "peak_intensity" : 0, "peak_time" : 0,
+                           "show_peak_values" : True, "peak_dec_num" : 3}
             Used_Diagram = HPLC_Diagram
             
         elif self.purpose == "ms":

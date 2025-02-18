@@ -63,3 +63,12 @@ set_peaks_warnings_val = lambda entry_names, too_hi, too_lo, lo, hi : {"both" : 
                                                                        "too_lo" : ("warning", f"The provided sequences in {entry_names} entry\n" +\
                                                                        f"include values outside the retention time range ({lo} - {hi} min).\n" +\
                                                                        f"Too low  values:  {too_lo}.")}
+
+set_peaks_warnings_notf = lambda entry_names, rt_values_out, nearest_rts : {"=1" : ("warning", f"No data found for {entry_names} entry value and its deviation.\n" +\
+                                                                            f"Problematic value : '{rt_values_out}'.\n" +\
+                                                                            f"Try to change either deviation or the position value (as provided below):\n" +\
+                                                                            f"{nearest_rts}."),
+                                                                            ">1" : ("warning", f"No data found for {entry_names} entry values and their deviations.\n" +\
+                                                                            f"Problematic values : '{rt_values_out}'.\n" +\
+                                                                            f"Try to change either deviations or the position values (as provided below):\n" +\
+                                                                            f"{nearest_rts}.")}
