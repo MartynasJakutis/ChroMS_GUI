@@ -367,7 +367,8 @@ def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, 
     result, outputs_dict, rt_pos_values, rt_dev_values = False, None, 0, 0
     are_no_num_found, is_pos_str_not_empty, are_compatible_len, are_values_in_range, are_all_values_found = (True,) + (False,) * 4
     rt_pos_str, rt_dev_str = entry_pos.entry.get(), entry_dev.entry.get()
-    if rt_pos_str == "":
+    are_disabled_entries = all([str(x.entry.cget("state")) == str(tk.DISABLED) for x in [entry_pos, entry_dev]])
+    if rt_pos_str == "" or are_disabled_entries:
         is_pos_str_not_empty = False
     else:
         is_pos_str_not_empty = True
@@ -446,9 +447,6 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
             data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         elif not rt_exists:
             return
-        #else:
-            
-            #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
@@ -462,7 +460,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                        "data_wave_nm" : data.wave_nm,
                        "intensity_min" : intensity_min, "intensity_max" : intensity_max,
                        "peak_intensity" : data.max_ab_intensities, "peak_time" : data.rts_of_max_intensity,
-                       "show_peak_values" : True, "peak_dec_num" : 3,
+                       "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3,
                        file_title : truncated_file_name}
     else:
         num = purpose[2]
@@ -542,7 +540,7 @@ def select_subplots(plot_object, listbox_object, output_object, purpose):
     only_drawing_and_time_output(plot_object, output_object, purpose)
     focus_and_activate_listbox(listbox_object)
 
-def only_drawing_and_time_output(plot_object, output_object, purpose):
+def only_drawing_and_time_output(plot_object, output_object, purpose, changing_entry_state = {}):
     start_time_calc = time.time()
     data_calc_text = f"""\n Calc time: {time.time() - start_time_calc :.3f} s\n"""
     start_time_draw = time.time()
@@ -551,7 +549,10 @@ def only_drawing_and_time_output(plot_object, output_object, purpose):
     else:
         plot_object.redraw_diagram(purpose = purpose)
     data_draw_text = f"Draw time: {time.time() - start_time_draw :.3f} s"
-    first_line = f"""Selection of subplots was changed to "{plot_object.selected_subplots}":"""
+    if changing_entry_state:
+        first_line = f"""Feature of showing peaks is {changing_entry_state[True]}."""
+    else:
+        first_line = f"""Selection of subplots was changed to "{plot_object.selected_subplots}":"""
     output_object.insert_text(text = first_line + data_calc_text + data_draw_text,
                               output_type = "success")
 

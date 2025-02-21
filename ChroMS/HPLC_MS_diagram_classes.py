@@ -200,7 +200,7 @@ class HPLC_Diagram(Diagram):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_rt, data_ab, data_wv_all, data_ab_all,
-                 data_wave_nm, intensity_min, intensity_max, peak_intensity, peak_time, show_peak_values, peak_dec_num,
+                 data_wave_nm, intensity_min, intensity_max, peak_intensity, peak_time, show_peak_text, show_peaks, peak_dec_num,
                  colorbar_label, colorbar_text_color, colorbar_weight, colorbar_fontsize,
                  radiobutton_var, screenheight, screenwidth):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
@@ -222,7 +222,8 @@ class HPLC_Diagram(Diagram):
 
         self.peak_intensity = peak_intensity
         self.peak_time = peak_time
-        self.show_peak_values = show_peak_values
+        self.show_peak_text = show_peak_text
+        self.show_peaks = show_peaks
         self.peak_dec_num = peak_dec_num
 
         self.colorbar_label = colorbar_label
@@ -263,14 +264,14 @@ class HPLC_Diagram(Diagram):
         super().redraw_diagram()
         
     def mark_max_ab_intensities(self, subplot):
-        if any([x == 0 for x in [self.peak_time, self.peak_intensity]]):
+        if any([x == 0 for x in [self.peak_time, self.peak_intensity, int(self.show_peaks)]]):
             return
         else:
             subplot.scatter(self.peak_time, self.peak_intensity, color = "k")
             self.write_peak_text(subplot = subplot)
 
     def write_peak_text(self, subplot):
-        if self.show_peak_values:
+        if self.show_peak_text:
             for ptime, inten in zip(self.peak_time, self.peak_intensity):
                 str_time  = "{0:.{1}f} min".format(ptime, self.peak_dec_num)
                 y_text = inten + self.data_ab.max() * 0.1 if inten >= 0 else inten - self.data_ab.max() * 0.1

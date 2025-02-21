@@ -179,6 +179,48 @@ class MultifunctionalBackbone(object):
                                                              **opm.radiobutton_pars[radiobutton])
             opm.radiobuttons[radiobutton].create()
     
+    def create_radiobuttons_on_off_entry(self):
+        """Creates radiobuttons for turning on or off the entry"""
+        opm = self.opm
+        self.opm.radiobutton_variable_on_off = tk.IntVar(master = self.window, value = 1)
+
+        opm.radiobutton_on_off_pars = {"ratiobutton_on" : {"text" : "On", "row" : 0,
+                                                           "column" : 4, "onvalue" : 1},
+                                       "radiobutton_off" : {"text" : "Off", "row" : 0,
+                                                            "column" : 5, "onvalue" : 0}}
+
+        if self.purpose == "chrom":
+            master_frame = opm.frames["find_peaks"]
+        else:
+            return
+        #elif self.purpose == "ms":
+        #    subplot1, subplot2 = "MS1", "MS2" 
+        function = lambda : 1
+
+        
+        for radiobutton in self.opm.radiobutton_on_off_pars.keys():
+            opm.radiobuttons[radiobutton] = ctwc.Radiobutton(master = master_frame, padx = 2.5, pady = 0,
+                                                             var = self.opm.radiobutton_variable_on_off, 
+                                                             command = lambda : self.enable_disable_entry(),
+                                                             **opm.radiobutton_on_off_pars[radiobutton])
+            opm.radiobuttons[radiobutton].create()
+
+    def enable_disable_entry(self):
+        if self.purpose == "chrom":
+            entries = [self.opm.peak_value_entry, self.opm.peak_dev_entry]
+        else:
+            return
+        if self.opm.radiobutton_variable_on_off.get():
+            state, show_peaks, str_state = tk.NORMAL, True, "ENABLED"
+        else:
+            state, show_peaks, str_state = tk.DISABLED, False, "DISABLED"
+        self.opm.graph.set_main_param_values(show_peaks = show_peaks)
+        
+        for entry in entries:
+            entry.entry.config(state = state)
+        wmf.only_drawing_and_time_output(plot_object = self.opm.graph, output_object = self.opm.output, purpose = self.purpose,
+                                         changing_entry_state = {True : str_state})
+
     def create_graph(self):
         opm = self.opm
         opm.graph_params = {"dpi" : 100, "need_title1" : True, "title1" : "", "title1_pos" : (0.5, 0.95),
@@ -204,7 +246,7 @@ class MultifunctionalBackbone(object):
                            "colorbar_weight" : "bold", "colorbar_fontsize" : 14,
                            "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0,
                            "intensity_min" : 0, "intensity_max" : 1, "peak_intensity" : 0, "peak_time" : 0,
-                           "show_peak_values" : True, "peak_dec_num" : 3}
+                           "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3}
             Used_Diagram = HPLC_Diagram
             
         elif self.purpose == "ms":
@@ -239,6 +281,7 @@ class MultifunctionalBackbone(object):
     def create_opm_with_widgets(self):
         self.opm = self.create_output_plot_man()
         self.create_radiobuttons()
+        self.create_radiobuttons_on_off_entry()
         if self.purpose == "chrom":
             self.opm.wv_entry.bind_key_or_event(key_or_event = "<Control-v>", func = lambda event : ctwc.Entry.paste(self.opm.wv_entry,
                                                                                                                      max_len = mgp.LEN_4_DIGIT_INT, 

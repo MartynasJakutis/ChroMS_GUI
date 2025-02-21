@@ -60,20 +60,23 @@ class OutputPlotManagerBackbone(object):
                                                   "row" : 1, "column" : 0, "sticky" : tk.W},
                                       "label3" : {"master" : self.labelframes["plot_opt"], "text" : "Find peaks: ", 
                                                   "row" : 2, "column" : 0, "sticky" : tk.W},
-                                      "label4" : {"master" : self.frames["wavelength"], "text" : "\tIntensity, AU: ", 
+                                      "label4" : {"master" : self.labelframes["plot_opt"], "text" : "Range: ", 
+                                                  "row" : 3, "column" : 0, "sticky" : tk.W},
+                                      "label5" : {"master" : self.frames["wavelength"], "text" : "\tIntensity, AU: ", 
                                                   "row" : 0, "column" : 1, "sticky" : tk.W},
-                                      "label5" : {"master" : self.frames["wavelength"], "text" : "min", 
+                                      "label6" : {"master" : self.frames["wavelength"], "text" : "min", 
                                                   "row" : 0, "column" : 2, "sticky" : tk.W},
-                                      "label6" : {"master" : self.frames["wavelength"], "text" : "max", 
+                                      "label7" : {"master" : self.frames["wavelength"], "text" : "max", 
                                                   "row" : 0, "column" : 4, "sticky" : tk.W},
-                                      "label7" : {"master" : self.frames["find_peaks"], "text" : "±", 
+                                      "label8" : {"master" : self.frames["find_peaks"], "text" : "±", 
                                                   "row" : 0, "column" : 1, "sticky" : tk.W},
-                                      "label8" : {"master" : self.frames["find_peaks"], "text" : "min.", 
+                                      "label9" : {"master" : self.frames["find_peaks"], "text" : "min.", 
                                                   "row" : 0, "column" : 3, "sticky" : tk.W}})
             
             
         for label in self.label_params.keys():
-            self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = "SystemButtonFace",
+            padx = (5, 20) if label == "label9" else (5, 0)
+            self.labels[label] = ctwc.Label(padx = padx, pady = 0, background = "SystemButtonFace",
                                             style = "Normal.TLabel", **self.label_params[label]).create()
         
             
