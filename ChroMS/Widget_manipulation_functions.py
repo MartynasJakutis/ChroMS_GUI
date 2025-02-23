@@ -410,6 +410,41 @@ def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, 
                        output_object = output_object, plot_object = plot_object, purpose = purpose)
     return result, rt_pos_values, rt_dev_values
 
+def limit_processing(limits):
+    new_limits = [float(limit) if limit != "" else None for limit in limits]
+    if new_limits[0] == new_limits[1] and new_limits != [None, None]:
+        if new_limits[0] == 0:
+            new_limits[0], new_limits[1] = new_limits[0] - 1, new_limits[1] + 1
+        elif new_limits[0] > 0:
+            new_limits[0], new_limits[1] = new_limits[0] * 0.95, new_limits[1] * 1.05
+        else:
+            new_limits[0], new_limits[1] = new_limits[0] * 1.05, new_limits[1] * 0.95
+    return new_limits
+        
+def x_y_limit_processing(x_min, x_max, y_min, y_max):
+    x_limits = limit_processing(limits = [x_min, x_max])
+    y_limits = limit_processing(limits = [y_min, y_max])
+    return x_limits, y_limits
+
+def check_axis_limits(x_min, x_max, y_min, y_max, output_object, plot_object, purpose):
+    not_numbers = ["-", ".", "-."]
+    lim_not_num = lambda x : x in not_numbers
+    entry_names = {"'X min'" : x_min, "'X max'" : x_max,
+                   "'Y min'" : y_min, "'Y max'" : y_max}
+    problem_vals = {k : f"'{v}'" for k, v in entry_names.items() if lim_not_num(v)}
+    if not len(problem_vals):
+        result, errorkey = True, None
+    else:
+        result = False
+        errorkey = "one" if len(problem_vals) == 1 else "more"
+    
+    if result == False:
+        outputs_dict = tof.set_limits_prohibited_vals(errorkey = errorkey, problem_vals = problem_vals)
+        warning_output(outputs_dict = outputs_dict, key = errorkey,
+                       output_object = output_object, plot_object = plot_object, purpose = purpose)
+    
+    return result
+
 def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
@@ -447,6 +482,14 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
             data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         elif not rt_exists:
             return
+
+        x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
+        are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 
+                                               output_object = output_object, plot_object = plot_object, purpose = purpose)
+        if are_limits_correct:
+            provided_xlim, provided_ylim = x_y_limit_processing(x_min, x_max, y_min, y_max)
+        else:
+            return
         
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
@@ -461,6 +504,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                        "intensity_min" : intensity_min, "intensity_max" : intensity_max,
                        "peak_intensity" : data.max_ab_intensities, "peak_time" : data.rts_of_max_intensity,
                        "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3,
+                       "provided_xlim" : provided_xlim, "provided_ylim" : provided_ylim,
                        file_title : truncated_file_name}
     else:
         num = purpose[2]

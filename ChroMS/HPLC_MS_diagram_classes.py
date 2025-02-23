@@ -201,6 +201,7 @@ class HPLC_Diagram(Diagram):
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_rt, data_ab, data_wv_all, data_ab_all,
                  data_wave_nm, intensity_min, intensity_max, peak_intensity, peak_time, show_peak_text, show_peaks, peak_dec_num,
+                 provided_xlim, provided_ylim,
                  colorbar_label, colorbar_text_color, colorbar_weight, colorbar_fontsize,
                  radiobutton_var, screenheight, screenwidth):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
@@ -225,6 +226,8 @@ class HPLC_Diagram(Diagram):
         self.show_peak_text = show_peak_text
         self.show_peaks = show_peaks
         self.peak_dec_num = peak_dec_num
+        self.provided_xlim = provided_xlim
+        self.provided_ylim = provided_ylim
 
         self.colorbar_label = colorbar_label
         self.colorbar_text_color = colorbar_text_color
@@ -249,11 +252,18 @@ class HPLC_Diagram(Diagram):
         self.set_labels_2nd_subplot(subplot = subplot)
         self.ylabel2 = init_ylabel2
         subplot.plot(self.data_rt, self.data_ab)
-        subplot.set_xlim(min(self.data_rt), max(self.data_rt))
-        y_min = self.data_ab.min() - self.data_ab.max() * 0.1
-        y_max = self.data_ab.max() * 1.2
-        subplot.set_ylim(y_min, y_max)
+        self.set_xlim_ylim_chrom(subplot = subplot)
         self.mark_max_ab_intensities(subplot = subplot)
+
+    def set_xlim_ylim_chrom(self, subplot):
+        x_min = min(self.data_rt) if self.provided_xlim[0] == None else self.provided_xlim[0]
+        x_max = max(self.data_rt) if self.provided_xlim[1] == None else self.provided_xlim[1]
+
+        y_min = self.data_ab.min() - self.data_ab.max() * 0.1 if self.provided_ylim[0] == None else self.provided_ylim[0]
+        y_max = self.data_ab.max() * 1.2 if self.provided_ylim[0] == None else self.provided_ylim[1]
+       
+        subplot.set_xlim(x_min, x_max)
+        subplot.set_ylim(y_min, y_max)
 
     def redraw_diagram(self):
         """Sets Diagram state according to condition if all attributes are integers and redraws the diagram."""

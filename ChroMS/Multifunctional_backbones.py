@@ -95,6 +95,7 @@ class MultifunctionalBackbone(object):
         self.show_ms_ffm_labelframe(ffm_to_show = ffm_to_show)
         self.config_subplots_radiobuttons(ffm_to_show = ffm_to_show)
         self.change_listbox_focus(ffm_to_show = ffm_to_show)
+        self.active_ffm = self.ffm_to_show
 
         opm_deact_radiobtn_val = self.opm.radiobutton_variable.get()
         current_radiobtn_val = self.opm.radiobuttons[rbtn_to_deactivate].onvalue
@@ -195,13 +196,12 @@ class MultifunctionalBackbone(object):
             return
         #elif self.purpose == "ms":
         #    subplot1, subplot2 = "MS1", "MS2" 
-        function = lambda : 1
 
         
         for radiobutton in self.opm.radiobutton_on_off_pars.keys():
             opm.radiobuttons[radiobutton] = ctwc.Radiobutton(master = master_frame, padx = 2.5, pady = 0,
                                                              var = self.opm.radiobutton_variable_on_off, 
-                                                             command = lambda : self.enable_disable_entry(),
+                                                             command = self.enable_disable_entry,
                                                              **opm.radiobutton_on_off_pars[radiobutton])
             opm.radiobuttons[radiobutton].create()
 
@@ -220,6 +220,7 @@ class MultifunctionalBackbone(object):
             entry.entry.config(state = state)
         wmf.only_drawing_and_time_output(plot_object = self.opm.graph, output_object = self.opm.output, purpose = self.purpose,
                                          changing_entry_state = {True : str_state})
+        self.change_listbox_focus(ffm_to_show = self.active_ffm)
 
     def create_graph(self):
         opm = self.opm
@@ -246,7 +247,8 @@ class MultifunctionalBackbone(object):
                            "colorbar_weight" : "bold", "colorbar_fontsize" : 14,
                            "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0,
                            "intensity_min" : 0, "intensity_max" : 1, "peak_intensity" : 0, "peak_time" : 0,
-                           "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3}
+                           "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3,
+                           "provided_xlim" : (None, None), "provided_ylim" : (None, None)}
             Used_Diagram = HPLC_Diagram
             
         elif self.purpose == "ms":
@@ -318,6 +320,7 @@ class MultifunctionalBackbone(object):
         for ffm, hf_name in zip(self.ffms, self.hist_file_names):
             self.create_ffm_multifunc_widgets(ffm = ffm, hist_file_name = hf_name)
         self.update_backbone()
+        self.active_ffm = self.ffm1
 
     def create_ffm_multifunc_widgets(self, ffm, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
@@ -326,7 +329,11 @@ class MultifunctionalBackbone(object):
                              "inten_min" : self.opm.inten_min_entry,
                              "inten_max" : self.opm.inten_max_entry,
                              "peak_pos" : self.opm.peak_value_entry,
-                             "peak_dev" : self.opm.peak_dev_entry}
+                             "peak_dev" : self.opm.peak_dev_entry,
+                             "x_min" : self.opm.x_min_entry,
+                             "x_max" : self.opm.x_max_entry,
+                             "y_min" : self.opm.y_min_entry,
+                             "y_max" : self.opm.y_max_entry}
         else:
             entry_objects = None
         select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,

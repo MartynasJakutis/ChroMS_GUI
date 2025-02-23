@@ -72,3 +72,18 @@ set_peaks_warnings_notf = lambda entry_names, rt_values_out, nearest_rts : {"=1"
                                                                             f"Problematic values : '{rt_values_out}'.\n" +\
                                                                             f"Try to change either deviations or the position values (as provided below):\n" +\
                                                                             f"{nearest_rts}.")}
+
+def set_limits_prohibited_vals(errorkey, problem_vals):
+    msg_type = "warning"
+    if errorkey == "one":
+        first_line = f"The following entry includes a prohibited value."
+    elif errorkey == "more":
+        first_line = f"The following entries includes prohibited values."
+    other_text = ""
+    for i, (k, v) in enumerate(problem_vals.items()):
+        additional_text = "\n" if i % 2 == 0 else ""
+        appended_text = additional_text + k + " : " + v + " " * 10
+        other_text += appended_text
+    end_line = "\nUse only integers and/or floating point numbers."
+    
+    return {errorkey : (msg_type, first_line + other_text + end_line)}
