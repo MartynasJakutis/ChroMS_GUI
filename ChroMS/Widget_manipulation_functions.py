@@ -483,17 +483,17 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         elif not rt_exists:
             return
 
-        x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
-        are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 
-                                               output_object = output_object, plot_object = plot_object, purpose = purpose)
-        if are_limits_correct:
-            provided_xlim, provided_ylim = x_y_limit_processing(x_min, x_max, y_min, y_max)
-        else:
-            return
-        
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
         data.read()
+    
+    x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
+    are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 
+                                           output_object = output_object, plot_object = plot_object, purpose = purpose)
+    if are_limits_correct:
+        provided_xlim, provided_ylim = x_y_limit_processing(x_min, x_max, y_min, y_max)
+    else:
+        return
 
     data_calc_text = f"""File: '{path}'\n Calc time: {time.time() - start_time_calc :.3f} s\n"""
     main_param_dict = {"state" : "not_initial"}
@@ -509,6 +509,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     else:
         num = purpose[2]
         dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.absolute_intensity,
+                       "provided_xlim" : provided_xlim, "provided_ylim" : provided_ylim,
                        file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}"}
         redraw_diagram_method_args.update({"purpose" : purpose})
 

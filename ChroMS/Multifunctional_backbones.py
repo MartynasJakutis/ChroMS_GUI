@@ -95,7 +95,7 @@ class MultifunctionalBackbone(object):
         self.show_ms_ffm_labelframe(ffm_to_show = ffm_to_show)
         self.config_subplots_radiobuttons(ffm_to_show = ffm_to_show)
         self.change_listbox_focus(ffm_to_show = ffm_to_show)
-        self.active_ffm = self.ffm_to_show
+        self.active_ffm = ffm_to_show
 
         opm_deact_radiobtn_val = self.opm.radiobutton_variable.get()
         current_radiobtn_val = self.opm.radiobuttons[rbtn_to_deactivate].onvalue
@@ -238,7 +238,8 @@ class MultifunctionalBackbone(object):
                             "master_labelframe" : opm.labelframes["chrom/ms"], 
                             "add_multiplier_w" : 0.98, "add_multiplier_h" : 0.90,
                             "radiobutton_var" : opm.radiobutton_variable, "state" : "initial", 
-                            "screenheight" : self.screenheight, "screenwidth" : self.screenwidth}
+                            "screenheight" : self.screenheight, "screenwidth" : self.screenwidth,
+                            "provided_xlim" : (None, None), "provided_ylim" : (None, None)}
         
         if self.purpose == "chrom":
             dict_update = {"xlabel1" : "Išėjimo laikas, min", "xlabel2" : "Išėjimo laikas, min",
@@ -247,8 +248,7 @@ class MultifunctionalBackbone(object):
                            "colorbar_weight" : "bold", "colorbar_fontsize" : 14,
                            "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0,
                            "intensity_min" : 0, "intensity_max" : 1, "peak_intensity" : 0, "peak_time" : 0,
-                           "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3,
-                           "provided_xlim" : (None, None), "provided_ylim" : (None, None)}
+                           "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3}
             Used_Diagram = HPLC_Diagram
             
         elif self.purpose == "ms":
@@ -324,18 +324,19 @@ class MultifunctionalBackbone(object):
 
     def create_ffm_multifunc_widgets(self, ffm, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
+        entry_objects = {"x_min" : self.opm.x_min_entry,
+                         "x_max" : self.opm.x_max_entry,
+                         "y_min" : self.opm.y_min_entry,
+                         "y_max" : self.opm.y_max_entry}
         if self.purpose == "chrom":
-            entry_objects = {"wv" : self.opm.wv_entry,
-                             "inten_min" : self.opm.inten_min_entry,
-                             "inten_max" : self.opm.inten_max_entry,
-                             "peak_pos" : self.opm.peak_value_entry,
-                             "peak_dev" : self.opm.peak_dev_entry,
-                             "x_min" : self.opm.x_min_entry,
-                             "x_max" : self.opm.x_max_entry,
-                             "y_min" : self.opm.y_min_entry,
-                             "y_max" : self.opm.y_max_entry}
+            entry_objects.update({"wv" : self.opm.wv_entry,
+                                  "inten_min" : self.opm.inten_min_entry,
+                                  "inten_max" : self.opm.inten_max_entry,
+                                  "peak_pos" : self.opm.peak_value_entry,
+                                  "peak_dev" : self.opm.peak_dev_entry})
         else:
-            entry_objects = None
+            entry_objects.update({"find_mz1" : self.opm.find_mz1_entry,
+                                  "find_mz2" : self.opm.find_mz2_entry})
         select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,
                                  "plot_object" : self.opm.graph, "output_object" : self.opm.output,
                                  "entry_objects" : entry_objects, "purpose" : ffm.purpose}

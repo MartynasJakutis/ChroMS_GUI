@@ -28,7 +28,7 @@ class Diagram(object):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, radiobutton_var, screenheight,
-                 screenwidth):
+                 screenwidth, provided_xlim, provided_ylim):
         self.dpi = dpi
         self.need_title1 = need_title1
         self.title1 = title1
@@ -68,6 +68,8 @@ class Diagram(object):
                         self.screenheight/(1.2 * self.dpi) * self.add_multiplier_h)
         self.radiobutton_var = radiobutton_var
         self.num_subp_padding_dict = {1 : 25, 2 : 15}
+        self.provided_xlim = provided_xlim
+        self.provided_ylim = provided_ylim
         
     def create_a_figure(self):
         """Creates Figure canvas containing matplotlib.Figure object with its 
@@ -201,9 +203,8 @@ class HPLC_Diagram(Diagram):
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_rt, data_ab, data_wv_all, data_ab_all,
                  data_wave_nm, intensity_min, intensity_max, peak_intensity, peak_time, show_peak_text, show_peaks, peak_dec_num,
-                 provided_xlim, provided_ylim,
                  colorbar_label, colorbar_text_color, colorbar_weight, colorbar_fontsize,
-                 radiobutton_var, screenheight, screenwidth):
+                 radiobutton_var, screenheight, screenwidth, provided_xlim, provided_ylim):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
                          title1_weight, title1_fontsize, xlabel1, xlabel2, ylabel1, ylabel2,
                          xlabel1_pos, xlabel2_pos, ylabel1_pos, ylabel2_pos, 
@@ -212,7 +213,7 @@ class HPLC_Diagram(Diagram):
                          xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                          matplotlib_style1, matplotlib_style2, state, 
                          master_labelframe, add_multiplier_w, add_multiplier_h, radiobutton_var, screenheight,
-                         screenwidth)
+                         screenwidth, provided_xlim, provided_ylim)
         self.data_rt = data_rt
         self.data_ab = data_ab
         self.data_ab_all = data_ab_all
@@ -226,8 +227,6 @@ class HPLC_Diagram(Diagram):
         self.show_peak_text = show_peak_text
         self.show_peaks = show_peaks
         self.peak_dec_num = peak_dec_num
-        self.provided_xlim = provided_xlim
-        self.provided_ylim = provided_ylim
 
         self.colorbar_label = colorbar_label
         self.colorbar_text_color = colorbar_text_color
@@ -298,7 +297,7 @@ class MS_Diagram(Diagram):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_mz1, data_mz2, data_inten1,
-                 data_inten2, radiobutton_var, screenheight, screenwidth):
+                 data_inten2, radiobutton_var, screenheight, screenwidth, provided_xlim, provided_ylim):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
                          title1_weight, title1_fontsize, xlabel1, xlabel2, ylabel1, ylabel2,
                          xlabel1_pos, xlabel2_pos, ylabel1_pos, ylabel2_pos, 
@@ -307,7 +306,7 @@ class MS_Diagram(Diagram):
                          xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                          matplotlib_style1, matplotlib_style2, state, 
                          master_labelframe, add_multiplier_w, add_multiplier_h, radiobutton_var,
-                         screenheight, screenwidth)
+                         screenheight, screenwidth, provided_xlim, provided_ylim)
         self.need_title2 = need_title2
         self.title2 = title2
         self.title2_pos = title2_pos
@@ -351,7 +350,7 @@ class MS_Diagram(Diagram):
         
         if type(data_mz) != int:
             subplot.plot(data_mz, data_inten)
-            subplot.set_xlim(min(data_mz), max(data_mz))
+            self.set_xlim_ylim_ms(subplot = subplot, data_mz = data_mz, data_inten = data_inten)
         else:
             self.plotting_init_state(subplot = subplot)
     
@@ -366,8 +365,20 @@ class MS_Diagram(Diagram):
         self.set_labels_2nd_subplot(subplot = subplot)
         self.plotting_term_state_ms(subplot = subplot, 
                                     data_mz = self.data_mz2, data_inten = self.data_inten2)
+        
 
-            
+    
+    def set_xlim_ylim_ms(self, subplot, data_mz, data_inten):
+        x_min = min(data_mz) if self.provided_xlim[0] == None else self.provided_xlim[0]
+        x_max = max(data_mz) if self.provided_xlim[1] == None else self.provided_xlim[1]
+
+        #y_min = data_inten.min() - data_inten.max() * 0.1 if self.provided_ylim[0] == None else self.provided_ylim[0]
+        y_min = 0 if self.provided_ylim[0] == None else self.provided_ylim[0]
+        y_max = data_inten.max() * 1.2 if self.provided_ylim[0] == None else self.provided_ylim[1]
+        
+        subplot.set_xlim(x_min, x_max)
+        subplot.set_ylim(y_min, y_max)
+     
     def redraw_diagram(self, purpose):
         """Redraws the diagram. Figure layout is set in such manner that if there is a subplot without sufficient data,
         it will be set to None. Otherwise the 'constrained' layout is used."""

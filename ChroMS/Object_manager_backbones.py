@@ -45,10 +45,18 @@ class OutputPlotManagerBackbone(object):
                                                        **self.labelframe_params[lframe]).create()
 
         self.frame_params = self.frame_params_func(plot_opt_lf = self.labelframes["plot_opt"])
+
         if self.purpose == "chrom":
             self.frame_params.update({"wavelength" : {"master" : self.labelframes["plot_opt"], 
                                                       "row" : 1, "column" : 1},
                                       "find_peaks" : {"master" : self.labelframes["plot_opt"], 
+                                                      "row" : 2, "column" : 1},
+                                      "set_ranges" : {"master" : self.labelframes["plot_opt"], 
+                                                      "row" : 3, "column" : 1}})
+        elif self.purpose == "ms":
+            self.frame_params.update({"find_mz1" : {"master" : self.labelframes["plot_opt"], 
+                                                      "row" : 1, "column" : 1},
+                                      "find_mz2" : {"master" : self.labelframes["plot_opt"], 
                                                       "row" : 2, "column" : 1},
                                       "set_ranges" : {"master" : self.labelframes["plot_opt"], 
                                                       "row" : 3, "column" : 1}})
@@ -57,6 +65,7 @@ class OutputPlotManagerBackbone(object):
                                             **self.frame_params[frame]).create()
             
         self.label_params = self.label_params_func(plot_opt_lf = self.labelframes["plot_opt"])
+
         if self.purpose == "chrom":                                                       
             self.label_params.update({"label2" : {"master" : self.labelframes["plot_opt"], "text" : "Wavelength, nm: ", 
                                                   "row" : 1, "column" : 0, "sticky" : tk.W},
@@ -73,20 +82,14 @@ class OutputPlotManagerBackbone(object):
                                       "label8" : {"master" : self.frames["find_peaks"], "text" : "±", 
                                                   "row" : 0, "column" : 1, "sticky" : tk.E + tk.W},
                                       "label9" : {"master" : self.frames["find_peaks"], "text" : "min.", 
-                                                  "row" : 0, "column" : 3, "sticky" : tk.W},
-                                      "label10" : {"master" : self.frames["set_ranges"], "text" : "X [", 
-                                                  "row" : 0, "column" : 0, "sticky" : tk.E},
-                                      "label11" : {"master" : self.frames["set_ranges"], "text" : "–", 
-                                                  "row" : 0, "column" : 2, "sticky" : tk.E + tk.W},
-                                      "label12" : {"master" : self.frames["set_ranges"], "text" : "] min.", 
-                                                  "row" : 0, "column" : 4, "sticky" : tk.W},
-                                      "label13" : {"master" : self.frames["set_ranges"], "text" : "Y [", 
-                                                  "row" : 0, "column" : 5, "sticky" : tk.E},
-                                      "label14" : {"master" : self.frames["set_ranges"], "text" : "–", 
-                                                  "row" : 0, "column" : 7, "sticky" : tk.E + tk.W},
-                                      "label15" : {"master" : self.frames["set_ranges"], "text" : "] AU", 
-                                                  "row" : 0, "column" : 9, "sticky" : tk.W}})
-            
+                                                  "row" : 0, "column" : 3, "sticky" : tk.W}})
+        elif self.purpose == "ms":                                                       
+            self.label_params.update({"label2" : {"master" : self.labelframes["plot_opt"], "text" : "Find m/z 1: ", 
+                                                  "row" : 1, "column" : 0, "sticky" : tk.W},
+                                      "label3" : {"master" : self.labelframes["plot_opt"], "text" : "Find m/z 2: ", 
+                                                  "row" : 2, "column" : 0, "sticky" : tk.W},
+                                      "label4" : {"master" : self.labelframes["plot_opt"], "text" : "Set ranges: ", 
+                                                  "row" : 3, "column" : 0, "sticky" : tk.W}})        
             
         for label in self.label_params.keys():
             padx = (5, 20) if label == "label9" else (5, 0)
@@ -99,8 +102,10 @@ class OutputPlotManagerBackbone(object):
         self.output = ctwc.Outputwidget(master = self.labelframes["output"], width = 65, height = 6.5, 
                                         font = ("DefaultTkFont", 12, "normal"), row = 0, column = 0, 
                                         padx = 2.5, pady = 0)
+        self.fill_set_ranges_frame(master = self.frames["set_ranges"])
         widgets = [self.output]
         self.output.create()
+        self.create_entries_for_peak_search()
         if self.purpose == "chrom":
             self.wv_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
                                        font = ("TkDefaultFont", 12, "normal"), width = 5, 
@@ -111,30 +116,16 @@ class OutputPlotManagerBackbone(object):
             self.inten_max_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
                                        font = ("TkDefaultFont", 12, "normal"), width = 8, 
                                        row = 0, column = 5, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
-            self.peak_value_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 15, 
-                                       row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
-            self.peak_dev_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 8, 
-                                       row = 0, column = 2, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
-            self.x_min_entry = ctwc.Entry(master = self.frames["set_ranges"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 7, 
-                                       row = 0, column = 1, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
-            self.x_max_entry = ctwc.Entry(master = self.frames["set_ranges"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 7, 
-                                       row = 0, column = 3, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
-            self.y_min_entry = ctwc.Entry(master = self.frames["set_ranges"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 7, 
-                                       row = 0, column = 6, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
-            self.y_max_entry = ctwc.Entry(master = self.frames["set_ranges"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 7, 
-                                       row = 0, column = 8, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
-            for entry, const in zip([self.wv_entry, self.inten_min_entry, self.inten_max_entry, 
-                                     self.peak_value_entry, self.peak_dev_entry, self.x_min_entry,
-                                     self.x_max_entry, self.y_min_entry, self.y_max_entry],
-                                    [mgp.DEFAULT_WAVELENGTH, mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY,
-                                     mgp.DEFAULT_PEAK_POS_SEQ, mgp.DEFAULT_PEAK_DEV_SEQ, mgp.DEFAULT_CHROM_X_MIN,
-                                     mgp.DEFAULT_CHROM_X_MAX, mgp.DEFAULT_CHROM_Y_MIN, mgp.DEFAULT_CHROM_Y_MAX]):
+            
+            entries_list = [self.wv_entry, self.inten_min_entry, self.inten_max_entry, 
+                            self.peak_value_entry, self.peak_dev_entry, self.x_min_entry,
+                            self.x_max_entry, self.y_min_entry, self.y_max_entry]
+
+            const_list = [mgp.DEFAULT_WAVELENGTH, mgp.DEFAULT_MIN_INTENSITY, mgp.DEFAULT_MAX_INTENSITY,
+                          mgp.DEFAULT_PEAK_POS_SEQ, mgp.DEFAULT_PEAK_DEV_SEQ, mgp.DEFAULT_CHROM_X_MIN,
+                          mgp.DEFAULT_CHROM_X_MAX, mgp.DEFAULT_CHROM_Y_MIN, mgp.DEFAULT_CHROM_Y_MAX]
+            
+            for entry, const in zip(entries_list, const_list):
                 entry.create()
                 entry.entry.insert(index = 0, string = const)
 
@@ -148,14 +139,6 @@ class OutputPlotManagerBackbone(object):
                                                                                               max_len = mgp.LEN_TIME_AFTER_DEC))
             self.peak_dev_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_float_seq(entry_object = self.peak_dev_entry,
                                                                                              max_len = mgp.LEN_TIME_AFTER_DEC))
-            self.x_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.x_min_entry,
-                                                                                          max_len = mgp.LEN_5_DIGIT_FLOAT))
-            self.x_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.x_max_entry,
-                                                                                          max_len = mgp.LEN_5_DIGIT_FLOAT))
-            self.y_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.y_min_entry,
-                                                                                          max_len = mgp.LEN_5_DIGIT_FLOAT))
-            self.y_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.y_max_entry,
-                                                                                          max_len = mgp.LEN_5_DIGIT_FLOAT))
 
             wmf.maintain_four_digit_integer(entry_object = self.wv_entry, is_startup = True, 
                                             max_len = mgp.LEN_4_DIGIT_INT, default_value = "254")
@@ -167,25 +150,95 @@ class OutputPlotManagerBackbone(object):
                                        max_len = mgp.LEN_TIME_AFTER_DEC, default_value = "")
             wmf.maintain_pos_float_seq(entry_object = self.peak_dev_entry, is_startup = True,
                                        max_len = mgp.LEN_TIME_AFTER_DEC, default_value = "0.25")
-            wmf.maintain_pos_neg_float(entry_object = self.x_min_entry, is_startup = True,
-                                       max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
-            wmf.maintain_pos_neg_float(entry_object = self.x_max_entry, is_startup = True,
-                                       max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
-            wmf.maintain_pos_neg_float(entry_object = self.y_min_entry, is_startup = True,
-                                       max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
-            wmf.maintain_pos_neg_float(entry_object = self.y_max_entry, is_startup = True,
-                                       max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
 
+        elif self.purpose == "ms":
+            entries_list = [self.find_mz1_entry, self.find_mz2_entry, self.x_min_entry,
+                            self.x_max_entry, self.y_min_entry, self.y_max_entry]
+            const_list = [mgp.DEFAULT_FIND_MZ1_SEQ, mgp.DEFAULT_FIND_MZ2_SEQ, mgp.DEFAULT_MS_X_MIN,
+                          mgp.DEFAULT_MS_X_MAX, mgp.DEFAULT_MS_Y_MIN, mgp.DEFAULT_MS_Y_MAX]
+            for entry, const in zip(entries_list, const_list):
+                entry.create()
+                entry.entry.insert(index = 0, string = const)
 
-        else:
-            pass
-        self.output.create()
+            self.find_mz1_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_float_seq(entry_object = self.find_mz1_entry,
+                                                                                               max_len = mgp.LEN_MZ_AFTER_DEC))
+            self.find_mz2_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_float_seq(entry_object = self.find_mz2_entry,
+                                                                                               max_len = mgp.LEN_MZ_AFTER_DEC))
+            wmf.maintain_pos_float_seq(entry_object = self.find_mz1_entry, is_startup = True,
+                                       max_len = mgp.LEN_MZ_AFTER_DEC, default_value = "")
+            wmf.maintain_pos_float_seq(entry_object = self.find_mz2_entry, is_startup = True,
+                                       max_len = mgp.LEN_MZ_AFTER_DEC, default_value = "")
+
+        self.x_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.x_min_entry,
+                                                                                      max_len = mgp.LEN_5_DIGIT_FLOAT))
+        self.x_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.x_max_entry,
+                                                                                      max_len = mgp.LEN_5_DIGIT_FLOAT))
+        self.y_min_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.y_min_entry,
+                                                                                      max_len = mgp.LEN_5_DIGIT_FLOAT))
+        self.y_max_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_pos_neg_float(entry_object = self.y_max_entry,
+                                                                                      max_len = mgp.LEN_5_DIGIT_FLOAT))
+        wmf.maintain_pos_neg_float(entry_object = self.x_min_entry, is_startup = True,
+                                   max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
+        wmf.maintain_pos_neg_float(entry_object = self.x_max_entry, is_startup = True,
+                                   max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
+        wmf.maintain_pos_neg_float(entry_object = self.y_min_entry, is_startup = True,
+                                   max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
+        wmf.maintain_pos_neg_float(entry_object = self.y_max_entry, is_startup = True,
+                                   max_len = mgp.LEN_5_DIGIT_FLOAT, default_value = "")
+
     def create_all_widgets(self):
         self.load_widget_params()
         self.create_simple_widgets()
         self.create_advanced_widgets()
 
+    def fill_set_ranges_frame(self, master):
+        self.set_ranges_labels = {}
+        x_units, y_units = ("min.", "AU") if self.purpose == "chrom" else ("m/z", "I")
+        self.set_ranges_label_params = {"label1" : {"master" : master, "text" : "X [", 
+                                                    "row" : 0, "column" : 0, "sticky" : tk.E},
+                                        "label2" : {"master" : master, "text" : "–", 
+                                                    "row" : 0, "column" : 2, "sticky" : tk.E + tk.W},
+                                        "label3" : {"master" : master, "text" : f"] {x_units}", 
+                                                     "row" : 0, "column" : 4, "sticky" : tk.W},
+                                        "label4" : {"master" : master, "text" : "Y [", 
+                                                     "row" : 0, "column" : 5, "sticky" : tk.E},
+                                        "label5" : {"master" : master, "text" : "–", 
+                                                     "row" : 0, "column" : 7, "sticky" : tk.E + tk.W},
+                                        "label6" : {"master" : master, "text" : f"] {y_units}", 
+                                                     "row" : 0, "column" : 9, "sticky" : tk.W}}
+        for label in self.set_ranges_label_params.keys():
+            padx = (5, 0)
+            self.set_ranges_labels[label] = ctwc.Label(padx = padx, pady = 0, background = "SystemButtonFace",
+                                                       style = "Normal.TLabel", **self.set_ranges_label_params[label]).create()
+        
+        self.x_min_entry = ctwc.Entry(master = master, style = "TEntry", 
+                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      row = 0, column = 1, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+        self.x_max_entry = ctwc.Entry(master = master, style = "TEntry", 
+                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      row = 0, column = 3, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+        self.y_min_entry = ctwc.Entry(master = master, style = "TEntry", 
+                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      row = 0, column = 6, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+        self.y_max_entry = ctwc.Entry(master = master, style = "TEntry", 
+                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      row = 0, column = 8, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
 
+    def create_entries_for_peak_search(self):
+        if self.purpose == "chrom":
+            self.peak_value_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
+                                               font = ("TkDefaultFont", 12, "normal"), width = 15, 
+                                               row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+            self.peak_dev_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
+                                             font = ("TkDefaultFont", 12, "normal"), width = 8, 
+                                             row = 0, column = 2, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+        elif self.purpose == "ms":
+            self.find_mz1_entry = ctwc.Entry(master = self.frames["find_mz1"], style = "TEntry", 
+                                               font = ("TkDefaultFont", 12, "normal"), width = 15, 
+                                               row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+            self.find_mz2_entry = ctwc.Entry(master = self.frames["find_mz2"], style = "TEntry", 
+                                               font = ("TkDefaultFont", 12, "normal"), width = 15, 
+                                               row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
 class FileFolderManagerBackbone(OutputPlotManagerBackbone):
     """Class which contains methods for File and Folder Manager Backbone (ffm) creation.
     master - higher hierarchy widget, purpose - str which refers what kind of ffm to create."""
