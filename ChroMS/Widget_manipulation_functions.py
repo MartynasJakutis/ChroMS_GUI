@@ -267,24 +267,35 @@ def calculate_only_dot_values(data_values):
             number_of_only_dots += 1
     return number_of_only_dots
 
-def check_for_not_num_rt(rt_pos_str, rt_dev_str, rt_pos_values, rt_dev_values):
-    result = True
-    pos_are_not_num, dev_are_not_num = [x.replace(".", "").replace(",", "") == "" for x in [rt_pos_str, rt_dev_str]]
-    rt_pos_dot_num, rt_dev_dot_num = [calculate_only_dot_values(data_values = x) for x in [rt_pos_values, rt_dev_values]]
-    rt_pos_ret, rt_dev_ret = [rts_for_return(x) for x in [rt_pos_str, rt_dev_str]]
+def check_for_not_num_rt(rt_pos_str, rt_dev_str, rt_pos_values, rt_dev_values, for_ms = False):
+    result = True    
+    strings, values = (rt_pos_str, rt_dev_str), (rt_pos_values, rt_dev_values)
+    poss_ent_names = ["'find m/z 1'", "'find m/z 2'"] if for_ms else ["'peak positions'", "'peak deviations'"]
+    ent_names = [n for n, s in zip(poss_ent_names, strings) if s != None]
+    used_strs = [x for x in strings if x != None]
+    used_values = [x for x in values if x != None]
 
-    both_not_num = pos_are_not_num and dev_are_not_num
-    both_dot_num = rt_pos_dot_num and rt_dev_dot_num
-    pos_not_and_dev_dot = pos_are_not_num and rt_dev_dot_num
-    dev_not_and_pos_dot = dev_are_not_num and rt_pos_dot_num
+    are_not_num = [x.replace(".", "").replace(",", "") == "" for x in used_strs]
+    are_dot_num = [calculate_only_dot_values(data_values = x) for x in used_values]
+    ret_strings = [rts_for_return(x) for x in used_strs]
+    
+    cond1, cond2 = any([are_not_num[0], are_dot_num[0]]), False
+    if len(used_strs) > 1:
+        both_not_num, both_dot_num  = all(are_not_num), all(are_dot_num)
+        pos_not_and_dev_dot, dev_not_and_pos_dot = are_not_num[0] and are_dot_num[1], are_not_num[1] and are_dot_num[0]
+        both_entry_prob = [both_not_num, both_dot_num, pos_not_and_dev_dot, dev_not_and_pos_dot]
+        cond2 = any([are_not_num[1], are_dot_num[1]])
+    else:
+        both_entry_prob = [False]
 
-    if any([both_not_num, both_dot_num, pos_not_and_dev_dot, dev_not_and_pos_dot]):
-        errorkey, entry_names, entry_values, dot_num = ("both", "'peak positions' and 'peak deviations'", f"'{rt_pos_ret}' and '{rt_dev_ret}'",
-                                                        f"({rt_pos_dot_num} and {rt_dev_dot_num})")
-    elif any([pos_are_not_num, rt_pos_dot_num]):
-        errorkey, entry_names, entry_values, dot_num = "one", "'peak positions'", f"'{rt_pos_ret}'", f"({rt_pos_dot_num})"
-    elif any([dev_are_not_num, rt_dev_dot_num]):
-        errorkey, entry_names, entry_values, dot_num = "one", "'peak deviations'", f"'{rt_dev_ret}'", f"({rt_dev_dot_num})"
+    if any(both_entry_prob):
+        errorkey, entry_names, entry_values, dot_num = ("both", f"{ent_names[0]} and {ent_names[1]}", 
+                                                        f"'{ret_strings[0]}' and '{ret_strings[1]}'",
+                                                        f"({are_dot_num[0]} and {are_dot_num[1]})")
+    elif cond1:
+        errorkey, entry_names, entry_values, dot_num = "one", f"{ent_names[0]}", f"'{ret_strings[0]}'", f"({are_dot_num[0]})"
+    elif cond2:
+        errorkey, entry_names, entry_values, dot_num = "one", f"{ent_names[1]}", f"'{ret_strings[1]}'", f"({are_dot_num[1]})"
     else:
         result, errorkey, entry_names, entry_values, dot_num = (False,) + (None,) * 4
     warning_args = {"entry_names" : entry_names,
@@ -308,14 +319,43 @@ def check_rt_lengths(rt_pos_values, rt_dev_values):
                     "e_dev_l" : e_dev_l} 
     return result, errorkey, warning_args
 
+def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_pos_values_fl2, ms_data_object):
+    mz_pos_values = (mz_pos_values1, mz_pos_values2)
+    entry_names = ["'find m/z 1'", "'find m/z 2'"]
+    entry_names = [n if v != None else "" for n, v in zip(entry_names, mz_pos_values)]
+    
+    min_rt, max_rt = ms_data_object.mz.min(), ms_data_object.mz.max()
+    too_hi_rts = [mz_pos_value for mz_pos_value, mz_pos_value_fl in zip(mz_pos_values, mz_pos_values_fl) if rt_pos_value_fl > max_rt]
+    too_lo_rts = [mz_pos_value for mz_pos_value, mz_pos_value_fl in zip(mz_pos_values, mz_pos_values_fl) if rt_pos_value_fl < min_rt]
+    too_hi_rts_ret, too_lo_rts_ret = [f"'{rts_for_return(rts = x)}'" for x in [too_hi_rts, too_lo_rts]]
+
+    if len(too_hi_rts) and len(too_lo_rts):
+        errorkey = "both"
+    elif len(too_hi_rts):
+        errorkey = "too_hi"
+    elif len(too_lo_rts):
+        errorkey = "too_lo"
+    else:
+        result, errorkey = True, None
+    warning_args = {"entry_names" : entry_names,
+                    "too_hi" : too_hi_rts_ret,
+                    "too_lo" : too_lo_rts_ret,
+                    "lo" : min_rt,
+                    "hi" : max_rt}    
+
+    return result, errorkey, warning_args    
+
+
+
 def compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object):
     result = False
+    entry_names = "'peak positions'"
+    
     min_rt, max_rt = hplc_3d_data_object.retention_time.min(), hplc_3d_data_object.retention_time.max()
     too_hi_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl > max_rt]
     too_lo_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl < min_rt]
     too_hi_rts_ret, too_lo_rts_ret = [f"'{rts_for_return(rts = x)}'" for x in [too_hi_rts, too_lo_rts]]
 
-    entry_names = "'peak positions'"
     if len(too_hi_rts) and len(too_lo_rts):
         errorkey = "both"
     elif len(too_hi_rts):
@@ -364,30 +404,39 @@ def check_for_found_rt(rt_pos_values, rt_dev_values, rt_pos_values_fl, rt_dev_va
     return result, errorkey, warning_args
 
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
-    result, outputs_dict, rt_pos_values, rt_dev_values = False, None, 0, 0
+    for_ms = True if purpose != "chrom" else False
+    result, outputs_dict, rt_pos_values, rt_dev_values = False, None, None, None
     are_no_num_found, is_pos_str_not_empty, are_compatible_len, are_values_in_range, are_all_values_found = (True,) + (False,) * 4
-    rt_pos_str, rt_dev_str = entry_pos.entry.get(), entry_dev.entry.get()
-    are_disabled_entries = all([str(x.entry.cget("state")) == str(tk.DISABLED) for x in [entry_pos, entry_dev]])
-    if rt_pos_str == "" or are_disabled_entries:
+    rt_pos_str, rt_dev_str = [x.entry.get() for x in [entry_pos, entry_dev]]
+    disabled_entries = [str(x.entry.cget("state")) == str(tk.DISABLED) for x in [entry_pos, entry_dev]]
+    strings = [s for s, d in zip([rt_pos_str, rt_dev_str], disabled_entries) if not d]
+    empty_entries = rt_pos_str == "" if purpose == "chrom" else strings == ["", ""]
+    if empty_entries or all(disabled_entries):
         is_pos_str_not_empty = False
     else:
         is_pos_str_not_empty = True
-    
+        if purpose != "chrom":
+            rt_pos_str, rt_pos_values = [x if x not in ["", []] else None for x in [rt_pos_str, rt_pos_values]]
+            rt_dev_str, rt_dev_values = [x if x not in ["", []] else None for x in [rt_dev_str, rt_dev_values]]
     if is_pos_str_not_empty:
-        rt_pos_values, rt_dev_values = [create_list_of_clean_values(data_str = x) for x in [rt_pos_str, rt_dev_str]]
+        rt_pos_values, rt_dev_values = [create_list_of_clean_values(data_str = x) for x in strings]
         are_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = rt_pos_str, rt_dev_str = rt_dev_str,
-                                                                        rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values)
+                                                                        rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
+                                                                        for_ms = for_ms)
     else:
         return None, rt_pos_values, rt_dev_values
-
-    if not are_no_num_found:
+    
+    if for_ms:
+        are_compatible_len = True
+    elif not are_no_num_found:
         are_compatible_len, errorkey, warning_args = check_rt_lengths(rt_pos_values = rt_pos_values,
                                                                       rt_dev_values = rt_dev_values)
     else:
         outputs_dict = tof.set_peaks_warnings_not_num(**warning_args) if not outputs_dict else outputs_dict
 
+
     if are_compatible_len:
-        rt_pos_values_fl, rt_dev_values_fl = [list(map(float, x)) for x in [rt_pos_values, rt_dev_values]]
+        rt_pos_values_fl, rt_dev_values_fl = [list(map(float, x)) if x != None else None for x in [rt_pos_values, rt_dev_values]]
         are_values_in_range, errorkey, warning_args = compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object)
     else:
         outputs_dict = tof.set_peaks_warnings_len(**warning_args) if not outputs_dict else outputs_dict
@@ -409,6 +458,8 @@ def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, 
         warning_output(outputs_dict = outputs_dict, key = errorkey,
                        output_object = output_object, plot_object = plot_object, purpose = purpose)
     return result, rt_pos_values, rt_dev_values
+
+
 
 def limit_processing(limits):
     new_limits = [float(limit) if limit != "" else None for limit in limits]
@@ -486,6 +537,14 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
         data.read()
+        mz_exists, mz_pos_values1, mz_pos_values2 = check_rt_presence(hplc_3d_data_object = data, entry_pos = entry_objects["find_mz1"],
+                                                                      entry_dev = entry_objects["find_mz2"], output_object = output_object,
+                                                                      plot_object = plot_object, purpose = purpose)
+        if mz_exists == None:
+            print("aaa")
+            #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
+        elif not mz_exists:
+            return
     
     x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
     are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 

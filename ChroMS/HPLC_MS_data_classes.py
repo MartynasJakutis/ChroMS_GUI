@@ -68,8 +68,8 @@ class HPLC_3D_Data(HPLC_MS_Data):
 
     def get_max_ab_intensities_by_rts(self, rt_pos, rt_dev):
         self.rt_pos_prob_ind, self.rt_dev_prob_ind = [], []
-        not_0 = all([x != 0 for x in [rt_pos, rt_dev]])
-        if not_0:
+        not_none = all([x != None for x in [rt_pos, rt_dev]])
+        if not_none:
             len_rt_pos, self.len_rt_dev_init = len(rt_pos), len(rt_dev)
             if len_rt_pos != self.len_rt_dev_init:
                 rt_dev = rt_dev * len_rt_pos 
