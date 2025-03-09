@@ -64,17 +64,6 @@ set_peaks_warnings_val = lambda entry_names, too_hi, too_lo, lo, hi : {"both" : 
                                                                        f"include values outside the retention time range ({lo} - {hi} min).\n" +\
                                                                        f"Too low  values:  {too_lo}.")}
 
-set_peaks_warnings_val_mz = lambda entry_names, too_hi, too_lo, rng : {"both" : ("warning", f"The provided sequences in {entry_names}\n" +\
-                                                                         f"include values outside the m/z ratio range ({rng}).\n" +\
-                                                                         f"Too high values:  {too_hi}\n" +\
-                                                                         f"Too low  values:  {too_lo}."),
-                                                                         "too_hi" : ("warning", f"The provided sequences in {entry_names}\n" +\
-                                                                         f"include values outside the m/z ratio range ({rng}).\n" +\
-                                                                         f"Too high values:  {too_hi}."),
-                                                                         "too_lo" : ("warning", f"The provided sequences in {entry_names}\n" +\
-                                                                         f"include values outside the m/z ratio range ({rng}).\n" +\
-                                                                         f"Too low  values:  {too_lo}.")}
-
 set_peaks_warnings_notf = lambda entry_names, rt_values_out, nearest_rts : {"=1" : ("warning", f"No data found for {entry_names} entry value and its deviation.\n" +\
                                                                             f"Problematic value : '{rt_values_out}'.\n" +\
                                                                             f"Try to change either deviation or the position value (as provided below):\n" +\
@@ -98,3 +87,18 @@ def set_limits_prohibited_vals(errorkey, problem_vals):
     end_line = "\nUse only integers and/or floating point numbers."
     
     return {errorkey : (msg_type, first_line + other_text + end_line)}
+
+set_peaks_warnings_val_mz(errorkey, entry_names, too_hi, too_lo, rng): 
+    entry_names += "entries" if errorkey == "both" else entry_names + "entry"
+    line_1st = f"The provided sequences in {entry_names}"
+    
+{"both" : ("warning", f"The provided sequences in {entry_names}\n" +\                                                     
+f"include values outside the m/z ratio range ({rng}).\n" +\                                                   
+f"Too high values:  {too_hi}\n" +\                                                     
+f"Too low  values:  {too_lo}."),                                                                         
+"too_hi" : ("warning", f"The provided sequences in {entry_names}\n" +\                                                                         
+f"include values outside the m/z ratio range ({rng}).\n" +\                                                                         
+f"Too high values:  {too_hi}."),                                                                         
+"too_lo" : ("warning", f"The provided sequences in {entry_names}\n" +\                                                                         
+f"include values outside the m/z ratio range ({rng}).\n" +\                                                                         
+f"Too low  values:  {too_lo}.")}

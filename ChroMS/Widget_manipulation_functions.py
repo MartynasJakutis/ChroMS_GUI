@@ -250,7 +250,7 @@ create_list_of_clean_values = lambda data_str : [x for x in data_str.split(",") 
 def rts_for_return(rts):
     if type(rts) == list:
         rts = ",".join(rts)
-    rts_mod = rts if len(rts) <= 30 else rts[ : 30] + " (first 30 symbols)"
+    rts_mod = rts if len(rts) <= 30 else rts[ : 30] + " ...(first 30 symbols)"
     return rts_mod
 
 def create_pos_pm_dev_output(pos_ind, dev_ind, rt_pos_values, rt_dev_values):
@@ -319,29 +319,40 @@ def check_rt_lengths(rt_pos_values, rt_dev_values):
                     "e_dev_l" : e_dev_l} 
     return result, errorkey, warning_args
 
-def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_pos_values_fl2, ms_data_object):
-    mz_pos_values = (mz_pos_values1, mz_pos_values2)
-    entry_names = ["'find m/z 1'", "'find m/z 2'"]
-    entry_names = [n if v != None else "" for n, v in zip(entry_names, mz_pos_values)]
-    
-    min_rt, max_rt = ms_data_object.mz.min(), ms_data_object.mz.max()
-    too_hi_rts = [mz_pos_value for mz_pos_value, mz_pos_value_fl in zip(mz_pos_values, mz_pos_values_fl) if rt_pos_value_fl > max_rt]
-    too_lo_rts = [mz_pos_value for mz_pos_value, mz_pos_value_fl in zip(mz_pos_values, mz_pos_values_fl) if rt_pos_value_fl < min_rt]
-    too_hi_rts_ret, too_lo_rts_ret = [f"'{rts_for_return(rts = x)}'" for x in [too_hi_rts, too_lo_rts]]
-
-    if len(too_hi_rts) and len(too_lo_rts):
-        errorkey = "both"
-    elif len(too_hi_rts):
-        errorkey = "too_hi"
-    elif len(too_lo_rts):
-        errorkey = "too_lo"
+def get_toolo_toohi_rts(rt_pos_values, rt_pos_values_fl, min_rt, max_rt):
+    too_hi_rts, too_lo_rts = [], []
+    if all([x == [None, None] for x in (rt_pos_values, rt_pos_values_fl)]):
+        pass
     else:
-        result, errorkey = True, None
-    warning_args = {"entry_names" : entry_names,
-                    "too_hi" : too_hi_rts_ret,
-                    "too_lo" : too_lo_rts_ret,
-                    "lo" : min_rt,
-                    "hi" : max_rt}    
+        rt_pos_values, rt_pos_values_fl = [[x for x in y if x != None] for y in (rt_pos_values, rt_pos_values_fl)]
+        for entvals, entvals_fl in zip(rt_pos_values, rt_pos_values_fl):
+            too_hi_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl > max_rt])
+            too_lo_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl < min_rt])
+    return too_hi_rts, too_lo_rts
+
+def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_pos_values_fl2, ms_data_object):
+    result = False
+    mz_pos_values, mz_pos_values_fl = (mz_pos_values1, mz_pos_values2), (mz_pos_values_fl1, mz_pos_values_fl2) 
+    entry_names_init = ["'find m/z 1'", "'find m/z 2'"]
+    min_mz, max_mz = ms_data_object.mz.min(), ms_data_object.mz.max()
+    too_hi_mzs, too_lo_mzs = get_toolo_toohi_rts(rt_pos_values = mz_pos_values, rt_pos_values_fl = mz_pos_values_fl,
+                                                 min_rt = min_mz, max_rt = max_mz)
+    entry_names = [n if th != [] or tl != [] for n, th, tl in zip(entry_names_init, too_hi_mzs, too_lo_mzs)]
+    too_hi_mzs_ret = [f"'{rts_for_return(rts = x)}'" for x in too_hi_mzs]
+    too_lo_mzs_ret = [f"'{rts_for_return(rts = x)}'" for x in too_lo_mzs]
+
+    if len(entry_names) == 2:
+        entry_names_str, errorkey = " and ".join(entry_names), "both"
+    elif entry_names[0] == entry_names_init[0]:
+        entry_names_str, errorkey = f"{entry_names[0]}", "mz1"
+    elif entry_names[0] == entry_names_init[1]:
+        entry_names_str, errorkey = f"{entry_names[0]}", "mz2"
+    else:
+        result, entry_names_str, errorkey = True, None, None
+    warning_args = {"entry_names" : entry_names_str,
+                    "too_hi" : too_hi_mzs_ret,
+                    "too_lo" : too_lo_mzs_ret,
+                    "rng" : f"{min_mz} – {max_mz}"}    
 
     return result, errorkey, warning_args    
 
@@ -352,8 +363,10 @@ def compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object):
     entry_names = "'peak positions'"
     
     min_rt, max_rt = hplc_3d_data_object.retention_time.min(), hplc_3d_data_object.retention_time.max()
-    too_hi_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl > max_rt]
-    too_lo_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl < min_rt]
+    #too_hi_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl > max_rt]
+    #too_lo_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl < min_rt]
+    too_hi_rts, too_lo_rts = get_toolo_toohi_rts(rt_pos_values = rt_pos_values, rt_pos_values_fl = rt_pos_values_fl,
+                                                 min_rt = min_rt, max_rt = max_rt)
     too_hi_rts_ret, too_lo_rts_ret = [f"'{rts_for_return(rts = x)}'" for x in [too_hi_rts, too_lo_rts]]
 
     if len(too_hi_rts) and len(too_lo_rts):
