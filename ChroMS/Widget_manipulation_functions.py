@@ -319,44 +319,64 @@ def check_rt_lengths(rt_pos_values, rt_dev_values):
                     "e_dev_l" : e_dev_l} 
     return result, errorkey, warning_args
 
-def get_toolo_toohi_rts(rt_pos_values, rt_pos_values_fl, min_rt, max_rt):
+def get_toolo_toohi_rts(rt_pos_values, rt_pos_values_fl, min_rts, max_rts):
     too_hi_rts, too_lo_rts = [], []
-    if all([x == [None, None] for x in (rt_pos_values, rt_pos_values_fl)]):
-        pass
-    else:
-        rt_pos_values, rt_pos_values_fl = [[x for x in y if x != None] for y in (rt_pos_values, rt_pos_values_fl)]
-        for entvals, entvals_fl in zip(rt_pos_values, rt_pos_values_fl):
-            too_hi_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl > max_rt])
-            too_lo_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl < min_rt])
+    for entvals, entvals_fl, min_rt, max_rt in zip(rt_pos_values, rt_pos_values_fl, min_rts, max_rts):
+        condition = any([x == None for x in (entvals, entvals_fl, min_rt, max_rt)])
+        if condition:
+            too_hi_rts.append([])
+            too_lo_rts.append([])
+            continue
+        too_hi_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl > max_rt])
+        too_lo_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl < min_rt])
     return too_hi_rts, too_lo_rts
 
-def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_pos_values_fl2, ms_data_object):
+def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_pos_values_fl2, ms_data_object, ms_diag_object, purpose):
     result = False
-    mz_pos_values, mz_pos_values_fl = (mz_pos_values1, mz_pos_values2), (mz_pos_values_fl1, mz_pos_values_fl2) 
+    other_mz_name_dict = {"ms1" : "mz2",
+                          "ms2" : "mz1"}
     entry_names_init = ["'find m/z 1'", "'find m/z 2'"]
-    min_mz, max_mz = ms_data_object.mz.min(), ms_data_object.mz.max()
+    poss_purposes = list(other_mz_name_dict.keys())
+    mz_pos_values, mz_pos_values_fl = (mz_pos_values1, mz_pos_values2), (mz_pos_values_fl1, mz_pos_values_fl2) 
+    
+
+    min_mz_curr, max_mz_curr = ms_data_object.mz.min(), ms_data_object.mz.max()
+    other_mz_name = other_mz_name_dict.get(purpose)
+    other_mz = ms_diag_object.get_data_mz(mz = other_mz_name)
+    if type(other_mz) != int:
+        min_mz_othr, max_mz_othr = other_mz.min(), other_mz.max()
+    else:
+        min_mz_othr, max_mz_othr = (None,) * 2
+    min_mzs = [min_mz_curr, min_mz_othr] if purpose == poss_purposes[0] else [min_mz_othr, min_mz_curr]
+    max_mzs = [max_mz_curr, max_mz_othr] if purpose == poss_purposes[0] else [max_mz_othr, max_mz_curr]
+    
+    ret_ranges_dict = {k : f"{v1} – {v2}" for k, v1, v2 in zip(entry_names_init, min_mzs, max_mzs)}
+
     too_hi_mzs, too_lo_mzs = get_toolo_toohi_rts(rt_pos_values = mz_pos_values, rt_pos_values_fl = mz_pos_values_fl,
-                                                 min_rt = min_mz, max_rt = max_mz)
+                                                 min_rts = min_mz, max_rts = max_mz)
     entry_names = [n if th != [] or tl != [] for n, th, tl in zip(entry_names_init, too_hi_mzs, too_lo_mzs)]
+
+    mz_ranges = [ret_ranges_dict.get(entry_name) for entry_name in entry_names]
+    mz_ranges_str = " and ".join(mz_ranges) if len(entry_names) == 2 else "".join(mz_ranges)
+ 
     too_hi_mzs_ret = [f"'{rts_for_return(rts = x)}'" for x in too_hi_mzs]
     too_lo_mzs_ret = [f"'{rts_for_return(rts = x)}'" for x in too_lo_mzs]
-
-    if len(entry_names) == 2:
+    
+    if len(entry_names) == 0:    
+        result, entry_names_str, errorkey = True, None, None
+    elif len(entry_names) == 2:
         entry_names_str, errorkey = " and ".join(entry_names), "both"
     elif entry_names[0] == entry_names_init[0]:
         entry_names_str, errorkey = f"{entry_names[0]}", "mz1"
     elif entry_names[0] == entry_names_init[1]:
         entry_names_str, errorkey = f"{entry_names[0]}", "mz2"
-    else:
-        result, entry_names_str, errorkey = True, None, None
+
     warning_args = {"entry_names" : entry_names_str,
                     "too_hi" : too_hi_mzs_ret,
                     "too_lo" : too_lo_mzs_ret,
-                    "rng" : f"{min_mz} – {max_mz}"}    
+                    "mz_ranges" : mz_ranges_str}    
 
     return result, errorkey, warning_args    
-
-
 
 def compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object):
     result = False

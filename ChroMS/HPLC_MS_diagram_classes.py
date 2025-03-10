@@ -398,3 +398,9 @@ class MS_Diagram(Diagram):
                 self.set_layout()
                 self.state = "not_initial"
                 self.draw_diagram()
+
+    def get_data_mz(self, mz):
+        data_mz_dict = {"mz1" : self.data_mz1,
+                        "mz2" : self.data_mz2}
+        mz_ret = data_mz_dict.get(mz, None)
+        return mz_ret
