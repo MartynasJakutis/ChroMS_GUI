@@ -250,7 +250,7 @@ create_list_of_clean_values = lambda data_str : [x for x in data_str.split(",") 
 def rts_for_return(rts):
     if type(rts) == list:
         rts = ",".join(rts)
-    rts_mod = rts if len(rts) <= 30 else rts[ : 30] + " ...(first 30 symbols)"
+    rts_mod = rts if len(rts) <= 30 else rts[ : 30] + " (first 30 symbols)"
     return rts_mod
 
 def create_pos_pm_dev_output(pos_ind, dev_ind, rt_pos_values, rt_dev_values):
@@ -327,19 +327,18 @@ def get_toolo_toohi_rts(rt_pos_values, rt_pos_values_fl, min_rts, max_rts):
             too_hi_rts.append([])
             too_lo_rts.append([])
             continue
-        too_hi_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl > max_rt])
-        too_lo_rts.append([entval for entval, entval_fl in zip(entvals, entvals_f) if entval_fl < min_rt])
+        too_hi_rts.append([entval for entval, entval_fl in zip(entvals, entvals_fl) if entval_fl > max_rt])
+        too_lo_rts.append([entval for entval, entval_fl in zip(entvals, entvals_fl) if entval_fl < min_rt])
     return too_hi_rts, too_lo_rts
 
 def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_pos_values_fl2, ms_data_object, ms_diag_object, purpose):
     result = False
     other_mz_name_dict = {"ms1" : "mz2",
                           "ms2" : "mz1"}
-    entry_names_init = ["'find m/z 1'", "'find m/z 2'"]
+    entry_names_init = ["'Find m/z 1'", "'Find m/z 2'"]
     poss_purposes = list(other_mz_name_dict.keys())
     mz_pos_values, mz_pos_values_fl = (mz_pos_values1, mz_pos_values2), (mz_pos_values_fl1, mz_pos_values_fl2) 
     
-
     min_mz_curr, max_mz_curr = ms_data_object.mz.min(), ms_data_object.mz.max()
     other_mz_name = other_mz_name_dict.get(purpose)
     other_mz = ms_diag_object.get_data_mz(mz = other_mz_name)
@@ -353,28 +352,24 @@ def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_p
     ret_ranges_dict = {k : f"{v1} – {v2}" for k, v1, v2 in zip(entry_names_init, min_mzs, max_mzs)}
 
     too_hi_mzs, too_lo_mzs = get_toolo_toohi_rts(rt_pos_values = mz_pos_values, rt_pos_values_fl = mz_pos_values_fl,
-                                                 min_rts = min_mz, max_rts = max_mz)
-    entry_names = [n if th != [] or tl != [] for n, th, tl in zip(entry_names_init, too_hi_mzs, too_lo_mzs)]
+                                                 min_rts = min_mzs, max_rts = max_mzs)
+    entry_names = [n for n, th, tl in zip(entry_names_init, too_hi_mzs, too_lo_mzs) if th != [] or tl != []]
 
-    mz_ranges = [ret_ranges_dict.get(entry_name) for entry_name in entry_names]
-    mz_ranges_str = " and ".join(mz_ranges) if len(entry_names) == 2 else "".join(mz_ranges)
+    mz_ranges_ret = [ret_ranges_dict.get(entry_name) for entry_name in entry_names]
  
     too_hi_mzs_ret = [f"'{rts_for_return(rts = x)}'" for x in too_hi_mzs]
     too_lo_mzs_ret = [f"'{rts_for_return(rts = x)}'" for x in too_lo_mzs]
     
     if len(entry_names) == 0:    
-        result, entry_names_str, errorkey = True, None, None
+        result, errorkey = True, None
     elif len(entry_names) == 2:
-        entry_names_str, errorkey = " and ".join(entry_names), "both"
-    elif entry_names[0] == entry_names_init[0]:
-        entry_names_str, errorkey = f"{entry_names[0]}", "mz1"
-    elif entry_names[0] == entry_names_init[1]:
-        entry_names_str, errorkey = f"{entry_names[0]}", "mz2"
-
-    warning_args = {"entry_names" : entry_names_str,
+        errorkey = "both"
+    else:
+        errorkey = entry_names[0]
+    warning_args = {"entry_names" : entry_names_init,
                     "too_hi" : too_hi_mzs_ret,
                     "too_lo" : too_lo_mzs_ret,
-                    "mz_ranges" : mz_ranges_str}    
+                    "mz_ranges" : mz_ranges_ret}    
 
     return result, errorkey, warning_args    
 
@@ -383,11 +378,11 @@ def compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object):
     entry_names = "'peak positions'"
     
     min_rt, max_rt = hplc_3d_data_object.retention_time.min(), hplc_3d_data_object.retention_time.max()
-    #too_hi_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl > max_rt]
-    #too_lo_rts = [rt_pos_value for rt_pos_value, rt_pos_value_fl in zip(rt_pos_values, rt_pos_values_fl) if rt_pos_value_fl < min_rt]
-    too_hi_rts, too_lo_rts = get_toolo_toohi_rts(rt_pos_values = rt_pos_values, rt_pos_values_fl = rt_pos_values_fl,
-                                                 min_rt = min_rt, max_rt = max_rt)
+    too_hi_rts, too_lo_rts = get_toolo_toohi_rts(rt_pos_values = [rt_pos_values], rt_pos_values_fl = [rt_pos_values_fl],
+                                                 min_rts = [min_rt], max_rts = [max_rt])
+    too_hi_rts, too_lo_rts = too_hi_rts[0], too_lo_rts[0]
     too_hi_rts_ret, too_lo_rts_ret = [f"'{rts_for_return(rts = x)}'" for x in [too_hi_rts, too_lo_rts]]
+    
 
     if len(too_hi_rts) and len(too_lo_rts):
         errorkey = "both"
@@ -436,7 +431,7 @@ def check_for_found_rt(rt_pos_values, rt_dev_values, rt_pos_values_fl, rt_dev_va
 
     return result, errorkey, warning_args
 
-def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
+def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose, ms_diag_object = None):
     for_ms = True if purpose != "chrom" else False
     result, outputs_dict, rt_pos_values, rt_dev_values = False, None, None, None
     are_no_num_found, is_pos_str_not_empty, are_compatible_len, are_values_in_range, are_all_values_found = (True,) + (False,) * 4
@@ -469,18 +464,34 @@ def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, 
 
 
     if are_compatible_len:
-        rt_pos_values_fl, rt_dev_values_fl = [list(map(float, x)) if x != None else None for x in [rt_pos_values, rt_dev_values]]
-        are_values_in_range, errorkey, warning_args = compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object)
+        if for_ms:
+            ms_data_object = hplc_3d_data_object
+            ms_diag_object = ms_diag_object
+            mz_pos_values1, mz_pos_values2 = rt_pos_values, rt_dev_values
+            mz_pos_values_fl1, mz_pos_values_fl2 = [list(map(float, x)) if x != None else None for x in [mz_pos_values1, mz_pos_values2]]
+            are_values_in_range, errorkey, warning_args = compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, 
+                                                                               mz_pos_values_fl2, ms_data_object, ms_diag_object, 
+                                                                               purpose)
+        else:
+            rt_pos_values_fl, rt_dev_values_fl = [list(map(float, x)) if x != None else None for x in [rt_pos_values, rt_dev_values]]
+            are_values_in_range, errorkey, warning_args = compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object)
+
     else:
         outputs_dict = tof.set_peaks_warnings_len(**warning_args) if not outputs_dict else outputs_dict
 
     if are_values_in_range:
-        are_all_values_found, errorkey, warning_args = check_for_found_rt(rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
+        if not for_ms:
+            are_all_values_found, errorkey, warning_args = check_for_found_rt(rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
                                                                           rt_pos_values_fl = rt_pos_values_fl, 
                                                                           rt_dev_values_fl = rt_dev_values_fl,
                                                                           hplc_3d_data_object = hplc_3d_data_object)
+        else:
+            are_all_values_found, errorkey, warning_args = True, None, None
     else:
-        outputs_dict = tof.set_peaks_warnings_val(**warning_args) if not outputs_dict else outputs_dict
+        if not for_ms:
+            outputs_dict = tof.set_peaks_warnings_val(**warning_args) if not outputs_dict else outputs_dict
+        else:
+            outputs_dict = tof.set_peaks_warnings_val_mz(errorkey, **warning_args) if not outputs_dict else outputs_dict
 
     if are_all_values_found:
         result = True
@@ -572,7 +583,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         data.read()
         mz_exists, mz_pos_values1, mz_pos_values2 = check_rt_presence(hplc_3d_data_object = data, entry_pos = entry_objects["find_mz1"],
                                                                       entry_dev = entry_objects["find_mz2"], output_object = output_object,
-                                                                      plot_object = plot_object, purpose = purpose)
+                                                                      plot_object = plot_object, purpose = purpose, ms_diag_object = plot_object)
         if mz_exists == None:
             print("aaa")
             #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)

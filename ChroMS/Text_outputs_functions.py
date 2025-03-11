@@ -74,7 +74,6 @@ set_peaks_warnings_notf = lambda entry_names, rt_values_out, nearest_rts : {"=1"
                                                                             f"{nearest_rts}.")}
 
 def set_limits_prohibited_vals(errorkey, problem_vals):
-    msg_type = "warning"
     if errorkey == "one":
         first_line = f"The following entry includes a prohibited value."
     elif errorkey == "more":
@@ -86,19 +85,25 @@ def set_limits_prohibited_vals(errorkey, problem_vals):
         other_text += appended_text
     end_line = "\nUse only integers and/or floating point numbers."
     
-    return {errorkey : (msg_type, first_line + other_text + end_line)}
+    return {errorkey : ("warning", first_line + other_text + end_line)}
 
-set_peaks_warnings_val_mz(errorkey, entry_names, too_hi, too_lo, rng): 
-    entry_names += "entries" if errorkey == "both" else entry_names + "entry"
-    line_1st = f"The provided sequences in {entry_names}"
-    
-{"both" : ("warning", f"The provided sequences in {entry_names}\n" +\                                                     
-f"include values outside the m/z ratio range ({rng}).\n" +\                                                   
-f"Too high values:  {too_hi}\n" +\                                                     
-f"Too low  values:  {too_lo}."),                                                                         
-"too_hi" : ("warning", f"The provided sequences in {entry_names}\n" +\                                                                         
-f"include values outside the m/z ratio range ({rng}).\n" +\                                                                         
-f"Too high values:  {too_hi}."),                                                                         
-"too_lo" : ("warning", f"The provided sequences in {entry_names}\n" +\                                                                         
-f"include values outside the m/z ratio range ({rng}).\n" +\                                                                         
-f"Too low  values:  {too_lo}.")}
+def set_peaks_warnings_val_mz(errorkey, entry_names, too_hi, too_lo, mz_ranges):
+    entry_names_str = " and ".join(entry_names) if errorkey == "both" else errorkey
+    entry_names_str += " entries" if errorkey == "both" else " entry"
+    mz_ranges = "ratio ranges " + " and ".join(mz_ranges) if errorkey == "both" else "ratio range " + "".join(mz_ranges)
+    line_1 = f"The provided sequences in {entry_names_str} include values"
+    line_2 = f"outside the m/z ratio ({mz_ranges})."
+    lines = [line_1, line_2]
+    for name, th, tl in zip(entry_names, too_hi, too_lo):
+        new_line_init = f"{name}: "
+        if th != "''":
+            new_line = new_line_init + f"Too high values: {th}."
+            if tl != "''":
+                new_line += "\n" + " " * 23 + f"Too low values: {tl}."
+        elif tl != "''":
+            new_line = new_line_init + f"Too low values: {tl}"
+        else:
+            continue
+        lines.append(new_line)
+    all_text = "\n".join(lines)
+    return {errorkey : ("warning", all_text)}
