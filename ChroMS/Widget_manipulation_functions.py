@@ -431,67 +431,87 @@ def check_for_found_rt(rt_pos_values, rt_dev_values, rt_pos_values_fl, rt_dev_va
 
     return result, errorkey, warning_args
 
-def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose, ms_diag_object = None):
-    for_ms = True if purpose != "chrom" else False
+def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_object, purpose):
+    result, outputs_dict, mz1_values, mz2_values = False, None, None, None
+    are_no_num_found, is_pos_str_not_empty, are_values_in_range, are_all_values_found = (True,) + (False,) * 3
+    mz1_str, mz2_str = [x.entry.get() for x in [entry_mz1, entry_mz2]]
+    disabled_entries = [str(x.entry.cget("state")) == str(tk.DISABLED) for x in [entry_mz1, entry_mz2]]
+    strings = [s for s, d in zip([mz1_str, mz2_str], disabled_entries) if not d]
+    empty_entries = strings == ["", ""]
+    if empty_entries or all(disabled_entries):
+        is_pos_str_not_empty = False
+    else:
+        is_pos_str_not_empty = True
+        mz1_str, mz1_values = [x if x not in ["", []] else None for x in [mz1_str, mz1_values]]
+        mz2_str, mz2_values = [x if x not in ["", []] else None for x in [mz2_str, mz2_values]]
+
+    if is_pos_str_not_empty:
+        mz1_values, mz2_values = [create_list_of_clean_values(data_str = x) for x in strings]
+        are_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = mz1_str, rt_dev_str = mz2_str,
+                                                                        rt_pos_values = mz1_values, rt_dev_values = mz2_values,
+                                                                        for_ms = True)
+    else:
+        return None, mz1_values, mz2_values
+    
+    if not are_no_num_found:
+        mz1_values_fl, mz2_values_fl = [list(map(float, x)) if x != None else None for x in [mz1_values, mz2_values]]
+        are_values_in_range, errorkey, warning_args = compare_mz_positions(mz1_values, mz1_values_fl, mz2_values, 
+                                                                           mz2_values_fl, ms_data_object, plot_object, 
+                                                                           purpose)
+    else:
+        outputs_dict = tof.set_peaks_warnings_len(**warning_args) if not outputs_dict else outputs_dict
+
+    if are_values_in_range:
+        are_all_values_found, errorkey, warning_args = True, None, None
+        result = True
+    else:
+        outputs_dict = tof.set_peaks_warnings_val_mz(errorkey, **warning_args) if not outputs_dict else outputs_dict
+
+    if result == False:
+        warning_output(outputs_dict = outputs_dict, key = errorkey,
+                       output_object = output_object, plot_object = plot_object, purpose = purpose, retain_data = True)
+    return result, mz1_values, mz2_values
+
+def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
     result, outputs_dict, rt_pos_values, rt_dev_values = False, None, None, None
     are_no_num_found, is_pos_str_not_empty, are_compatible_len, are_values_in_range, are_all_values_found = (True,) + (False,) * 4
     rt_pos_str, rt_dev_str = [x.entry.get() for x in [entry_pos, entry_dev]]
     disabled_entries = [str(x.entry.cget("state")) == str(tk.DISABLED) for x in [entry_pos, entry_dev]]
     strings = [s for s, d in zip([rt_pos_str, rt_dev_str], disabled_entries) if not d]
-    empty_entries = rt_pos_str == "" if purpose == "chrom" else strings == ["", ""]
+    empty_entries = rt_pos_str == ""
     if empty_entries or all(disabled_entries):
         is_pos_str_not_empty = False
     else:
         is_pos_str_not_empty = True
-        if purpose != "chrom":
-            rt_pos_str, rt_pos_values = [x if x not in ["", []] else None for x in [rt_pos_str, rt_pos_values]]
-            rt_dev_str, rt_dev_values = [x if x not in ["", []] else None for x in [rt_dev_str, rt_dev_values]]
+
     if is_pos_str_not_empty:
         rt_pos_values, rt_dev_values = [create_list_of_clean_values(data_str = x) for x in strings]
         are_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = rt_pos_str, rt_dev_str = rt_dev_str,
                                                                         rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
-                                                                        for_ms = for_ms)
+                                                                        for_ms = False)
     else:
         return None, rt_pos_values, rt_dev_values
     
-    if for_ms:
-        are_compatible_len = True
-    elif not are_no_num_found:
+    if not are_no_num_found:
         are_compatible_len, errorkey, warning_args = check_rt_lengths(rt_pos_values = rt_pos_values,
                                                                       rt_dev_values = rt_dev_values)
     else:
         outputs_dict = tof.set_peaks_warnings_not_num(**warning_args) if not outputs_dict else outputs_dict
 
-
     if are_compatible_len:
-        if for_ms:
-            ms_data_object = hplc_3d_data_object
-            ms_diag_object = ms_diag_object
-            mz_pos_values1, mz_pos_values2 = rt_pos_values, rt_dev_values
-            mz_pos_values_fl1, mz_pos_values_fl2 = [list(map(float, x)) if x != None else None for x in [mz_pos_values1, mz_pos_values2]]
-            are_values_in_range, errorkey, warning_args = compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, 
-                                                                               mz_pos_values_fl2, ms_data_object, ms_diag_object, 
-                                                                               purpose)
-        else:
-            rt_pos_values_fl, rt_dev_values_fl = [list(map(float, x)) if x != None else None for x in [rt_pos_values, rt_dev_values]]
-            are_values_in_range, errorkey, warning_args = compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object)
+        rt_pos_values_fl, rt_dev_values_fl = [list(map(float, x)) if x != None else None for x in [rt_pos_values, rt_dev_values]]
+        are_values_in_range, errorkey, warning_args = compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object)
 
     else:
         outputs_dict = tof.set_peaks_warnings_len(**warning_args) if not outputs_dict else outputs_dict
 
     if are_values_in_range:
-        if not for_ms:
-            are_all_values_found, errorkey, warning_args = check_for_found_rt(rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
+        are_all_values_found, errorkey, warning_args = check_for_found_rt(rt_pos_values = rt_pos_values, rt_dev_values = rt_dev_values,
                                                                           rt_pos_values_fl = rt_pos_values_fl, 
                                                                           rt_dev_values_fl = rt_dev_values_fl,
                                                                           hplc_3d_data_object = hplc_3d_data_object)
-        else:
-            are_all_values_found, errorkey, warning_args = True, None, None
     else:
-        if not for_ms:
-            outputs_dict = tof.set_peaks_warnings_val(**warning_args) if not outputs_dict else outputs_dict
-        else:
-            outputs_dict = tof.set_peaks_warnings_val_mz(errorkey, **warning_args) if not outputs_dict else outputs_dict
+        outputs_dict = tof.set_peaks_warnings_val(**warning_args) if not outputs_dict else outputs_dict
 
     if are_all_values_found:
         result = True
@@ -500,10 +520,8 @@ def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, 
 
     if result == False:
         warning_output(outputs_dict = outputs_dict, key = errorkey,
-                       output_object = output_object, plot_object = plot_object, purpose = purpose)
+                       output_object = output_object, plot_object = plot_object, purpose = purpose, retain_data = False)
     return result, rt_pos_values, rt_dev_values
-
-
 
 def limit_processing(limits):
     new_limits = [float(limit) if limit != "" else None for limit in limits]
@@ -540,52 +558,69 @@ def check_axis_limits(x_min, x_max, y_min, y_max, output_object, plot_object, pu
     
     return result
 
+def hplc_3d_data_checking(data, entry_objects, output_object, plot_object, purpose):
+    wv_exists = check_wv_presence(hplc_3d_data_object = data, entry_object = entry_objects["wv"], 
+                                      output_object = output_object,
+                                      plot_object = plot_object, purpose = purpose)
+    if not wv_exists:
+       return False
+        
+    data.get_ab_intensity_of_wv(wave_nm = int(entry_objects["wv"].entry.get()))
+    inten_min_max_are_num = check_inten_min_max(entry_min = entry_objects["inten_min"], entry_max = entry_objects["inten_max"],
+                                                    output_object = output_object, plot_object = plot_object, purpose = purpose)
+    if not inten_min_max_are_num:
+        return False
+    intensity_min = float(entry_objects["inten_min"].entry.get())
+    intensity_max = float(entry_objects["inten_max"].entry.get())
+    intensities = [intensity_min, intensity_max]
+
+    rt_exists, rt_pos_values, rt_dev_values = check_rt_presence(hplc_3d_data_object = data, entry_pos = entry_objects["peak_pos"],
+                                                                entry_dev = entry_objects["peak_dev"], output_object = output_object,
+                                                                plot_object = plot_object, purpose = purpose)
+    if rt_exists == None:
+        data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
+        return True, intensities
+    elif not rt_exists:
+        return False
+    return True, intensities
+
 def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
-    redraw_diagram_method_args = {}
+    redraw_diagram_method_args, main_param_dict = {}, {}
     path, truncated_file_name = get_txt_file_path(combobox_object, 
                                                   listbox_object, purpose = purpose)
     data_classes = {"chrom" : {"class" : HPLC_3D_Data, "title_arg" : "title1"},
                     "ms1" : {"class" : MS_Data, "title_arg" : "title1"},
                     "ms2" : {"class" : MS_Data, "title_arg" : "title2"}}
+
     Data_Class = data_classes.get(purpose).get("class")
     file_title = data_classes.get(purpose).get("title_arg")
     data_class_args = {"file" : path}
     start_time_calc = time.time()
+
     if Data_Class == HPLC_3D_Data:
         data = Data_Class(**data_class_args)
         data.read()
-        wv_exists = check_wv_presence(hplc_3d_data_object = data, entry_object = entry_objects["wv"], 
-                                      output_object = output_object,
-                                      plot_object = plot_object, purpose = purpose)
-        if not wv_exists:
-           return
-        data.get_ab_intensity_of_wv(wave_nm = int(entry_objects["wv"].entry.get()))
-
-        inten_min_max_are_num = check_inten_min_max(entry_min = entry_objects["inten_min"], entry_max = entry_objects["inten_max"],
-                                                    output_object = output_object, plot_object = plot_object, purpose = purpose)
-        if not inten_min_max_are_num:
+        check_result = hplc_3d_data_checking(data, entry_objects, output_object, plot_object, purpose)
+        if not check_result:
             return
-        intensity_min = float(entry_objects["inten_min"].entry.get())
-        intensity_max = float(entry_objects["inten_max"].entry.get())
-
-        rt_exists, rt_pos_values, rt_dev_values = check_rt_presence(hplc_3d_data_object = data, entry_pos = entry_objects["peak_pos"],
-                                                                    entry_dev = entry_objects["peak_dev"], output_object = output_object,
-                                                                    plot_object = plot_object, purpose = purpose)
-        if rt_exists == None:
-            data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
-        elif not rt_exists:
-            return
-
+        else:
+            intensity_min, intensity_max = check_result[1]
+        
     elif Data_Class == MS_Data:
         data = Data_Class(**data_class_args)
         data.read()
-        mz_exists, mz_pos_values1, mz_pos_values2 = check_rt_presence(hplc_3d_data_object = data, entry_pos = entry_objects["find_mz1"],
-                                                                      entry_dev = entry_objects["find_mz2"], output_object = output_object,
-                                                                      plot_object = plot_object, purpose = purpose, ms_diag_object = plot_object)
+        num = purpose[2]
+        dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.absolute_intensity,
+                       file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}"}
+        redraw_diagram_method_args.update({"purpose" : purpose})
+        main_param_dict.update(dict_update)
+        plot_object.set_main_param_values(**main_param_dict)
+        mz_exists, mz_pos_values1, mz_pos_values2 = check_mz_presence(ms_data_object = data, entry_mz1 = entry_objects["find_mz1"],
+                                                                      entry_mz2 = entry_objects["find_mz2"], output_object = output_object,
+                                                                      plot_object = plot_object, purpose = purpose)
         if mz_exists == None:
-            print("aaa")
             #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         elif not mz_exists:
             return
@@ -599,7 +634,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         return
 
     data_calc_text = f"""File: '{path}'\n Calc time: {time.time() - start_time_calc :.3f} s\n"""
-    main_param_dict = {"state" : "not_initial"}
+
     if Data_Class == HPLC_3D_Data:
         dict_update = {"data_rt" : data.retention_time, "data_ab" : data.ab_intensity,
                        "data_wv_all" : data.wavelengths, "data_ab_all" : data.all_ab_intensities,
@@ -609,24 +644,19 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                        "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3,
                        "provided_xlim" : provided_xlim, "provided_ylim" : provided_ylim,
                        file_title : truncated_file_name}
-    else:
-        num = purpose[2]
-        dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.absolute_intensity,
-                       "provided_xlim" : provided_xlim, "provided_ylim" : provided_ylim,
-                       file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}"}
-        redraw_diagram_method_args.update({"purpose" : purpose})
-
-    main_param_dict.update(dict_update)
-    
+        main_param_dict.update(dict_update)
+        plot_object.set_main_param_values(**main_param_dict)
+       
     start_time_draw = time.time()
-    plot_object.set_main_param_values(**main_param_dict)
+    plot_object.set_main_param_values(**{"state" : "not_initial", "provided_xlim" : provided_xlim,
+                                         "provided_ylim" : provided_ylim})
     plot_object.redraw_diagram(**redraw_diagram_method_args)
     data_draw_text = f"Draw time: {time.time() - start_time_draw :.3f} s"
     output_object.insert_text(text = data_calc_text + data_draw_text,
                               output_type = "success")
     listbox_object.listbox.focus_set()
 
-def warning_output(outputs_dict, key, output_object, plot_object, purpose):
+def warning_output(outputs_dict, key, output_object, plot_object, purpose, retain_data = False):
     """Outputs warning to output_object, sets plot_object state to 'initial'"""
     write_output_type_n_text(outputs_dict = outputs_dict, key = key,
                              output_object = output_object)
@@ -634,7 +664,7 @@ def warning_output(outputs_dict, key, output_object, plot_object, purpose):
         if purpose == "chrom":
             set_chrom_plot_state_to_initial(plot_object)
         else:
-            set_ms_plot_state_to_initial(plot_object, purpose)
+            set_ms_plot_state_to_initial(plot_object, purpose, retain_data = retain_data)
 
 
 def set_chrom_plot_state_to_initial(plot_object):
@@ -643,14 +673,18 @@ def set_chrom_plot_state_to_initial(plot_object):
                                       data_wv_all = 0, data_ab_all = 0, data_wave_nm = 0)
     plot_object.redraw_diagram()
 
-def set_ms_plot_state_to_initial(plot_object, purpose):
+def set_ms_plot_state_to_initial(plot_object, purpose, retain_data = False):
     """Sets ms plot state to initials, replaces all the data with zeros and redraws the diagram."""
     num = int(purpose[-1])
-    title_par = f"title{num}"
+    saved_mz_data, saved_inten_data, saved_title = plot_object.get_main_param_values(f"data_mz{num}", f"data_inten{num}",
+                                                                                     f"title{num}")
     arg_dictionary = {f"data_mz{num}" : 0, f"data_inten{num}" : 0,
-                      title_par : None}
+                      f"title{num}" : None}
     plot_object.set_main_param_values(state = "initial", **arg_dictionary)
     plot_object.redraw_diagram(purpose = purpose)
+    if retain_data:
+        plot_object.set_main_param_values(**{f"data_mz{num}" : saved_mz_data, f"data_inten{num}" : saved_inten_data,
+                                             f"title{num}" : saved_title})
 
 def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom"):
     """Selects file and removes 2 space symbols. Selected file is used for data processing. If thats not possible, will be

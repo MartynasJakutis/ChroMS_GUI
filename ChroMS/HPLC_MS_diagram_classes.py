@@ -147,9 +147,9 @@ class Diagram(object):
         self.subplots_term_state_funcs = {"subplot1" : f_subplot1,
                                           "subplot2" : f_subplot2}
                 
-    def draw_diagram(self):
+    def draw_diagram(self, ms_error = None):
         """Updates figure canvas."""
-
+        
         subplots_dict = {0 : "both",
                          1 : "subplot1",
                          2 : "subplot2"}
@@ -192,6 +192,15 @@ class Diagram(object):
         for k, v in kwargs.items():
             if k in dir(self):
                 setattr(self, k, v)
+
+    def get_main_param_values(self, *kwargs):
+        """Returns attribute values if such are present."""
+        values = []
+        for k in kwargs:
+            v = getattr(self, k) if k in dir(self) else None
+            values.append(v)
+        return values
+                 
 
 class HPLC_Diagram(Diagram):
     def __init__(self, dpi, need_title1, title1, title1_pos, title1_text_color, 
