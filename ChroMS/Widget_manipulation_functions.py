@@ -270,7 +270,7 @@ def calculate_only_dot_values(data_values):
 def check_for_not_num_rt(rt_pos_str, rt_dev_str, rt_pos_values, rt_dev_values, for_ms = False):
     result = True    
     strings, values = (rt_pos_str, rt_dev_str), (rt_pos_values, rt_dev_values)
-    poss_ent_names = ["'find m/z 1'", "'find m/z 2'"] if for_ms else ["'peak positions'", "'peak deviations'"]
+    poss_ent_names = ["'Find m/z 1'", "'Find m/z 2'"] if for_ms else ["'Peak positions'", "'Peak deviations'"]
     ent_names = [n for n, s in zip(poss_ent_names, strings) if s != None]
     used_strs = [x for x in strings if x != None]
     used_values = [x for x in values if x != None]
@@ -306,7 +306,7 @@ def check_for_not_num_rt(rt_pos_str, rt_dev_str, rt_pos_values, rt_dev_values, f
 def check_rt_lengths(rt_pos_values, rt_dev_values):
     result = True
     len_rt_pos_values, len_rt_dev_values = len(rt_pos_values), len(rt_dev_values)
-    e_pos, e_dev, e_pos_l, e_dev_l = "'peak positions'", "'peak deviations'", len_rt_pos_values, len_rt_dev_values
+    e_pos, e_dev, e_pos_l, e_dev_l = "'Peak positions'", "'Peak deviations'", len_rt_pos_values, len_rt_dev_values
     if len_rt_dev_values == 1:
         errorkey = None
     elif len_rt_dev_values != len_rt_pos_values:
@@ -367,6 +367,7 @@ def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_p
     else:
         errorkey = entry_names[0]
     warning_args = {"entry_names" : entry_names_init,
+                    "entry_names_term" : entry_names,
                     "too_hi" : too_hi_mzs_ret,
                     "too_lo" : too_lo_mzs_ret,
                     "mz_ranges" : mz_ranges_ret}    
@@ -375,7 +376,7 @@ def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_p
 
 def compare_rt_positions(rt_pos_values, rt_pos_values_fl, hplc_3d_data_object):
     result = False
-    entry_names = "'peak positions'"
+    entry_names = "'Peak positions'"
     
     min_rt, max_rt = hplc_3d_data_object.retention_time.min(), hplc_3d_data_object.retention_time.max()
     too_hi_rts, too_lo_rts = get_toolo_toohi_rts(rt_pos_values = [rt_pos_values], rt_pos_values_fl = [rt_pos_values_fl],
@@ -412,7 +413,7 @@ def get_nearest_rt_values(bad_item_ind, rt_pos_values, rt_pos_values_fl, possibl
 def check_for_found_rt(rt_pos_values, rt_dev_values, rt_pos_values_fl, rt_dev_values_fl, hplc_3d_data_object):
     hplc_3d_data_object.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values_fl, rt_dev = rt_dev_values_fl)
     attr_list = [hplc_3d_data_object.rt_pos_prob_ind, hplc_3d_data_object.rt_dev_prob_ind]
-    entry_names = "'peak positions'"
+    entry_names = "'Peak positions'"
     if all([len(x) == 0 for x in attr_list]):
         result, errorkey, rt_values_out, nearest_rts = True, None, None, None
     else:
@@ -431,7 +432,17 @@ def check_for_found_rt(rt_pos_values, rt_dev_values, rt_pos_values_fl, rt_dev_va
 
     return result, errorkey, warning_args
 
+def find_and_set_ms_subplot_errors(errorkey, err_entry_names, plot_object):
+    err_dict = {"'Find m/z 1'" : "subplot1",
+                "'Find m/z 2'" : "subplot2"}
+    if type(err_entry_names) == str:
+        split_char = " and " if errorkey == "both" else ""
+        err_entry_names = err_entry_names.split(split_char)
+    ms_subplot_errors = [err_dict.get(i) for i in err_entry_names]
+    plot_object.subplot_errors = ms_subplot_errors
+
 def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_object, purpose):
+    plot_object.subplot_errors = []
     result, outputs_dict, mz1_values, mz2_values = False, None, None, None
     are_no_num_found, is_pos_str_not_empty, are_values_in_range, are_all_values_found = (True,) + (False,) * 3
     mz1_str, mz2_str = [x.entry.get() for x in [entry_mz1, entry_mz2]]
@@ -458,18 +469,21 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
         are_values_in_range, errorkey, warning_args = compare_mz_positions(mz1_values, mz1_values_fl, mz2_values, 
                                                                            mz2_values_fl, ms_data_object, plot_object, 
                                                                            purpose)
+        err_entry_names = warning_args.pop("entry_names_term")
     else:
-        outputs_dict = tof.set_peaks_warnings_len(**warning_args) if not outputs_dict else outputs_dict
+        find_and_set_ms_subplot_errors(errorkey, err_entry_names, plot_object)
+        outputs_dict = tof.set_peaks_warnings_not_num(**warning_args) if not outputs_dict else outputs_dict
 
     if are_values_in_range:
-        are_all_values_found, errorkey, warning_args = True, None, None
-        result = True
+        result, errorkey, warning_args = True, None, None
     else:
+        find_and_set_ms_subplot_errors(errorkey, err_entry_names, plot_object)
         outputs_dict = tof.set_peaks_warnings_val_mz(errorkey, **warning_args) if not outputs_dict else outputs_dict
 
     if result == False:
         warning_output(outputs_dict = outputs_dict, key = errorkey,
                        output_object = output_object, plot_object = plot_object, purpose = purpose, retain_data = True)
+    print(plot_object.subplot_errors)
     return result, mz1_values, mz2_values
 
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
@@ -621,6 +635,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                                                                       entry_mz2 = entry_objects["find_mz2"], output_object = output_object,
                                                                       plot_object = plot_object, purpose = purpose)
         if mz_exists == None:
+            pass
             #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         elif not mz_exists:
             return
@@ -676,15 +691,13 @@ def set_chrom_plot_state_to_initial(plot_object):
 def set_ms_plot_state_to_initial(plot_object, purpose, retain_data = False):
     """Sets ms plot state to initials, replaces all the data with zeros and redraws the diagram."""
     num = int(purpose[-1])
-    saved_mz_data, saved_inten_data, saved_title = plot_object.get_main_param_values(f"data_mz{num}", f"data_inten{num}",
-                                                                                     f"title{num}")
-    arg_dictionary = {f"data_mz{num}" : 0, f"data_inten{num}" : 0,
-                      f"title{num}" : None}
-    plot_object.set_main_param_values(state = "initial", **arg_dictionary)
-    plot_object.redraw_diagram(purpose = purpose)
     if retain_data:
-        plot_object.set_main_param_values(**{f"data_mz{num}" : saved_mz_data, f"data_inten{num}" : saved_inten_data,
-                                             f"title{num}" : saved_title})
+        plot_object.redraw_diagram(purpose = purpose, ms_error = True)
+    else:
+        arg_dictionary = {f"data_mz{num}" : 0, f"data_inten{num}" : 0,
+                      f"title{num}" : None}
+        plot_object.set_main_param_values(state = "initial", **arg_dictionary)
+        plot_object.redraw_diagram(purpose = purpose)
 
 def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom"):
     """Selects file and removes 2 space symbols. Selected file is used for data processing. If thats not possible, will be
@@ -729,7 +742,7 @@ def only_drawing_and_time_output(plot_object, output_object, purpose, changing_e
     if purpose == "chrom":
         plot_object.redraw_diagram()
     else:
-        plot_object.redraw_diagram(purpose = purpose)
+        plot_object.redraw_diagram(purpose = purpose, ms_error = True)
     data_draw_text = f"Draw time: {time.time() - start_time_draw :.3f} s"
     if changing_entry_state:
         first_line = f"""Feature of showing peaks is {changing_entry_state[True]}."""

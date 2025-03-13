@@ -147,9 +147,11 @@ class Diagram(object):
         self.subplots_term_state_funcs = {"subplot1" : f_subplot1,
                                           "subplot2" : f_subplot2}
                 
-    def draw_diagram(self, ms_error = None):
+    def draw_diagram(self, ms_error = False):
         """Updates figure canvas."""
-        
+        if not ms_error:
+            self.subplot_errors = []
+
         subplots_dict = {0 : "both",
                          1 : "subplot1",
                          2 : "subplot2"}
@@ -177,15 +179,18 @@ class Diagram(object):
             if self.state == "initial":
                 self.plotting_init_state(subplot = subplot_to_draw)
             else:
-                self.subplots_term_state_funcs[i](subplot_to_draw)
+                if i not in self.subplot_errors:
+                    self.subplots_term_state_funcs[i](subplot_to_draw)
+                else:
+                    self.plotting_init_state(subplot = subplot_to_draw)
                 
         self.set_titles_all()
         self.canvas.draw()
 
-    def redraw_diagram(self):
+    def redraw_diagram(self, ms_error = False):
         self.fig.clear()
         self.set_layout()
-        self.draw_diagram()
+        self.draw_diagram(ms_error)
         
     def set_main_param_values(self, **kwargs):
         """Modifies attribute values if such are present."""
@@ -273,13 +278,13 @@ class HPLC_Diagram(Diagram):
         subplot.set_xlim(x_min, x_max)
         subplot.set_ylim(y_min, y_max)
 
-    def redraw_diagram(self):
+    def redraw_diagram(self, ms_error = False):
         """Sets Diagram state according to condition if all attributes are integers and redraws the diagram."""
         are_main_par_ints = [type(x) == int for x in [self.data_wave_nm, self.data_rt, 
                                                       self.data_ab, self.data_ab_all, 
                                                       self.data_wv_all]]        
         self.state = "initial" if all(are_main_par_ints) else "not_initial"
-        super().redraw_diagram()
+        super().redraw_diagram(ms_error)
         
     def mark_max_ab_intensities(self, subplot):
         if any([x == 0 for x in [self.peak_time, self.peak_intensity, int(self.show_peaks)]]):
@@ -326,6 +331,7 @@ class MS_Diagram(Diagram):
         self.data_mz2 = data_mz2
         self.data_inten1 = data_inten1
         self.data_inten2 = data_inten2
+        self.subplot_errors = []
 
     def set_title_2nd_subplot(self, subplot):
         padding = self.num_subp_padding_dict.get(len(self.subplots_available))
@@ -387,26 +393,53 @@ class MS_Diagram(Diagram):
         
         subplot.set_xlim(x_min, x_max)
         subplot.set_ylim(y_min, y_max)
-     
-    def redraw_diagram(self, purpose):
+    
+    def save_mz_and_inten_data(self):
+        self.saved_data_dict = {}
+        self.purpose_nums = [int(i[-1]) for i in self.subplot_errors if self.subplot_errors != []]
+        for num in self.purpose_nums:
+            attrb_names = [f"data_mz{num}", f"data_inten{num}"]
+            self.saved_data_dict.update({k : self.get_main_param_values(k)[0] for k in attrb_names})
+ 
+    def change_mz_and_inten_to_zero(self):
+        self.zero_data_dict = {}
+        for k in self.saved_data_dict:
+            self.zero_data_dict.update({k : 0})
+        self.set_main_param_values(**self.zero_data_dict)
+        print(self.zero_data_dict)
+
+    def reset_mz_and_inten_data(self):
+        self.set_main_param_values(**self.saved_data_dict)
+
+    def redraw_diagram(self, purpose, ms_error = False):
         """Redraws the diagram. Figure layout is set in such manner that if there is a subplot without sufficient data,
         it will be set to None. Otherwise the 'constrained' layout is used."""
+
+        if self.subplot_errors:
+            self.save_mz_and_inten_data()
+            self.change_mz_and_inten_to_zero()
+
         attribute_dict = {"ms1" : [self.data_mz1, self.data_inten1],
                           "ms2" : [self.data_mz2, self.data_inten2]}
         are_main_par_ints = all([all([type(x) != int for x in attribute_dict[y]]) for y in attribute_dict])
         not_both_subplots = self.radiobutton_var.get() > 0
         if are_main_par_ints:
-            super().redraw_diagram()
+            super().redraw_diagram(ms_error)
         else:
             attributes = attribute_dict.get(purpose)
             if all([type(x) != int for x in attributes]) and not_both_subplots:
-                super().redraw_diagram()
+                super().redraw_diagram(ms_error)
             else:
-                self.fig.clear()
-                self.state = "initial"
-                self.set_layout()
-                self.state = "not_initial"
-                self.draw_diagram()
+                self.redraw_diagram_with_data_without_layout(purpose, ms_error)
+        if self.subplot_errors:
+            self.reset_mz_and_inten_data()
+
+    def redraw_diagram_with_data_without_layout(self, purpose, ms_error = False):
+        self.fig.clear()
+        self.state = "initial"
+        self.set_layout()
+        self.state = "not_initial"
+        self.draw_diagram(ms_error)
 
     def get_data_mz(self, mz):
         data_mz_dict = {"mz1" : self.data_mz1,
