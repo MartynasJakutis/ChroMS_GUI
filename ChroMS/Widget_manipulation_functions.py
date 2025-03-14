@@ -436,10 +436,12 @@ def find_and_set_ms_subplot_errors(errorkey, err_entry_names, plot_object):
     err_dict = {"'Find m/z 1'" : "subplot1",
                 "'Find m/z 2'" : "subplot2"}
     if type(err_entry_names) == str:
-        split_char = " and " if errorkey == "both" else ""
+        split_char = " and " if errorkey == "both" else "\t"
         err_entry_names = err_entry_names.split(split_char)
+    print(err_entry_names,errorkey)
     ms_subplot_errors = [err_dict.get(i) for i in err_entry_names]
     plot_object.subplot_errors = ms_subplot_errors
+    print(plot_object.subplot_errors)
 
 def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_object, purpose):
     plot_object.subplot_errors = []
@@ -461,6 +463,7 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
         are_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = mz1_str, rt_dev_str = mz2_str,
                                                                         rt_pos_values = mz1_values, rt_dev_values = mz2_values,
                                                                         for_ms = True)
+        err_entry_names = warning_args.get("entry_names")
     else:
         return None, mz1_values, mz2_values
     

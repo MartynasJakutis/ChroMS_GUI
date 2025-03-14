@@ -70,7 +70,9 @@ class Diagram(object):
         self.num_subp_padding_dict = {1 : 25, 2 : 15}
         self.provided_xlim = provided_xlim
         self.provided_ylim = provided_ylim
-        
+          
+        self.selected_layout = None        
+
     def create_a_figure(self):
         """Creates Figure canvas containing matplotlib.Figure object with its 
         toolbar and embeds them inside the master widget"""
@@ -130,9 +132,13 @@ class Diagram(object):
         """Sets figure layout according to the current Diagram object state."""
         layouts_dict = {"initial" : None,
                         "not_initial" : "constrained"}
-        selected_layout = layouts_dict.get(self.state)
-        self.fig.set_layout_engine(selected_layout)
-        
+        self.selected_layout = layouts_dict.get(self.state)
+        self.fig.set_layout_engine(self.selected_layout)
+   
+    def adjust_figure_subplots(self):
+        if self.radiobutton_var.get() == 0 and self.selected_layout == None:
+            self.fig.subplots_adjust(hspace = 0.4)
+
     def plotting_init_state(self, subplot):
         """Plotting initial Diagram state in the subplot."""
         x_ticks = subplot.get_xticks()
@@ -185,6 +191,7 @@ class Diagram(object):
                     self.plotting_init_state(subplot = subplot_to_draw)
                 
         self.set_titles_all()
+        self.adjust_figure_subplots()
         self.canvas.draw()
 
     def redraw_diagram(self, ms_error = False):
