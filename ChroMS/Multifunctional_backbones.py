@@ -183,24 +183,34 @@ class MultifunctionalBackbone(object):
     def create_radiobuttons_on_off_entry(self):
         """Creates radiobuttons for turning on or off the entry"""
         opm = self.opm
-        self.opm.radiobutton_variable_on_off = tk.IntVar(master = self.window, value = 1)
-
-        opm.radiobutton_on_off_pars = {"ratiobutton_on" : {"text" : "On", "row" : 0,
-                                                           "column" : 4, "onvalue" : 1},
-                                       "radiobutton_off" : {"text" : "Off", "row" : 0,
-                                                            "column" : 5, "onvalue" : 0}}
-
         if self.purpose == "chrom":
             master_frame = opm.frames["find_peaks"]
-        else:
-            return
-        #elif self.purpose == "ms":
-        #    subplot1, subplot2 = "MS1", "MS2" 
+            self.opm.radiobutton_variable_on_off = tk.IntVar(master = self.window, value = 1)
+            opm.radiobutton_on_off_pars = {"ratiobutton_on" : {"master" : master_frame, "text" : "On", "row" : 0,
+                                                               "column" : 4, "onvalue" : 1,
+                                                               "var" : self.opm.radiobutton_variable_on_off},
+                                           "radiobutton_off" : {"master" : master_frame, "text" : "Off", "row" : 0,
+                                                                "column" : 5, "onvalue" : 0,
+                                                                "var" : self.opm.radiobutton_variable_on_off}}
 
-        
+        elif self.purpose == "ms":
+            master_frame1, master_frame2 = [opm.frames[x] for x in ("find_mz1", "find_mz2")]
+            self.opm.radiobutton_variable_on_off_mz1 = tk.IntVar(master = self.window, value = 1)
+            self.opm.radiobutton_variable_on_off_mz2 = tk.IntVar(master = self.window, value = 1)
+            opm.radiobutton_on_off_pars = {"ratiobutton_on_mz1" : {"master" : master_frame1, "text" : "On", "row" : 0,
+                                                                   "column" : 1, "onvalue" : 1,
+                                                                   "var" : self.opm.radiobutton_variable_on_off_mz1},
+                                           "radiobutton_off_mz1" : {"master" : master_frame1, "text" : "Off", "row" : 0,
+                                                                    "column" : 2, "onvalue" : 0,
+                                                                    "var" : self.opm.radiobutton_variable_on_off_mz1},
+                                           "ratiobutton_on_mz2" : {"master" : master_frame2, "text" : "On", "row" : 0,
+                                                                   "column" : 1, "onvalue" : 1,
+                                                                   "var" : self.opm.radiobutton_variable_on_off_mz2},
+                                           "radiobutton_off_mz2" : {"master" : master_frame2, "text" : "Off", "row" : 0,
+                                                                    "column" : 2, "onvalue" : 0,
+                                                                    "var" : self.opm.radiobutton_variable_on_off_mz2}}
         for radiobutton in self.opm.radiobutton_on_off_pars.keys():
-            opm.radiobuttons[radiobutton] = ctwc.Radiobutton(master = master_frame, padx = 2.5, pady = 0,
-                                                             var = self.opm.radiobutton_variable_on_off, 
+            opm.radiobuttons[radiobutton] = ctwc.Radiobutton(padx = 2.5, pady = 0, 
                                                              command = self.enable_disable_entry,
                                                              **opm.radiobutton_on_off_pars[radiobutton])
             opm.radiobuttons[radiobutton].create()
@@ -239,7 +249,8 @@ class MultifunctionalBackbone(object):
                             "add_multiplier_w" : 0.98, "add_multiplier_h" : 0.90,
                             "radiobutton_var" : opm.radiobutton_variable, "state" : "initial", 
                             "screenheight" : self.screenheight, "screenwidth" : self.screenwidth,
-                            "provided_xlim" : (None, None), "provided_ylim" : (None, None)}
+                            "provided_xlim" : (None, None), "provided_ylim" : (None, None),
+                            "show_peak_text" : True, "show_peaks" : True}
         
         if self.purpose == "chrom":
             dict_update = {"xlabel1" : "Išėjimo laikas, min", "xlabel2" : "Išėjimo laikas, min",
@@ -248,7 +259,7 @@ class MultifunctionalBackbone(object):
                            "colorbar_weight" : "bold", "colorbar_fontsize" : 14,
                            "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0,
                            "intensity_min" : 0, "intensity_max" : 1, "peak_intensity" : 0, "peak_time" : 0,
-                           "show_peak_text" : True, "show_peaks" : True, "peak_dec_num" : 3}
+                           "peak_dec_num" : 3}
             Used_Diagram = HPLC_Diagram
             
         elif self.purpose == "ms":
@@ -256,7 +267,8 @@ class MultifunctionalBackbone(object):
                            "title2_text_color" : "k", "title2_weight" : "bold", "title2_fontsize" : 13,
                            "xlabel1" : "m/z", "xlabel2" : "m/z",
                            "ylabel1" : "Absoliutus intensyvumas", "ylabel2" : "Absoliutus intensyvumas",
-                           "data_mz1" : 0, "data_mz2" : 0, "data_inten1" : 0, "data_inten2" : 0}
+                           "data_mz1" : 0, "data_mz2" : 0, "data_inten1" : 0, "data_inten2" : 0,
+                           "peak_dec_num" : 0}
             Used_Diagram = MS_Diagram
             
         opm.graph_params.update(dict_update)

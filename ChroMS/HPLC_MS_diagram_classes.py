@@ -28,7 +28,7 @@ class Diagram(object):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, radiobutton_var, screenheight,
-                 screenwidth, provided_xlim, provided_ylim):
+                 screenwidth, provided_xlim, provided_ylim, show_peak_text, show_peaks):
         self.dpi = dpi
         self.need_title1 = need_title1
         self.title1 = title1
@@ -72,6 +72,9 @@ class Diagram(object):
         self.provided_ylim = provided_ylim
           
         self.selected_layout = None        
+        self.show_peak_text = show_peak_text
+        self.show_peaks = show_peaks
+
 
     def create_a_figure(self):
         """Creates Figure canvas containing matplotlib.Figure object with its 
@@ -234,7 +237,7 @@ class HPLC_Diagram(Diagram):
                          xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                          matplotlib_style1, matplotlib_style2, state, 
                          master_labelframe, add_multiplier_w, add_multiplier_h, radiobutton_var, screenheight,
-                         screenwidth, provided_xlim, provided_ylim)
+                         screenwidth, provided_xlim, provided_ylim, show_peak_text, show_peaks)
         self.data_rt = data_rt
         self.data_ab = data_ab
         self.data_ab_all = data_ab_all
@@ -245,8 +248,6 @@ class HPLC_Diagram(Diagram):
 
         self.peak_intensity = peak_intensity
         self.peak_time = peak_time
-        self.show_peak_text = show_peak_text
-        self.show_peaks = show_peaks
         self.peak_dec_num = peak_dec_num
 
         self.colorbar_label = colorbar_label
@@ -318,7 +319,7 @@ class MS_Diagram(Diagram):
                  xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_mz1, data_mz2, data_inten1,
-                 data_inten2, radiobutton_var, screenheight, screenwidth, provided_xlim, provided_ylim):
+                 data_inten2, radiobutton_var, screenheight, screenwidth, provided_xlim, provided_ylim, show_peak_text, show_peaks, peak_dec_num):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
                          title1_weight, title1_fontsize, xlabel1, xlabel2, ylabel1, ylabel2,
                          xlabel1_pos, xlabel2_pos, ylabel1_pos, ylabel2_pos, 
@@ -327,7 +328,7 @@ class MS_Diagram(Diagram):
                          xlabel1_fontsize, xlabel2_fontsize, ylabel1_fontsize, ylabel2_fontsize,
                          matplotlib_style1, matplotlib_style2, state, 
                          master_labelframe, add_multiplier_w, add_multiplier_h, radiobutton_var,
-                         screenheight, screenwidth, provided_xlim, provided_ylim)
+                         screenheight, screenwidth, provided_xlim, provided_ylim, show_peak_text, show_peaks)
         self.need_title2 = need_title2
         self.title2 = title2
         self.title2_pos = title2_pos
@@ -339,6 +340,9 @@ class MS_Diagram(Diagram):
         self.data_inten1 = data_inten1
         self.data_inten2 = data_inten2
         self.subplot_errors = []
+        self.mzs_calculated = [[],[]]
+        self.intensities_for_mzs = [[],[]]
+        self.peak_dec_num = peak_dec_num
 
     def set_title_2nd_subplot(self, subplot):
         padding = self.num_subp_padding_dict.get(len(self.subplots_available))
@@ -367,12 +371,13 @@ class MS_Diagram(Diagram):
                     return
             super().plotting_init_state(subplot = subplot)
     
-    def plotting_term_state_ms(self, subplot, data_mz, data_inten):
+    def plotting_term_state_ms(self, subplot, data_mz, data_inten, purpose):
         """Shared plotting algorithm for both subplots."""
         
         if type(data_mz) != int:
             subplot.plot(data_mz, data_inten)
             self.set_xlim_ylim_ms(subplot = subplot, data_mz = data_mz, data_inten = data_inten)
+            self.mark_mz_peaks(subplot = subplot, data_inten = data_inten, purpose = purpose)
         else:
             self.plotting_init_state(subplot = subplot)
     
@@ -380,16 +385,14 @@ class MS_Diagram(Diagram):
         """Function of mass spectrum drawing for the upper subplot."""
         self.set_labels_1st_subplot(subplot = subplot)
         self.plotting_term_state_ms(subplot = subplot, 
-                                    data_mz = self.data_mz1, data_inten = self.data_inten1)
+                                    data_mz = self.data_mz1, data_inten = self.data_inten1, purpose = "ms1")
         
     def plotting_term_state_ms2(self, subplot):
         """Function of mass spectrum drawing for the lower subplot"""
         self.set_labels_2nd_subplot(subplot = subplot)
         self.plotting_term_state_ms(subplot = subplot, 
-                                    data_mz = self.data_mz2, data_inten = self.data_inten2)
-        
-
-    
+                                    data_mz = self.data_mz2, data_inten = self.data_inten2, purpose = "ms2")
+            
     def set_xlim_ylim_ms(self, subplot, data_mz, data_inten):
         x_min = min(data_mz) if self.provided_xlim[0] == None else self.provided_xlim[0]
         x_max = max(data_mz) if self.provided_xlim[1] == None else self.provided_xlim[1]
@@ -453,3 +456,52 @@ class MS_Diagram(Diagram):
                         "mz2" : self.data_mz2}
         mz_ret = data_mz_dict.get(mz, None)
         return mz_ret
+
+    def find_mz_by_least_sqares(self, mz_provided, data_mz, data_inten):
+        sq_differences = (mz_provided - data_mz) ** 2
+        is_minimal_sq_diff = sq_differences == sq_differences.min()
+        tailored_mz = data_mz[is_minimal_sq_diff][0]
+        tailored_inten_for_mz = data_inten[is_minimal_sq_diff][0]
+        return tailored_mz, tailored_inten_for_mz
+
+    def get_nearest_mz_values(self, mzs1, mzs2):
+        self.mzs_provided = [x if x != None else [] for x in (mzs1, mzs2)]
+        self.mzs_calculated = []
+        self.intensities_for_mzs = []
+        mz_names, inten_names = ["data_mz", "data_inten"]
+        data_mz_names, data_inten_names = [[f"{name}{num}" for num in range(1, 3)] for name in [mz_names, inten_names]]
+        for mzs_prov, data_mz_name, data_inten_name in zip(self.mzs_provided, data_mz_names, data_inten_names):
+            inner_list_mzs_calculated, inner_list_inten_for_mzs = [], []
+            if not mzs_prov:
+                self.mzs_calculated.append(inner_list_mzs_calculated)
+                self.intensities_for_mzs.append(inner_list_inten_for_mzs)
+                continue
+            data_mz, data_inten = self.get_main_param_values(data_mz_name, data_inten_name)
+            for mz_prov in mzs_prov:
+                mz_calculated, inten_for_mz = self.find_mz_by_least_sqares(mz_provided = mz_prov, data_mz = data_mz,
+                                                                           data_inten = data_inten)
+                inner_list_mzs_calculated.append(mz_calculated)
+                inner_list_inten_for_mzs.append(inten_for_mz)
+            self.mzs_calculated.append(inner_list_mzs_calculated)
+            self.intensities_for_mzs.append(inner_list_inten_for_mzs)
+        return self.mzs_provided, self.mzs_calculated
+####
+    def mark_mz_peaks(self, subplot, data_inten, purpose):
+        if not self.show_peaks:
+            return
+        else:
+            ind = 0 if purpose == "ms1" else 1
+            self.used_mzs, self.used_inten = [x[ind] for x in (self.mzs_calculated, self.intensities_for_mzs)]
+            if not self.used_mzs:
+                return
+            subplot.scatter(self.used_mzs, self.used_inten, color = "k")
+            self.write_peak_text(subplot = subplot, data_inten = data_inten)
+
+    def write_peak_text(self, subplot, data_inten):
+        if self.show_peak_text:
+            for mz, inten in zip(self.used_mzs, self.used_inten):
+                str_mz  = "{0:.{1}f}".format(mz, self.peak_dec_num)
+                y_text = inten + data_inten.max() * 0.1 if inten >= 0 else inten - data_inten.max() * 0.1
+                subplot.text(mz, y_text, s = str_mz, weight = 'bold', ha = 'center',
+                             va = "center", fontsize = 12, color = "k")
+            

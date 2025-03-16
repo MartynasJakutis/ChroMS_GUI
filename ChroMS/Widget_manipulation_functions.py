@@ -445,7 +445,7 @@ def find_and_set_ms_subplot_errors(errorkey, err_entry_names, plot_object):
 
 def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_object, purpose):
     plot_object.subplot_errors = []
-    result, outputs_dict, mz1_values, mz2_values = False, None, None, None
+    result, outputs_dict, mz1_values, mz2_values, mz1_values_fl, mz2_values_fl = (False,) + (None,) * 5
     are_no_num_found, is_pos_str_not_empty, are_values_in_range, are_all_values_found = (True,) + (False,) * 3
     mz1_str, mz2_str = [x.entry.get() for x in [entry_mz1, entry_mz2]]
     disabled_entries = [str(x.entry.cget("state")) == str(tk.DISABLED) for x in [entry_mz1, entry_mz2]]
@@ -465,7 +465,7 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
                                                                         for_ms = True)
         err_entry_names = warning_args.get("entry_names")
     else:
-        return None, mz1_values, mz2_values
+        return None, mz1_values_fl, mz2_values_fl
     
     if not are_no_num_found:
         mz1_values_fl, mz2_values_fl = [list(map(float, x)) if x != None else None for x in [mz1_values, mz2_values]]
@@ -487,7 +487,7 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
         warning_output(outputs_dict = outputs_dict, key = errorkey,
                        output_object = output_object, plot_object = plot_object, purpose = purpose, retain_data = True)
     print(plot_object.subplot_errors)
-    return result, mz1_values, mz2_values
+    return result, mz1_values_fl, mz2_values_fl
 
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
     result, outputs_dict, rt_pos_values, rt_dev_values = False, None, None, None
@@ -638,10 +638,15 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                                                                       entry_mz2 = entry_objects["find_mz2"], output_object = output_object,
                                                                       plot_object = plot_object, purpose = purpose)
         if mz_exists == None:
-            pass
+            plot_object.get_nearest_mz_values(mzs1 = mz_pos_values1, mzs2 = mz_pos_values2)
             #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         elif not mz_exists:
             return
+        else:
+            plot_object.get_nearest_mz_values(mzs1 = mz_pos_values1, mzs2 = mz_pos_values2)
+            print(plot_object.mzs_provided)
+            print(plot_object.mzs_calculated)
+            print(plot_object.intensities_for_mzs)
     
     x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
     are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 
