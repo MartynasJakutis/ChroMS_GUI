@@ -449,14 +449,15 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
     are_no_num_found, is_pos_str_not_empty, are_values_in_range, are_all_values_found = (True,) + (False,) * 3
     mz1_str, mz2_str = [x.entry.get() for x in [entry_mz1, entry_mz2]]
     disabled_entries = [str(x.entry.cget("state")) == str(tk.DISABLED) for x in [entry_mz1, entry_mz2]]
-    strings = [s for s, d in zip([mz1_str, mz2_str], disabled_entries) if not d]
+    strings = [s if not d else "" for s, d in zip([mz1_str, mz2_str], disabled_entries)]
     empty_entries = strings == ["", ""]
     if empty_entries or all(disabled_entries):
         is_pos_str_not_empty = False
     else:
         is_pos_str_not_empty = True
-        mz1_str, mz1_values = [x if x not in ["", []] else None for x in [mz1_str, mz1_values]]
-        mz2_str, mz2_values = [x if x not in ["", []] else None for x in [mz2_str, mz2_values]]
+        mz1_str, mz2_str = [x if x != "" else None for x in strings]
+        #mz1_str, mz1_values = [x if x not in ["", []] else None for x in [mz1_str, mz1_values]]
+        #mz2_str, mz2_values = [x if x not in ["", []] else None for x in [mz2_str, mz2_values]]
 
     if is_pos_str_not_empty:
         mz1_values, mz2_values = [create_list_of_clean_values(data_str = x) for x in strings]
@@ -580,7 +581,7 @@ def hplc_3d_data_checking(data, entry_objects, output_object, plot_object, purpo
                                       output_object = output_object,
                                       plot_object = plot_object, purpose = purpose)
     if not wv_exists:
-       return False
+        return False
         
     data.get_ab_intensity_of_wv(wave_nm = int(entry_objects["wv"].entry.get()))
     inten_min_max_are_num = check_inten_min_max(entry_min = entry_objects["inten_min"], entry_max = entry_objects["inten_max"],
@@ -749,11 +750,13 @@ def only_drawing_and_time_output(plot_object, output_object, purpose, changing_e
     start_time_draw = time.time()
     if purpose == "chrom":
         plot_object.redraw_diagram()
+        kind_of_entry = "chromatogram peaks"
     else:
+        kind_of_entry = f"m/z {purpose[-1]} peaks"
         plot_object.redraw_diagram(purpose = purpose, ms_error = True)
     data_draw_text = f"Draw time: {time.time() - start_time_draw :.3f} s"
     if changing_entry_state:
-        first_line = f"""Feature of showing peaks is {changing_entry_state[True]}."""
+        first_line = f"""Feature of showing {kind_of_entry} is {changing_entry_state[True]}:"""
     else:
         first_line = f"""Selection of subplots was changed to "{plot_object.selected_subplots}":"""
     output_object.insert_text(text = first_line + data_calc_text + data_draw_text,
