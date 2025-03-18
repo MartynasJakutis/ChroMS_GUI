@@ -739,10 +739,18 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
 
 
-def select_subplots(plot_object, listbox_object, output_object, purpose):
+def select_subplots(plot_object, listbox_object, output_object, entry_objects, purpose):
     """Changes number of shown subplots by redrawing diagram."""
     only_drawing_and_time_output(plot_object, output_object, purpose)
+    change_active_entries_and_radiobuttons(plot_object, entry_objects, purpose)
     focus_and_activate_listbox(listbox_object)
+
+def change_active_entries_and_radiobuttons(plot_object, entry_objects, purpose):
+    subplot_var_val = plot_object.get_main_param_values("radiobutton_var")[0].get()
+    if subplot_var_val:
+        pass
+        #print(subplot_var_val)
+        #print(entry_objects)
 
 def only_drawing_and_time_output(plot_object, output_object, purpose, changing_entry_state = {}):
     start_time_calc = time.time()

@@ -71,6 +71,7 @@ class MultifunctionalBackbone(object):
             opm.radiobuttons[radiobutton].radiobutton.config(command = lambda : wmf.select_subplots(plot_object = opm.graph,
                                                                                                     listbox_object = ffm_to_show.listbox,
                                                                                                     output_object = opm.output,
+                                                                                                    entry_objects = opm.ctrl_entries,
                                                                                                     purpose = ffm_to_show.purpose))
     def change_listbox_focus(self, ffm_to_show):
         """Sets focus on listbox widget."""
@@ -104,7 +105,8 @@ class MultifunctionalBackbone(object):
         if opm_deact_radiobtn_val == current_radiobtn_val:
             self.opm.radiobutton_variable.set(self.opm.radiobuttons[rbtn_to_activate].onvalue)
             wmf.select_subplots(plot_object = self.opm.graph, output_object = self.opm.output,
-                                listbox_object = ffm_to_show.listbox, purpose = ffm_to_show.purpose)
+                                listbox_object = ffm_to_show.listbox, entry_objects = self.opm.ctrl_entries,
+                                purpose = ffm_to_show.purpose)
         print("c")
         
     def create_checkbuttons(self, ffm, hist_file_name):
@@ -177,6 +179,7 @@ class MultifunctionalBackbone(object):
                                                              command = lambda : wmf.select_subplots(plot_object = opm.graph, 
                                                                                            listbox_object = self.ffm1.listbox,
                                                                                            output_object = self.opm.output,
+                                                                                           entry_objects = self.opm.ctrl_entries,
                                                                                            purpose = self.ffm1.purpose),
                                                              **opm.radiobutton_pars[radiobutton])
             opm.radiobuttons[radiobutton].create()
@@ -355,9 +358,9 @@ class MultifunctionalBackbone(object):
     def create_ffm_multifunc_widgets(self, ffm, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
         entry_objects = {"x_min" : self.opm.x_min_entry,
-                         "x_max" : self.opm.x_max_entry,
-                         "y_min" : self.opm.y_min_entry,
-                         "y_max" : self.opm.y_max_entry}
+                                                "x_max" : self.opm.x_max_entry,
+                                                "y_min" : self.opm.y_min_entry,
+                                                "y_max" : self.opm.y_max_entry}
         if self.purpose == "chrom":
             entry_objects.update({"wv" : self.opm.wv_entry,
                                   "inten_min" : self.opm.inten_min_entry,

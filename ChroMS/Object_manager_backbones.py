@@ -239,6 +239,14 @@ class OutputPlotManagerBackbone(object):
             self.find_mz2_entry = ctwc.Entry(master = self.frames["find_mz2"], style = "TEntry", 
                                                font = ("TkDefaultFont", 12, "normal"), width = 15, 
                                                row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
+        self.ctrl_entries = self.return_controlled_entries()
+    def return_controlled_entries(self):
+        if self.purpose == "ms":
+            return {"find_mz1" : self.find_mz1_entry,
+                    "find_mz2" : self.find_mz2_entry}
+        else:
+            return {"peak_pos" : self.peak_value_entry,
+                    "peak_dev" : self.peak_dev_entry}
 class FileFolderManagerBackbone(OutputPlotManagerBackbone):
     """Class which contains methods for File and Folder Manager Backbone (ffm) creation.
     master - higher hierarchy widget, purpose - str which refers what kind of ffm to create."""
