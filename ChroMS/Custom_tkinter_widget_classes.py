@@ -39,8 +39,75 @@ class Frame(Hauptwidget_Grid):
             self.frame.grid(row = self.row, column = self.column, sticky = self.sticky)
         return self.frame
 
+class ScrollableFrame(Hauptwidget_Grid):
+    def __init__(self, master, style, sticky, row, column):
+        super().__init__(master, row, column)
+        self.style = style
+        self.sticky = sticky
+    
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion = self.canvas.bbox("all"))
+
+    def populate(self):
+        '''Put in some fake data'''
+        for row in range(100):
+            tk.Label(self.frame, text="%s" % row, width=3, borderwidth="1",
+                     relief="solid").grid(row=row, column=0)
+            t="this is the second column for row %s" %row
+            tk.Label(self.frame, text=t).grid(row=row, column=1)
+
+    def create(self):
+        self.outer_frame = ttk.Frame(master = self.master, style = self.style)
+        #self.outer_frame.grid(row = self.row, column = self.column, sticky = self.sticky)
+
+        self.canvas = tk.Canvas(master = self.outer_frame, borderwidth = 0, background = "#ffffff")
+        self.frame = ttk.Frame(master = self.canvas)
+        self.vsb = tk.Scrollbar(master = self.outer_frame, orient = "vertical", command = self.canvas.yview)
+        self.canvas.configure(yscrollcommand = self.vsb.set)
+
+        self.vsb.pack(side = "right", fill = "y")
+        self.canvas.pack(side = "left", fill = "both", expand = True)
+        self.canvas.create_window((4,4), window = self.frame, anchor = "nw",
+                                  tags = "self.frame")
+
+        self.frame.bind("<Configure>", self.onFrameConfigure)
+        self.populate()
+        self.outer_frame.pack(side="top", fill="both", expand=True)
+
+class Example(tk.Frame):
+    def __init__(self, parent):
+
+        tk.Frame.__init__(self, parent)
+        self.canvas = tk.Canvas(self, borderwidth=0, background="#ffffff")
+        self.frame = tk.Frame(self.canvas, background="#ffffff")
+        self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((4,4), window=self.frame, anchor="nw",
+                                  tags="self.frame")
+
+        self.frame.bind("<Configure>", self.onFrameConfigure)
+
+        self.populate()
+
+    def populate(self):
+        '''Put in some fake data'''
+        for row in range(100):
+            tk.Label(self.frame, text="%s" % row, width=3, borderwidth="1",
+                     relief="solid").grid(row=row, column=0)
+            t="this is the second column for row %s" %row
+            tk.Label(self.frame, text=t).grid(row=row, column=1)
+
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+
 class LabelFrame(Hauptwidget_Grid):
-    def __init__(self, master, text, row, column, padx, pady, height, width, style, sticky = ''):
+    def __init__(self, master, text, row, column, padx, pady, height, width, style, sticky = '', rowspan = 0):
         super().__init__(master, row, column)
         self.text = text
         self.padx = padx
@@ -49,6 +116,7 @@ class LabelFrame(Hauptwidget_Grid):
         self.width = width
         self.style = style
         self.sticky = sticky
+        self.rowspan = rowspan
         
     def create(self):
         self.labelwidget = ttk.Label(master = self.master, text = self.text, style = "Bold.TLabel")
@@ -266,7 +334,7 @@ class Button(Hauptwidget_Grid):
     def create(self):
         self.button = ttk.Button(master = self.master, text = self.text, command = self.command)
         self.button.grid(row = self.row, column = self.column, padx = self.padx, pady = self.pady)
-
+        return self.button
     
 class ComboBox(Hauptwidget_Grid):
     def __init__(self, master, width, row, column):

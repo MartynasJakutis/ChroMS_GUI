@@ -115,7 +115,7 @@ class ChroMS_Application(object):
         selected_tab = tabtext_tab_dict.get(tab_text, None)
         if selected_tab == None:
             return
-        elif selected_tab == self.ms_tab and selected_tab.ffm1.radiobutton_variable.get():
+        elif selected_tab == self.ms_tab and selected_tab.ffm_ms_radiobutton_variable.get():
             selected_tab_listbox = selected_tab.ffm2.listbox
         else:
             selected_tab_listbox = selected_tab.ffm1.listbox
@@ -135,6 +135,11 @@ class ChroMS_Application(object):
         self.create_notebook()
         self.create_ms_and_chrom_tabs()
         
+        #example = ctwc.Example(app.tabs["tab1"])
+        #example.pack(side="top", fill="both", expand=True)
+        scrollable_frame = ctwc.ScrollableFrame(master = app.tabs["tab1"], 
+                                               style = "NewCusFrame.TFrame", sticky = tk.E + tk.W, row = 0, column = 0)
+        scrollable_frame.create()
         self.notebook.bind("<<NotebookTabChanged>>", lambda event : self.tab_selected(event))
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
         self.window.mainloop()

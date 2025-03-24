@@ -3,6 +3,30 @@ import Custom_tkinter_widget_classes as ctwc
 import Widget_manipulation_functions as wmf
 import Main_GUI_parameters as mgp
 
+class MSRadiobuttonLabelFrame(object):
+    def __init__(self, master, radiobtn_var):
+        self.master = master
+        self.radiobtn_var = radiobtn_var
+
+        self.ms_ffm_labelframe_params = {"master" : self.master,
+                                         "text" : "Choose\nMS file: ",
+                                         "row" : 0, "column" : 0}
+        self.radiobutton_pars = {"radiobutton1" : {"text" : "MS1", "row" : 0,
+                                                   "column" : 0, "onvalue" : 0},
+                                 "radiobutton2" : {"text" : "MS2", "row" : 1,
+                                                   "column" : 0, "onvalue" : 1}}
+    def create(self):
+        self.radiobuttons = {}
+        self.labelframe = ctwc.LabelFrame(padx = 2.5, pady = 2.5, width = 0, height = 0, 
+                                          style = "Font.TLabelframe", sticky = tk.E + tk.W,
+                                          **self.ms_ffm_labelframe_params).create()
+        for radiobutton in self.radiobutton_pars.keys():
+            self.radiobuttons[radiobutton] = ctwc.Radiobutton(master = self.labelframe, padx = 2.5, pady = 0,
+                                                              var = self.radiobtn_var, 
+                                                              command = None,
+                                                              **self.radiobutton_pars[radiobutton])
+            self.radiobuttons[radiobutton].create()
+
 class OutputPlotManagerBackbone(object):
     """Class which contains methods for Outputwidget and Plot Manager Backbone (opm) creation.
     master - master widget, purpose - str which refers what kind of opm to create."""
@@ -250,8 +274,9 @@ class OutputPlotManagerBackbone(object):
 class FileFolderManagerBackbone(OutputPlotManagerBackbone):
     """Class which contains methods for File and Folder Manager Backbone (ffm) creation.
     master - higher hierarchy widget, purpose - str which refers what kind of ffm to create."""
-    def __init__(self, master, purpose):
+    def __init__(self, master, purpose, ms_radiobutton_var = None):
         super().__init__(master, purpose)
+        self.ms_radiobutton_var = ms_radiobutton_var
         self.FILE_EXT = []
     def load_widget_params(self):
         purpose_dict = {"chrom" : "HPLC 3D",
@@ -266,6 +291,8 @@ class FileFolderManagerBackbone(OutputPlotManagerBackbone):
                                                                             "row" : 1, "column" : 0}}
         self.frame_params_func = lambda input_lf, filter_lf : {"listbox" : {"master" : input_lf, 
                                                                             "row" : 1, "column" : 1},
+                                                               "for_options" : {"master" : input_lf, 
+                                                                            "row" : 1, "column" : 2},
                                                                "checkbutton" : {"master" : filter_lf, 
                                                                                 "row" : 0, "column" : 1},
                                                                "file_search" : {"master" : filter_lf, 
@@ -306,6 +333,89 @@ class FileFolderManagerBackbone(OutputPlotManagerBackbone):
         self.file_search_entry = ctwc.Entry(master = self.frames["file_search"], style = "TEntry", 
                                             font = ("TkDefaultFont", 12, "normal"), width = 55, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+        self.to_options_btn = ctwc.Button(master = self.frames["for_options"], text = "To options", 
+                                          command = lambda : None,
+                                          row = 1, column = 0, padx = 2.5, pady = 0).create()
         self.file_search_entry.create_file_name_filter()
-        for widget in [self.combobox, self.listbox, self.file_search_entry]:
+        widgets = [self.combobox, self.listbox, self.file_search_entry]
+        if self.purpose in ["ms1", "ms2"] and self.ms_radiobutton_var:
+            self.ms_radiobutton_lf = MSRadiobuttonLabelFrame(master = self.frames["for_options"],
+                                                             radiobtn_var = self.ms_radiobutton_var)
+            widgets.append(self.ms_radiobutton_lf)
+        for widget in widgets:
             widget.create()
+
+##############################################################################################
+class OptionManagerBackbone(OutputPlotManagerBackbone):
+    def __init__(self, master, purpose, ms_radiobutton_var = None):
+        super().__init__(master, purpose)
+        self.ms_radiobutton_var = ms_radiobutton_var
+
+    def load_widget_params(self):
+        purpose_dict = {"chrom" : "HPLC 3D",
+                        "ms1" : "MS (File 1)",
+                        "ms2" : "MS (File 2)"}
+        input_lf_t = purpose_dict.get(self.purpose)
+        self.labelframe_params_func = lambda main_frame : {"design_options" : {"master" : main_frame, 
+                                                                               "text" : f"More options for {input_lf_t} visualization: ",
+                                                                               "row" : 0, "column" : 0, "rowspan" : 2},
+                                                           "algorithms" : {"master" : main_frame,
+                                                                           "text" : "Algorithms: ",
+                                                                           "row" : 2, "column" : 0}}
+        self.frame_params_func = lambda des_lf, alg_lf : {"sb_frame" : {"master" : des_lf, 
+                                                                        "row" : 1, "column" : 1},
+                                                          "for_options" : {"master" : des_lf, 
+                                                                           "row" : 1, "column" : 2},
+                                                          "checkbutton" : {"master" : alg_lf, 
+                                                                           "row" : 0, "column" : 1},
+                                                          "file_search" : {"master" : alg_lf, 
+                                                                           "row" : 1, "column" : 1}}
+        self.label_params_func = lambda des_lf, alg_lf : {"label1" : {"master" : des_lf, "text" : "Folder: ",
+                                                                      "row" : 0, "column" : 0, "sticky" : tk.W},
+                                                          "label2" : {"master" : des_lf, "text" : "Files: ", 
+                                                                      "row" : 1, "column" : 0, "sticky" : tk.N + tk.W},
+                                                          "label3" : {"master" : alg_lf, "text" : "Intensity: ", 
+                                                                      "row" : 0, "column" : 0, "sticky" : tk.W},
+                                                          "label4" : {"master" : alg_lf, "text" : "Find files: ", 
+                                                                      "row" : 1, "column" : 0, "sticky" : tk.W}}
+    def create_simple_widgets(self):
+        self.labelframe_params = self.labelframe_params_func(main_frame = self.master)
+        for lframe in self.labelframe_params.keys():
+            self.labelframes[lframe] = ctwc.LabelFrame(padx = 2.5, pady = 2.5, width = 400, height = 400, 
+                                                       style = "Font.TLabelframe", sticky = tk.E + tk.W,
+                                                       **self.labelframe_params[lframe]).create()
+
+        self.frame_params = self.frame_params_func(des_lf = self.labelframes["design_options"],
+                                                   alg_lf = self.labelframes["algorithms"])
+        for frame in self.frame_params.keys():
+            self.frames[frame] = ctwc.Frame(style = "NewCusFrame.TFrame", sticky = tk.E + tk.W, 
+                                            **self.frame_params[frame]).create()
+            
+        self.label_params = self.label_params_func(des_lf = self.labelframes["design_options"],
+                                                   alg_lf = self.labelframes["algorithms"])
+        for label in self.label_params.keys():
+            self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = "SystemButtonFace",
+                                            style = "Normal.TLabel", **self.label_params[label]).create()
+    def create_advanced_widgets(self):
+        """Creates widgets which are supposed to have additional functionality"""
+        #self.combobox = ctwc.ComboBox(master = self.labelframes["file_input"],
+        #                              width = 70, row = 0, column = 1)
+        #self.listbox = ctwc.Listbox(master = self.frames["listbox"], background = 'black', foreground = 'green', width = 70, 
+        #                            height = 10, selectbackground = 'gray', selectforeground = 'black', row = 0, column = 0, 
+        #                            padx = (0, 0), pady = 0, padx_scroll = 0, pady_scroll = 0, exportselection = False)
+        #self.file_search_entry = ctwc.Entry(master = self.frames["file_search"], style = "TEntry", 
+        #                                    font = ("TkDefaultFont", 12, "normal"), width = 55, 
+        #                                    row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+        #self.file_search_entry.create_file_name_filter()
+        #widgets = [self.combobox, self.listbox, self.file_search_entry]
+        self.to_ffm_btn = ctwc.Button(master = self.frames["for_options"], text = "Go back", 
+                                          command = lambda : None,
+                                          row = 1, column = 0, padx = 2.5, pady = 0).create()
+        widgets = []
+        if self.purpose in ["ms1", "ms2"] and self.ms_radiobutton_var:
+            self.ms_radiobutton_lf = MSRadiobuttonLabelFrame(master = self.frames["for_options"],
+                                                             radiobtn_var = self.ms_radiobutton_var)
+            widgets.append(self.ms_radiobutton_lf)
+        for widget in widgets:
+            widget.create()
+########################################################################
