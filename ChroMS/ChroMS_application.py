@@ -48,9 +48,12 @@ class ChroMS_Application(object):
         self.tk_styles.theme_use(self.theme)
 
         self.widget_styles = {"NewNotebook.TNotebook" : {"background" : self.tab_bg_color, "foreground" : "green"},
-                              "TNotebook.Tab" : {"background" : "green", "foreground" : "black", 
+                              "Main.TNotebook.Tab" : {"background" : "green", "foreground" : "black", 
                                                  "font" : ("URW Gothic L", 16, "bold"), "padding" : [0, 0], "width" : 10,
                                                  "anchor" : "center"},
+                              "Opt.TNotebook.Tab" : {"background" : "green", "foreground" : "black", 
+                                                    "font" : ("URW Gothic L", 14, "normal"), "padding" : [0, 0], "width" : 5,
+                                                    "anchor" : "center"},
                               "NewTabFrame.TFrame" : {"background" : self.tab_bg_color, "padding" : [0, 0]},
                               "NewCusFrame.TFrame" : {"background" : "SystemButtonFace", "padding" : [0, 0]},
                               "TLabelframe" : {"foreground" : "black", "background" : "SystemButtonFace",
@@ -85,7 +88,7 @@ class ChroMS_Application(object):
         #    self.tk_styles.map(style = dynamic_style, ** self.widget_dynamic_styles[dynamic_style])
         
     def create_notebook(self):
-        self.notebook = ttk.Notebook(master = self.window, style = "NewNotebook.TNotebook")
+        self.notebook = ttk.Notebook(master = self.window, style = "Main.TNotebook")
         for tab in self.tab_configs.keys():
             self.tabs[tab] = ctwc.Tab(master = self.notebook, **self.tab_configs[tab]).create()
         self.notebook.pack(expand = True, fill = 'both')
@@ -135,11 +138,6 @@ class ChroMS_Application(object):
         self.create_notebook()
         self.create_ms_and_chrom_tabs()
         
-        #example = ctwc.Example(app.tabs["tab1"])
-        #example.pack(side="top", fill="both", expand=True)
-        scrollable_frame = ctwc.ScrollableFrame(master = app.tabs["tab1"], 
-                                               style = "NewCusFrame.TFrame", sticky = tk.E + tk.W, row = 0, column = 0)
-        scrollable_frame.create()
         self.notebook.bind("<<NotebookTabChanged>>", lambda event : self.tab_selected(event))
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
         self.window.mainloop()

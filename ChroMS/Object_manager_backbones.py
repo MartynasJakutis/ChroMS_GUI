@@ -362,8 +362,8 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                                            "algorithms" : {"master" : main_frame,
                                                                            "text" : "Algorithms: ",
                                                                            "row" : 2, "column" : 0}}
-        self.frame_params_func = lambda des_lf, alg_lf : {"sb_frame" : {"master" : des_lf, 
-                                                                        "row" : 1, "column" : 1},
+        self.frame_params_func = lambda des_lf, alg_lf : {"opt_notebook" : {"master" : des_lf, 
+                                                                            "row" : 1, "column" : 1},
                                                           "for_options" : {"master" : des_lf, 
                                                                            "row" : 1, "column" : 2},
                                                           "checkbutton" : {"master" : alg_lf, 
@@ -398,7 +398,13 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                             style = "Normal.TLabel", **self.label_params[label]).create()
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
-        #self.combobox = ctwc.ComboBox(master = self.labelframes["file_input"],
+        #self.sb_frame = ctwc.ScrollableFrame(master = self.frames["opt_notebook"], 
+        #                                     style = "Opt.TNotebook", sticky = tk.E + tk.W,
+        #                                     row = 0, column = 0)
+        self.notebook_w_sb = ctwc.NotebookWithSbFrames(master = self.frames["opt_notebook"], 
+                                                       style = "Opt.TNotebook", sticky = tk.E + tk.W,
+                                                       row = 0, column = 0, tab_names = [f"{i}" for i in range(5)])
+        #self.combobox = ctwc.ComboBox(master = self.labelframes["opt_notebook"],
         #                              width = 70, row = 0, column = 1)
         #self.listbox = ctwc.Listbox(master = self.frames["listbox"], background = 'black', foreground = 'green', width = 70, 
         #                            height = 10, selectbackground = 'gray', selectforeground = 'black', row = 0, column = 0, 
@@ -411,7 +417,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
         self.to_ffm_btn = ctwc.Button(master = self.frames["for_options"], text = "Go back", 
                                           command = lambda : None,
                                           row = 1, column = 0, padx = 2.5, pady = 0).create()
-        widgets = []
+        widgets = [self.notebook_w_sb]
         if self.purpose in ["ms1", "ms2"] and self.ms_radiobutton_var:
             self.ms_radiobutton_lf = MSRadiobuttonLabelFrame(master = self.frames["for_options"],
                                                              radiobtn_var = self.ms_radiobutton_var)
