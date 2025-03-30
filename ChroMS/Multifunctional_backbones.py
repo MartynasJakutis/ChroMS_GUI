@@ -48,7 +48,7 @@ class MultifunctionalBackbone(object):
         for ffm in self.ffms + self.oms:
             for i in ffm.ms_radiobutton_lf.radiobuttons.keys():
                 ffm.ms_radiobutton_lf.radiobuttons[i].radiobutton.config(command = self.change_ms_ffm_labelframe)
-            
+
     def hide_obj_man_labelframes(self, to_hide):
         """Hides specified MS ffm labelframe"""
         for lf in to_hide.labelframes.keys():
@@ -68,7 +68,6 @@ class MultifunctionalBackbone(object):
                                                                                                     output_object = self.opm.output,
                                                                                                     entry_objects = self.opm.ctrl_entries,
                                                                                                     purpose = ffm_to_show.purpose))
-
     def change_listbox_focus(self, ffm_to_show):
         """Sets focus on listbox widget."""
         listbox_object = ffm_to_show.listbox
@@ -102,6 +101,11 @@ class MultifunctionalBackbone(object):
         elif self.purpose == "ms":
             self.om1.to_ffm_btn.config(command = lambda : self.go_options_to_ffm(om = self.om1, ffm = self.ffm1))
             self.om2.to_ffm_btn.config(command = lambda : self.go_options_to_ffm(om = self.om2, ffm = self.ffm2))
+    
+
+
+
+
 
     def change_ms_ffm_labelframe(self):
         """Replaces one MS ffm to another and deactivates radiobutton of 
@@ -387,8 +391,8 @@ class MultifunctionalBackbone(object):
             self.set_ms_radiobtn_frames_funcs()
             for i in [self.ffm2, self.om1, self.om2]:
                 self.hide_obj_man_labelframes(to_hide = i)
-        for ffm, hf_name in zip(self.ffms, self.hist_file_names):
-            self.create_ffm_multifunc_widgets(ffm = ffm, hist_file_name = hf_name)
+        for ffm, om, hf_name in zip(self.ffms, self.oms, self.hist_file_names):
+            self.create_ffm_multifunc_widgets(ffm = ffm, om = om, hist_file_name = hf_name)
         self.set_ffm_to_options_btn_funcs()
         self.set_options_to_ffm_btn_funcs()
   
@@ -409,12 +413,19 @@ class MultifunctionalBackbone(object):
         else:
             self.entry_objects.update({"find_mz1" : self.opm.find_mz1_entry,
                                        "find_mz2" : self.opm.find_mz2_entry})
-   
-    def create_ffm_multifunc_widgets(self, ffm, hist_file_name):
+    
+    def set_ms_inten_radiobtn_funcs(self, om, select_file_args_dict):
+        for i in om.inten_radiobuttons.radiobuttons:
+            om.inten_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : wmf.select_file(**select_file_args_dict))
+
+    def create_ffm_multifunc_widgets(self, ffm, om, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
         select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,
                                  "plot_object" : self.opm.graph, "output_object" : self.opm.output,
                                  "entry_objects" : self.entry_objects, "purpose" : ffm.purpose}
+        if self.purpose == "ms":
+            select_file_args_dict.update({"ms_inten_radiobtn_val" : om.inten_radiobtn_variable})
+            self.set_ms_inten_radiobtn_funcs(om = om, select_file_args_dict = select_file_args_dict)
 
         ffm.browse_btn = ctwc.Button(master = ffm.labelframes["file_input"], text = "Browse", 
                                      command = lambda : wmf.folder_search(combobox_object = ffm.combobox,

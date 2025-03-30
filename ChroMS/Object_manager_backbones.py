@@ -3,11 +3,39 @@ import Custom_tkinter_widget_classes as ctwc
 import Widget_manipulation_functions as wmf
 import Main_GUI_parameters as mgp
 
+class SeveralRadiobuttons(object):
+    def __init__(self, master, start_row, start_col, radiobtn_var, radiobtn_names, orientation = "horizontal"):
+        self.master = master
+        self.start_row = start_row
+        self.start_col = start_col
+        self.radiobtn_var = radiobtn_var
+        self.radiobtn_names = radiobtn_names
+        self.orientation = orientation
+        self.radiobutton_pars = {}
+        self.radiobuttons = {}
+    def set_params(self):
+        row_num, col_num = self.start_row, self.start_col
+        for ind, radiobtn_name in enumerate(self.radiobtn_names):
+            self.radiobutton_pars.update({radiobtn_name : {"text" : radiobtn_name, "row" : row_num, 
+                                                           "column" : col_num, "onvalue" : ind}})
+            if self.orientation == "horizontal":
+                col_num += 1
+            elif self.orientation == "vertical":
+                row_num += 1
+    def create(self):
+        self.set_params()
+        for radiobutton in self.radiobutton_pars.keys():
+            self.radiobuttons[radiobutton] = ctwc.Radiobutton(master = self.master, padx = 2.5, pady = 0,
+                                                              var = self.radiobtn_var, 
+                                                              command = None,
+                                                              **self.radiobutton_pars[radiobutton])
+            self.radiobuttons[radiobutton].create()             
+        
 class MSRadiobuttonLabelFrame(object):
     def __init__(self, master, radiobtn_var):
         self.master = master
         self.radiobtn_var = radiobtn_var
-
+        self.radiobuttons = {}
         self.ms_ffm_labelframe_params = {"master" : self.master,
                                          "text" : "Choose\nMS file: ",
                                          "row" : 0, "column" : 0}
@@ -16,7 +44,6 @@ class MSRadiobuttonLabelFrame(object):
                                  "radiobutton2" : {"text" : "MS2", "row" : 1,
                                                    "column" : 0, "onvalue" : 1}}
     def create(self):
-        self.radiobuttons = {}
         self.labelframe = ctwc.LabelFrame(padx = 2.5, pady = 2.5, width = 0, height = 0, 
                                           style = "Font.TLabelframe", sticky = tk.E + tk.W,
                                           **self.ms_ffm_labelframe_params).create()
@@ -350,7 +377,6 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
     def __init__(self, master, purpose, ms_radiobutton_var = None):
         super().__init__(master, purpose)
         self.ms_radiobutton_var = ms_radiobutton_var
-
     def load_widget_params(self):
         purpose_dict = {"chrom" : "HPLC 3D",
                         "ms1" : "MS (File 1)",
@@ -363,20 +389,16 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                                                            "text" : "Algorithms: ",
                                                                            "row" : 2, "column" : 0}}
         self.frame_params_func = lambda des_lf, alg_lf : {"opt_notebook" : {"master" : des_lf, 
-                                                                            "row" : 1, "column" : 1},
+                                                                            "row" : 1, "column" : 1, "sticky" : tk.W},
                                                           "for_options" : {"master" : des_lf, 
-                                                                           "row" : 1, "column" : 2},
-                                                          "checkbutton" : {"master" : alg_lf, 
-                                                                           "row" : 0, "column" : 1},
+                                                                           "row" : 1, "column" : 2, "sticky" : tk.W},
+                                                          "inten_radiobtn" : {"master" : alg_lf, 
+                                                                              "row" : 0, "column" : 1, "sticky" : tk.E + tk.W},
                                                           "file_search" : {"master" : alg_lf, 
-                                                                           "row" : 1, "column" : 1}}
-        self.label_params_func = lambda des_lf, alg_lf : {"label1" : {"master" : des_lf, "text" : "Folder: ",
+                                                                           "row" : 1, "column" : 1, "sticky" : tk.E + tk.W}}
+        self.label_params_func = lambda des_lf, alg_lf : {"label1" : {"master" : alg_lf, "text" : "Intensity: ", 
                                                                       "row" : 0, "column" : 0, "sticky" : tk.W},
-                                                          "label2" : {"master" : des_lf, "text" : "Files: ", 
-                                                                      "row" : 1, "column" : 0, "sticky" : tk.N + tk.W},
-                                                          "label3" : {"master" : alg_lf, "text" : "Intensity: ", 
-                                                                      "row" : 0, "column" : 0, "sticky" : tk.W},
-                                                          "label4" : {"master" : alg_lf, "text" : "Find files: ", 
+                                                          "label2" : {"master" : alg_lf, "text" : "Find files: ", 
                                                                       "row" : 1, "column" : 0, "sticky" : tk.W}}
     def create_simple_widgets(self):
         self.labelframe_params = self.labelframe_params_func(main_frame = self.master)
@@ -384,11 +406,10 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
             self.labelframes[lframe] = ctwc.LabelFrame(padx = 2.5, pady = 2.5, width = 400, height = 400, 
                                                        style = "Font.TLabelframe", sticky = tk.E + tk.W,
                                                        **self.labelframe_params[lframe]).create()
-
         self.frame_params = self.frame_params_func(des_lf = self.labelframes["design_options"],
                                                    alg_lf = self.labelframes["algorithms"])
         for frame in self.frame_params.keys():
-            self.frames[frame] = ctwc.Frame(style = "NewCusFrame.TFrame", sticky = tk.E + tk.W, 
+            self.frames[frame] = ctwc.Frame(style = "NewCusFrame.TFrame", 
                                             **self.frame_params[frame]).create()
             
         self.label_params = self.label_params_func(des_lf = self.labelframes["design_options"],
@@ -396,24 +417,16 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
         for label in self.label_params.keys():
             self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = "SystemButtonFace",
                                             style = "Normal.TLabel", **self.label_params[label]).create()
+        self.inten_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
-        #self.sb_frame = ctwc.ScrollableFrame(master = self.frames["opt_notebook"], 
-        #                                     style = "Opt.TNotebook", sticky = tk.E + tk.W,
-        #                                     row = 0, column = 0)
+        inten_radiobtn_names = ["Absolute", "Relative (%)", "Relative (fraction)"]
         self.notebook_w_sb = ctwc.NotebookWithSbFrames(master = self.frames["opt_notebook"], 
-                                                       style = "Opt.TNotebook", sticky = tk.E + tk.W,
-                                                       row = 0, column = 0, tab_names = [f"{i}" for i in range(5)])
-        #self.combobox = ctwc.ComboBox(master = self.labelframes["opt_notebook"],
-        #                              width = 70, row = 0, column = 1)
-        #self.listbox = ctwc.Listbox(master = self.frames["listbox"], background = 'black', foreground = 'green', width = 70, 
-        #                            height = 10, selectbackground = 'gray', selectforeground = 'black', row = 0, column = 0, 
-        #                            padx = (0, 0), pady = 0, padx_scroll = 0, pady_scroll = 0, exportselection = False)
-        #self.file_search_entry = ctwc.Entry(master = self.frames["file_search"], style = "TEntry", 
-        #                                    font = ("TkDefaultFont", 12, "normal"), width = 55, 
-        #                                    row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
-        #self.file_search_entry.create_file_name_filter()
-        #widgets = [self.combobox, self.listbox, self.file_search_entry]
+                                                       style = "Opt.TNotebook", sticky = tk.W,
+                                                       row = 0, column = 0,
+                                                       padx = (10, 0), pady = (5, 10),
+                                                       tab_names = [f"{i}" for i in range(5)])
+                
         self.to_ffm_btn = ctwc.Button(master = self.frames["for_options"], text = "Go back", 
                                           command = lambda : None,
                                           row = 1, column = 0, padx = 2.5, pady = 0).create()
@@ -421,7 +434,14 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
         if self.purpose in ["ms1", "ms2"] and self.ms_radiobutton_var:
             self.ms_radiobutton_lf = MSRadiobuttonLabelFrame(master = self.frames["for_options"],
                                                              radiobtn_var = self.ms_radiobutton_var)
-            widgets.append(self.ms_radiobutton_lf)
+            self.inten_radiobuttons = SeveralRadiobuttons(master = self.frames["inten_radiobtn"], start_row = 0, 
+                                                          start_col = 0, radiobtn_var = self.inten_radiobtn_variable, 
+                                                          radiobtn_names = inten_radiobtn_names, 
+                                                          orientation = "horizontal")
+            
+            widgets.extend([self.ms_radiobutton_lf, self.inten_radiobuttons])
         for widget in widgets:
             widget.create()
+
+             
 ########################################################################

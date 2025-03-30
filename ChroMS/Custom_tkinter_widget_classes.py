@@ -40,13 +40,15 @@ class Frame(Hauptwidget_Grid):
         return self.frame
 
 class NotebookWithSbFrames(Hauptwidget_Grid):
-    def __init__(self, master, style, sticky, row, column, tab_names):
+    def __init__(self, master, style, sticky, row, column, padx, pady, tab_names):
         super().__init__(master, row, column)
         self.style = style
         self.sticky = sticky
         self.tab_names = tab_names
         self.tabs = {}
         self.sb_frames = {}
+        self.padx = padx
+        self.pady = pady
 
     def add_tabs(self):
         for tab_name in self.tab_names:
@@ -58,7 +60,7 @@ class NotebookWithSbFrames(Hauptwidget_Grid):
     def create(self):
         self.notebook = ttk.Notebook(master = self.master, style = self.style)
         self.add_tabs()
-        self.notebook.grid(row = self.row, column = self.column, sticky = self.sticky)
+        self.notebook.grid(row = self.row, column = self.column, sticky = self.sticky, padx = self.padx, pady = self.pady)
 
 class ScrollableFrame(Hauptwidget_Grid):
     def __init__(self, master, style, sticky, row, column):
@@ -81,7 +83,7 @@ class ScrollableFrame(Hauptwidget_Grid):
     def create(self):
         self.outer_frame = ttk.Frame(master = self.master, style = self.style)
         self.canvas = tk.Canvas(master = self.outer_frame, 
-                                borderwidth = 0, background = "#ffffff")
+                                borderwidth = 0, background = "#ffffff", width = 450, height = 220)
         self.frame = ttk.Frame(master = self.canvas)
         self.vsb = tk.Scrollbar(master = self.outer_frame, orient = "vertical",
                                 command = self.canvas.yview)

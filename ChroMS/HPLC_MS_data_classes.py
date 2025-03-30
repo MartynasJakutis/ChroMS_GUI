@@ -103,7 +103,7 @@ class MS_Data(HPLC_MS_Data):
         self.retention_time = "Unknown"
         self.ionization_type = "Unknown"
         
-    def read(self):
+    def read(self, intensity_type_num):
         """modifies retention_time and ionization_type and creates attributes of mass and charge ratio (m/z), absolute intensity,
         relative_intensity"""
         ms_event_dict = {1 : r'$\mathtt{[M + H^{+}]^{+}}$',
@@ -127,8 +127,19 @@ class MS_Data(HPLC_MS_Data):
                 
         data_list = data_list[front_ind + 1 : back_ind]
         
-        data_array = np_array(data_list)
-        if data_array.dtype == np_float64:
-            self.mz = data_array[:, 0]
-            self.absolute_intensity = data_array[:, 1]
-            self.relative_intensity = data_array[:, 2]
+        self.data_array = np_array(data_list)
+        if self.data_array.dtype == np_float64:
+            get_inten_meth_dict = {0 : lambda : self.get_absolute_intensity(),
+                                   1 : lambda : self.get_relative_intensity(),
+                                   2 : lambda : self.get_relative_intensity_frac()}
+            self.mz = self.data_array[:, 0]
+            get_inten_meth_dict.get(intensity_type_num)()
+            #self.absolute_intensity = self.data_array[:, 1]
+            
+    def get_absolute_intensity(self):
+        self.intensity = self.data_array[:, 1]
+    def get_relative_intensity(self):
+        self.intensity = self.data_array[:, 2]
+    def get_relative_intensity_frac(self):
+        self.get_relative_intensity()
+        self.intensity = self.intensity / 100

@@ -602,7 +602,17 @@ def hplc_3d_data_checking(data, entry_objects, output_object, plot_object, purpo
         return False
     return True, intensities
 
-def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None):
+def txt_file_reading(purpose):
+    data_classes = {"chrom" : {"class" : HPLC_3D_Data, "title_arg" : "title1"},
+                    "ms1" : {"class" : MS_Data, "title_arg" : "title1"},
+                    "ms2" : {"class" : MS_Data, "title_arg" : "title2"}}
+    Data_Class = data_classes.get(purpose).get("class")
+    file_title = data_classes.get(purpose).get("title_arg")
+    data_class_args = {"file" : path}
+    start_time_calc = time.time()
+
+def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
+                        ms_inten_radiobtn_val = None):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
     redraw_diagram_method_args, main_param_dict = {}, {}
@@ -627,10 +637,11 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
             intensity_min, intensity_max = check_result[1]
         
     elif Data_Class == MS_Data:
+        intensity_type_num = ms_inten_radiobtn_val.get()
         data = Data_Class(**data_class_args)
-        data.read()
+        data.read(intensity_type_num = intensity_type_num)
         num = purpose[2]
-        dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.absolute_intensity,
+        dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.intensity,
                        file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}"}
         redraw_diagram_method_args.update({"purpose" : purpose})
         main_param_dict.update(dict_update)
@@ -708,7 +719,7 @@ def set_ms_plot_state_to_initial(plot_object, purpose, retain_data = False):
         plot_object.set_main_param_values(state = "initial", **arg_dictionary)
         plot_object.redraw_diagram(purpose = purpose)
 
-def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom"):
+def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom", ms_inten_radiobtn_val = None):
     """Selects file and removes 2 space symbols. Selected file is used for data processing. If thats not possible, will be
     raised exceptions and provided respective text output."""
     selected_file_dtype = {"chrom" : "HPLC 3D"}.get(purpose, "MS 2D")
@@ -726,11 +737,11 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         txt_f_processing_errors = tuple(txt_f_processing_errors)
         txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
                                 plot_object = plot_object, output_object = output_object, entry_objects = entry_objects,
-                                purpose = purpose) 
+                                purpose = purpose, ms_inten_radiobtn_val = ms_inten_radiobtn_val) 
         #try:
         #    txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
         #                        plot_object = plot_object, output_object = output_object, entry_objects = entry_objects,
-        #                        purpose = purpose)
+        #                        purpose = purpose, ms_inten_radiobtn_val = ms_inten_radiobtn_val)
         #except txt_f_processing_errors as err:
         #    warning_output(outputs_dict = outputs_dict, key = type(err),
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
