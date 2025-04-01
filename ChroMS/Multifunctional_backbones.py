@@ -416,7 +416,8 @@ class MultifunctionalBackbone(object):
     
     def set_ms_inten_radiobtn_funcs(self, om, select_file_args_dict):
         for i in om.inten_radiobuttons.radiobuttons:
-            om.inten_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : wmf.select_file(**select_file_args_dict))
+            om.inten_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : wmf.select_file(**select_file_args_dict, 
+                                                                                                        event_type = "ms_inten_radiobtn"))
 
     def create_ffm_multifunc_widgets(self, ffm, om, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
@@ -457,8 +458,8 @@ class MultifunctionalBackbone(object):
 
         ffm.listbox_binds = {"<Right>" : lambda event : ffm.listbox.going_up_down(direction = "down"),
                              "<Left>"  : lambda event : ffm.listbox.going_up_down(direction = "up"),
-                             "<<ListboxSelect>>" : lambda event : wmf.select_file(**select_file_args_dict),
-                             "<Return>" : lambda event : wmf.select_file(**select_file_args_dict)}
+                             "<<ListboxSelect>>" : lambda event : wmf.select_file(**select_file_args_dict, event_type = "click"),
+                             "<Return>" : lambda event : wmf.select_file(**select_file_args_dict, event_type = "click")}
         ffm.file_search_entry_binds = {"<Return>" : lambda event : wmf.focus_and_activate_listbox(listbox_object = ffm.listbox)}
         
         widgets = [ffm.combobox, ffm.listbox, ffm.file_search_entry]

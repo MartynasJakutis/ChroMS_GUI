@@ -602,34 +602,33 @@ def hplc_3d_data_checking(data, entry_objects, output_object, plot_object, purpo
         return False
     return True, intensities
 
-def txt_file_reading(purpose):
-    data_classes = {"chrom" : {"class" : HPLC_3D_Data, "title_arg" : "title1"},
-                    "ms1" : {"class" : MS_Data, "title_arg" : "title1"},
-                    "ms2" : {"class" : MS_Data, "title_arg" : "title2"}}
-    Data_Class = data_classes.get(purpose).get("class")
-    file_title = data_classes.get(purpose).get("title_arg")
-    data_class_args = {"file" : path}
-    start_time_calc = time.time()
 
-def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
-                        ms_inten_radiobtn_val = None):
+def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects,
+                        ms_inten_radiobtn_val):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
-    redraw_diagram_method_args, main_param_dict = {}, {}
+    main_param_dict = {}
+    if purpose == "chrom":
+        redraw_diagram_method_args, read_meth_args = {}, {}
+    else:
+        redraw_diagram_method_args, read_meth_args = {"purpose" : purpose}, {"intensity_type_num" : ms_inten_radiobtn_val.get()}
+
     path, truncated_file_name = get_txt_file_path(combobox_object, 
                                                   listbox_object, purpose = purpose)
+
     data_classes = {"chrom" : {"class" : HPLC_3D_Data, "title_arg" : "title1"},
                     "ms1" : {"class" : MS_Data, "title_arg" : "title1"},
                     "ms2" : {"class" : MS_Data, "title_arg" : "title2"}}
-
     Data_Class = data_classes.get(purpose).get("class")
     file_title = data_classes.get(purpose).get("title_arg")
     data_class_args = {"file" : path}
+
     start_time_calc = time.time()
 
+    data = Data_Class(**data_class_args)
+    data.read(**read_meth_args)
+
     if Data_Class == HPLC_3D_Data:
-        data = Data_Class(**data_class_args)
-        data.read()
         check_result = hplc_3d_data_checking(data, entry_objects, output_object, plot_object, purpose)
         if not check_result:
             return
@@ -637,9 +636,6 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
             intensity_min, intensity_max = check_result[1]
         
     elif Data_Class == MS_Data:
-        intensity_type_num = ms_inten_radiobtn_val.get()
-        data = Data_Class(**data_class_args)
-        data.read(intensity_type_num = intensity_type_num)
         num = purpose[2]
         dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.intensity,
                        file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}"}
@@ -668,8 +664,6 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     else:
         return
 
-    data_calc_text = f"""File: '{path}'\n Calc time: {time.time() - start_time_calc :.3f} s\n"""
-
     if Data_Class == HPLC_3D_Data:
         dict_update = {"data_rt" : data.retention_time, "data_ab" : data.ab_intensity,
                        "data_wv_all" : data.wavelengths, "data_ab_all" : data.all_ab_intensities,
@@ -681,15 +675,58 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                        file_title : truncated_file_name}
         main_param_dict.update(dict_update)
         plot_object.set_main_param_values(**main_param_dict)
-       
+
+    calc_time = time.time() - start_time_calc
+
     start_time_draw = time.time()
     plot_object.set_main_param_values(**{"state" : "not_initial", "provided_xlim" : provided_xlim,
                                          "provided_ylim" : provided_ylim})
     plot_object.redraw_diagram(**redraw_diagram_method_args)
-    data_draw_text = f"Draw time: {time.time() - start_time_draw :.3f} s"
-    output_object.insert_text(text = data_calc_text + data_draw_text,
+    draw_time = time.time() - start_time_draw
+
+    return path, calc_time, draw_time
+
+def select_file_by_click(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
+                         ms_inten_radiobtn_val = None):
+    process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
+                                          purpose, entry_objects, ms_inten_radiobtn_val)
+    if process_results == None:
+        return
+    else:
+        path, calc_time, draw_time = process_results
+
+    data_path_text = f"File: '{path}'\n"
+    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
+    output_object.insert_text(text = data_path_text + calc_draw_time,
                               output_type = "success")
     listbox_object.listbox.focus_set()
+
+def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
+                                     ms_inten_radiobtn_val = None):
+    intensity_modes = {0 : "ABSOLUTE",
+                       1 : "RELATIVE (%)",
+                       2 : "RELATIVE (FRACTION)"}
+    mod_text = f"MS intensity was set to {intensity_modes.get(ms_inten_radiobtn_val.get())}\n" 
+    try:
+        process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
+                                              purpose, entry_objects, ms_inten_radiobtn_val)
+        if process_results == None:
+            return
+        else:
+            path, calc_time, draw_time = process_results
+
+        data_path_text = f"File: '{path}'\n"
+        calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
+        output_text = data_path_text + mod_text + calc_draw_time
+
+    except:
+        output_text = mod_text
+    output_object.insert_text(text = output_text, output_type = "success")
+
+def create_data_calc_draw_text(calc_time, draw_time):
+    data_calc_text = f"""{"Calc time"}: {calc_time :>10.3f} s\n"""
+    data_draw_text = f"""{"Draw time"}: {draw_time :>9.3f} s"""
+    return data_calc_text + data_draw_text
 
 def warning_output(outputs_dict, key, output_object, plot_object, purpose, retain_data = False):
     """Outputs warning to output_object, sets plot_object state to 'initial'"""
@@ -719,9 +756,16 @@ def set_ms_plot_state_to_initial(plot_object, purpose, retain_data = False):
         plot_object.set_main_param_values(state = "initial", **arg_dictionary)
         plot_object.redraw_diagram(purpose = purpose)
 
-def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom", ms_inten_radiobtn_val = None):
+def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom", ms_inten_radiobtn_val = None,
+                event_type = "click"):
     """Selects file and removes 2 space symbols. Selected file is used for data processing. If thats not possible, will be
     raised exceptions and provided respective text output."""
+    select_file_func_args = {"combobox_object" : combobox_object, "listbox_object" : listbox_object, "plot_object" : plot_object,
+                             "output_object" : output_object, "entry_objects" : entry_objects, "purpose" : purpose,
+                             "ms_inten_radiobtn_val" : ms_inten_radiobtn_val}
+    select_file_funcs = {"click" : lambda : select_file_by_click(**select_file_func_args),
+                         "ms_inten_radiobtn" : lambda : select_file_by_ms_inten_radiobtn(**select_file_func_args)}
+    select_file_func = select_file_funcs.get(event_type)
     selected_file_dtype = {"chrom" : "HPLC 3D"}.get(purpose, "MS 2D")
     try :
         listbox_object.get_select_option()
@@ -735,13 +779,9 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         txt_f_processing_errors = list(outputs_dict.keys())
         txt_f_processing_errors.remove("OtherError")
         txt_f_processing_errors = tuple(txt_f_processing_errors)
-        txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
-                                plot_object = plot_object, output_object = output_object, entry_objects = entry_objects,
-                                purpose = purpose, ms_inten_radiobtn_val = ms_inten_radiobtn_val) 
+        select_file_func()
         #try:
-        #    txt_file_processing(combobox_object = combobox_object, listbox_object = listbox_object, 
-        #                        plot_object = plot_object, output_object = output_object, entry_objects = entry_objects,
-        #                        purpose = purpose, ms_inten_radiobtn_val = ms_inten_radiobtn_val)
+        #    select_file_func()
         #except txt_f_processing_errors as err:
         #    warning_output(outputs_dict = outputs_dict, key = type(err),
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
