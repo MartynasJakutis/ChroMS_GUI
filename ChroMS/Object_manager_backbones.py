@@ -398,7 +398,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                                                            "row" : 1, "column" : 1, "sticky" : tk.E + tk.W}}
         self.label_params_func = lambda des_lf, alg_lf : {"label1" : {"master" : alg_lf, "text" : "Intensity: ", 
                                                                       "row" : 0, "column" : 0, "sticky" : tk.W},
-                                                          "label2" : {"master" : alg_lf, "text" : "Find files: ", 
+                                                          "label2" : {"master" : alg_lf, "text" : "Trim mzs: ", 
                                                                       "row" : 1, "column" : 0, "sticky" : tk.W}}
     def create_simple_widgets(self):
         self.labelframe_params = self.labelframe_params_func(main_frame = self.master)

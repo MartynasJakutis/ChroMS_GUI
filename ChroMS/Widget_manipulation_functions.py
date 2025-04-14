@@ -706,21 +706,24 @@ def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_objec
     intensity_modes = {0 : "ABSOLUTE",
                        1 : "RELATIVE (%)",
                        2 : "RELATIVE (FRACTION)"}
-    mod_text = f"MS intensity was set to {intensity_modes.get(ms_inten_radiobtn_val.get())}\n" 
-    try:
-        process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
+    pur_num = purpose[-1]
+    mod_text = f"MS{pur_num} intensity was set to {intensity_modes.get(ms_inten_radiobtn_val.get())}\n" 
+    output_text = mod_text
+    data_mz = plot_object.get_main_param_values(f"data_mz{pur_num}")[0]
+    if type(data_mz) == int or plot_object.state == "initial":
+        output_object.insert_text(text = output_text, output_type = "success")
+        return
+
+    process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
                                               purpose, entry_objects, ms_inten_radiobtn_val)
-        if process_results == None:
-            return
-        else:
-            path, calc_time, draw_time = process_results
+    if process_results == None:
+        return
+    else:
+        path, calc_time, draw_time = process_results
 
-        data_path_text = f"File: '{path}'\n"
-        calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
-        output_text = data_path_text + mod_text + calc_draw_time
-
-    except:
-        output_text = mod_text
+    data_path_text = f"File: '{path}'\n"
+    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
+    output_text = data_path_text + mod_text + calc_draw_time        
     output_object.insert_text(text = output_text, output_type = "success")
 
 def create_data_calc_draw_text(calc_time, draw_time):
@@ -771,8 +774,12 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         listbox_object.get_select_option()
         selected_file = listbox_object.selected_file[2:]
     except IndexError as indexerr:
-        outputs_dict = tof.select_file_warnings(None, selected_file_dtype)
-        warning_output(outputs_dict = outputs_dict, key = type(indexerr),
+        if select_file_func == select_file_funcs.get("ms_inten_radiobtn"):
+          select_file_func()
+          return
+        else:
+          outputs_dict = tof.select_file_warnings(None, selected_file_dtype)
+          warning_output(outputs_dict = outputs_dict, key = type(indexerr),
                        output_object = output_object, plot_object = plot_object, purpose = purpose)
     else:
         outputs_dict = tof.select_file_warnings(selected_file, selected_file_dtype)
