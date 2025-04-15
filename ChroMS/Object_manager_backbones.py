@@ -391,36 +391,56 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
         self.frame_params_func = lambda des_lf, alg_lf : {"opt_notebook" : {"master" : des_lf, 
                                                                             "row" : 1, "column" : 1, "sticky" : tk.W},
                                                           "for_options" : {"master" : des_lf, 
-                                                                           "row" : 1, "column" : 2, "sticky" : tk.W},
-                                                          "inten_radiobtn" : {"master" : alg_lf, 
-                                                                              "row" : 0, "column" : 1, "sticky" : tk.E + tk.W},
-                                                          "file_search" : {"master" : alg_lf, 
-                                                                           "row" : 1, "column" : 1, "sticky" : tk.E + tk.W}}
-        self.label_params_func = lambda des_lf, alg_lf : {"label1" : {"master" : alg_lf, "text" : "Intensity: ", 
-                                                                      "row" : 0, "column" : 0, "sticky" : tk.W},
-                                                          "label2" : {"master" : alg_lf, "text" : "Trim mzs: ", 
-                                                                      "row" : 1, "column" : 0, "sticky" : tk.W}}
+                                                                           "row" : 1, "column" : 2, "sticky" : tk.W}}
+
     def create_simple_widgets(self):
         self.labelframe_params = self.labelframe_params_func(main_frame = self.master)
+
         for lframe in self.labelframe_params.keys():
             self.labelframes[lframe] = ctwc.LabelFrame(padx = 2.5, pady = 2.5, width = 400, height = 400, 
                                                        style = "Font.TLabelframe", sticky = tk.E + tk.W,
                                                        **self.labelframe_params[lframe]).create()
         self.frame_params = self.frame_params_func(des_lf = self.labelframes["design_options"],
                                                    alg_lf = self.labelframes["algorithms"])
+        if self.purpose == "chrom":
+            self.frame_params.update({})
+        else:
+           self.frame_params.update({"inten_radiobtn" : {"master" : self.labelframes["algorithms"], 
+                                                         "row" : 0, "column" : 1, "sticky" : tk.E + tk.W},
+                                     "trim_radiobtn" : {"master" : self.labelframes["algorithms"], 
+                                                        "row" : 1, "column" : 1, "sticky" : tk.E + tk.W},
+                                     "trim_perc": {"master" : self.labelframes["algorithms"], 
+                                                   "row" : 2, "column" : 1, "sticky" : tk.E + tk.W},
+                                     "gen_randnum_perc": {"master" : self.labelframes["algorithms"], 
+                                                          "row" : 3, "column" : 1, "sticky" : tk.E + tk.W}})
+
         for frame in self.frame_params.keys():
             self.frames[frame] = ctwc.Frame(style = "NewCusFrame.TFrame", 
                                             **self.frame_params[frame]).create()
-            
-        self.label_params = self.label_params_func(des_lf = self.labelframes["design_options"],
-                                                   alg_lf = self.labelframes["algorithms"])
+        if self.purpose == "chrom":
+            self.label_params = {"label1" : {"master" : self.labelframes["algorithms"], "text" : "Intensity: ", 
+                                         "row" : 0, "column" : 0, "sticky" : tk.W}}
+        else:
+            self.label_params = {"label1" : {"master" : self.labelframes["algorithms"], "text" : "Intensity: ", 
+                                             "row" : 0, "column" : 0, "sticky" : tk.W},
+                                 "label2" : {"master" : self.labelframes["algorithms"], "text" : "Trim mzs: ", 
+                                             "row" : 1, "column" : 0, "sticky" : tk.W},
+                                 "label3" : {"master" : self.labelframes["algorithms"], "text" : "Trim pars: ", 
+                                             "row" : 2, "column" : 0, "sticky" : tk.W},
+                                 "label4" : {"master" : self.frames["trim_perc"], "text" : "Trim values >=", 
+                                             "row" : 0, "column" : 0, "sticky" : tk.W},
+                                 "label5" : {"master" : self.frames["trim_perc"], "text" : "% of min mz", 
+                                             "row" : 0, "column" : 2, "sticky" : tk.W},
+                                 "label6" : {"master" : self.frames["gen_randnum_perc"], "text" : "Generate random numbers <=", 
+                                             "row" : 0, "column" : 0, "sticky" : tk.W},
+                                 "label7" : {"master" : self.frames["gen_randnum_perc"], "text" : "% of min mz", 
+                                             "row" : 0, "column" : 2, "sticky" : tk.W}}
+
         for label in self.label_params.keys():
             self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = "SystemButtonFace",
                                             style = "Normal.TLabel", **self.label_params[label]).create()
-        self.inten_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
-        inten_radiobtn_names = ["Absolute", "Relative (%)", "Relative (fraction)"]
         self.notebook_w_sb = ctwc.NotebookWithSbFrames(master = self.frames["opt_notebook"], 
                                                        style = "Opt.TNotebook", sticky = tk.W,
                                                        row = 0, column = 0,
@@ -432,14 +452,32 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                           row = 1, column = 0, padx = 2.5, pady = 0).create()
         widgets = [self.notebook_w_sb]
         if self.purpose in ["ms1", "ms2"] and self.ms_radiobutton_var:
+            self.inten_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
+            self.trim_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
+            inten_radiobtn_names = ["Absolute", "Relative (%)", "Relative (fraction)"]
+            trim_radiobtn_names = ["Disabled", "Change with zeros", "Change with random number"]
             self.ms_radiobutton_lf = MSRadiobuttonLabelFrame(master = self.frames["for_options"],
                                                              radiobtn_var = self.ms_radiobutton_var)
             self.inten_radiobuttons = SeveralRadiobuttons(master = self.frames["inten_radiobtn"], start_row = 0, 
                                                           start_col = 0, radiobtn_var = self.inten_radiobtn_variable, 
                                                           radiobtn_names = inten_radiobtn_names, 
                                                           orientation = "horizontal")
-            
-            widgets.extend([self.ms_radiobutton_lf, self.inten_radiobuttons])
+            self.trim_radiobuttons = SeveralRadiobuttons(master = self.frames["trim_radiobtn"], start_row = 0, 
+                                                         start_col = 0, radiobtn_var = self.trim_radiobtn_variable, 
+                                                         radiobtn_names = trim_radiobtn_names, 
+                                                         orientation = "horizontal")
+
+            self.trim_perc_entry = ctwc.Entry(master = self.frames["trim_perc"], style = "TEntry", 
+                                            font = ("TkDefaultFont", 12, "normal"), width = 5, 
+                                            row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+
+            self.gen_randnum_perc_entry = ctwc.Entry(master = self.frames["gen_randnum_perc"], style = "TEntry", 
+                                            font = ("TkDefaultFont", 12, "normal"), width = 5, 
+                                            row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
+
+
+            widgets.extend([self.ms_radiobutton_lf, self.inten_radiobuttons, self.trim_radiobuttons,
+                            self.trim_perc_entry, self.gen_randnum_perc_entry])
         for widget in widgets:
             widget.create()
 
