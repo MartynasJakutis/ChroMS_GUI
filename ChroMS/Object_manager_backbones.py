@@ -475,11 +475,28 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                             font = ("TkDefaultFont", 12, "normal"), width = 5, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
 
+            entries_list = [self.trim_perc_entry, self.gen_randnum_perc_entry]
+            const_list = [mgp.DEFAULT_MZ_TRIM_PERC, mgp.DEFAULT_MZ_RANDNUM_PERC]
+            widgets.extend([self.ms_radiobutton_lf, self.inten_radiobuttons,
+                            self.trim_radiobuttons])
 
-            widgets.extend([self.ms_radiobutton_lf, self.inten_radiobuttons, self.trim_radiobuttons,
-                            self.trim_perc_entry, self.gen_randnum_perc_entry])
+            for entry, const in zip(entries_list, const_list):
+                entry.create()
+                entry.entry.insert(index = 0, string = const)
+
+            self.trim_perc_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.trim_perc_entry,
+                                                                                                   max_len = mgp.LEN_5_DIGIT_INT))
+            self.gen_randnum_perc_entry.text_var.trace("w",
+                                                       lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.gen_randnum_perc_entry,
+                                                                                                     max_len = mgp.LEN_5_DIGIT_INT))
+
+            wmf.maintain_four_digit_integer(entry_object = self.trim_perc_entry, is_startup = True, 
+                                            max_len = mgp.LEN_5_DIGIT_INT, default_value = "70")
+            wmf.maintain_four_digit_integer(entry_object = self.gen_randnum_perc_entry, is_startup = True, 
+                                            max_len = mgp.LEN_5_DIGIT_INT, default_value = "15")
         for widget in widgets:
             widget.create()
+
 
              
 ########################################################################
