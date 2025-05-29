@@ -455,7 +455,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
             self.inten_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
             self.trim_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
             inten_radiobtn_names = ["Absolute", "Relative (%)", "Relative (fraction)"]
-            trim_radiobtn_names = ["Disabled", "Change with zeros", "Change with random number"]
+            trim_radiobtn_names = ["Disabled", "Enabled"]
             self.ms_radiobutton_lf = MSRadiobuttonLabelFrame(master = self.frames["for_options"],
                                                              radiobtn_var = self.ms_radiobutton_var)
             self.inten_radiobuttons = SeveralRadiobuttons(master = self.frames["inten_radiobtn"], start_row = 0, 
@@ -483,6 +483,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
             for entry, const in zip(entries_list, const_list):
                 entry.create()
                 entry.entry.insert(index = 0, string = const)
+                entry.entry.config(state = tk.DISABLED)
 
             self.trim_perc_entry.text_var.trace("w", lambda a,b,c: wmf.maintain_four_digit_integer(entry_object = self.trim_perc_entry,
                                                                                                    max_len = mgp.LEN_5_DIGIT_INT))
@@ -496,6 +497,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                             max_len = mgp.LEN_5_DIGIT_INT, default_value = "15")
         for widget in widgets:
             widget.create()
+       
 
 
              

@@ -604,14 +604,19 @@ def hplc_3d_data_checking(data, entry_objects, output_object, plot_object, purpo
 
 
 def txt_file_processing(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects,
-                        ms_inten_radiobtn_val):
+                        ms_inten_radiobtn_val, mz_trim_radiobtn_val):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
     main_param_dict = {}
     if purpose == "chrom":
         redraw_diagram_method_args, read_meth_args = {}, {}
     else:
-        redraw_diagram_method_args, read_meth_args = {"purpose" : purpose}, {"intensity_type_num" : ms_inten_radiobtn_val.get()}
+        intensity_type_dict = {0 : "absolute",
+                               1 : "relative_perc",
+                               2 : "relative_frac"}
+        inten_type_num = ms_inten_radiobtn_val.get()
+        intensity_type = intensity_type_dict.get(inten_type_num)
+        redraw_diagram_method_args, read_meth_args = {"purpose" : purpose}, {"intensity_type" : intensity_type}
 
     path, truncated_file_name = get_txt_file_path(combobox_object, 
                                                   listbox_object, purpose = purpose)
@@ -687,9 +692,9 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     return path, calc_time, draw_time
 
 def select_file_by_click(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
-                         ms_inten_radiobtn_val = None):
+                         ms_inten_radiobtn_val = None, mz_trim_radiobtn_val = None):
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
-                                          purpose, entry_objects, ms_inten_radiobtn_val)
+                                          purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
     if process_results == None:
         return
     else:
@@ -702,7 +707,7 @@ def select_file_by_click(combobox_object, listbox_object, plot_object, output_ob
     listbox_object.listbox.focus_set()
 
 def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
-                                     ms_inten_radiobtn_val = None):
+                                     ms_inten_radiobtn_val = None, mz_trim_radiobtn_val = None):
     intensity_modes = {0 : "ABSOLUTE",
                        1 : "RELATIVE (%)",
                        2 : "RELATIVE (FRACTION)"}
@@ -715,7 +720,31 @@ def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_objec
         return
 
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
-                                              purpose, entry_objects, ms_inten_radiobtn_val)
+                                          purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
+    if process_results == None:
+        return
+    else:
+        path, calc_time, draw_time = process_results
+
+    data_path_text = f"File: '{path}'\n"
+    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
+    output_text = data_path_text + mod_text + calc_draw_time        
+    output_object.insert_text(text = output_text, output_type = "success")
+
+def select_file_by_mz_trim_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
+                                    mz_trim_radiobtn_val = None, ms_inten_radiobtn_val = None):
+    trimming_modes = {0 : "DISABLED",
+                      1 : "ENABLED"}
+    pur_num = purpose[-1]
+    mod_text = f"Trimming of mzs{pur_num} values was set to {trimming_modes.get(mz_trim_radiobtn_val.get())}\n" 
+    output_text = mod_text
+    data_mz = plot_object.get_main_param_values(f"data_mz{pur_num}")[0]
+    if type(data_mz) == int or plot_object.state == "initial":
+        output_object.insert_text(text = output_text, output_type = "success")
+        return
+
+    process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
+                                          purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
     if process_results == None:
         return
     else:
@@ -760,21 +789,22 @@ def set_ms_plot_state_to_initial(plot_object, purpose, retain_data = False):
         plot_object.redraw_diagram(purpose = purpose)
 
 def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom", ms_inten_radiobtn_val = None,
-                event_type = "click"):
+                event_type = "click", mz_trim_radiobtn_val = None):
     """Selects file and removes 2 space symbols. Selected file is used for data processing. If thats not possible, will be
     raised exceptions and provided respective text output."""
     select_file_func_args = {"combobox_object" : combobox_object, "listbox_object" : listbox_object, "plot_object" : plot_object,
                              "output_object" : output_object, "entry_objects" : entry_objects, "purpose" : purpose,
-                             "ms_inten_radiobtn_val" : ms_inten_radiobtn_val}
+                             "ms_inten_radiobtn_val" : ms_inten_radiobtn_val, "mz_trim_radiobtn_val" : mz_trim_radiobtn_val}
     select_file_funcs = {"click" : lambda : select_file_by_click(**select_file_func_args),
-                         "ms_inten_radiobtn" : lambda : select_file_by_ms_inten_radiobtn(**select_file_func_args)}
+                         "ms_inten_radiobtn" : lambda : select_file_by_ms_inten_radiobtn(**select_file_func_args),
+                         "mz_trim_radiobtn" : lambda : select_file_by_mz_trim_radiobtn(**select_file_func_args)}
     select_file_func = select_file_funcs.get(event_type)
     selected_file_dtype = {"chrom" : "HPLC 3D"}.get(purpose, "MS 2D")
-    try :
+    try:
         listbox_object.get_select_option()
         selected_file = listbox_object.selected_file[2:]
     except IndexError as indexerr:
-        if select_file_func == select_file_funcs.get("ms_inten_radiobtn"):
+        if select_file_func in [select_file_funcs.get(i) for i in ("ms_inten_radiobtn", "mz_trim_radiobtn")]:
           select_file_func()
           return
         else:

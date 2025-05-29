@@ -262,6 +262,23 @@ class MultifunctionalBackbone(object):
                                                              **self.opm.radiobutton_on_off_pars[radiobutton])
             self.opm.radiobuttons_for_mzs[radiobutton].create()
 
+    def enable_disable_mzs_trimming_entry(self, var, select_file_args_dict):
+        trim_vars_n_entries = {self.om1.trim_radiobtn_variable == var : {"entries" : [self.om1.trim_perc_entry, self.om1.gen_randnum_perc_entry],
+                                                                  "purpose" : "ms1"},
+                               self.om2.trim_radiobtn_variable == var: {"entries" : [self.om2.trim_perc_entry, self.om2.gen_randnum_perc_entry],
+                                                                  "purpose" : "ms2"}}
+        entries, purpose = [trim_vars_n_entries.get(True).get(x) for x in ("entries", "purpose")]
+        if var.get():
+            state = tk.NORMAL
+        else:
+            state = tk.DISABLED
+        for entry in entries:
+            entry.entry.config(state = state)
+        wmf.select_file(**select_file_args_dict, event_type = "mz_trim_radiobtn")
+        #wmf.only_drawing_and_time_output(plot_object = self.opm.graph, output_object = self.opm.output, purpose = purpose,
+        #                                 changing_entry_state = {True : str_state})
+        self.change_listbox_focus(ffm_to_show = self.active_ffm)   
+
     def enable_disable_entry(self, var):
         show_peaks_str = "show_peaks"
         show_peaks_dict = {show_peaks_str : True}
@@ -398,7 +415,7 @@ class MultifunctionalBackbone(object):
   
         self.update_backbone()
         self.active_ffm = self.ffm1
-    
+
     def create_opm_entry_object_dict(self):
         self.entry_objects = {"x_min" : self.opm.x_min_entry,
                               "x_max" : self.opm.x_max_entry,
@@ -418,6 +435,9 @@ class MultifunctionalBackbone(object):
         for i in om.inten_radiobuttons.radiobuttons:
             om.inten_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : wmf.select_file(**select_file_args_dict, 
                                                                                                         event_type = "ms_inten_radiobtn"))
+        for i in om.trim_radiobuttons.radiobuttons:
+            om.trim_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : self.enable_disable_mzs_trimming_entry(var = om.trim_radiobtn_variable,
+                                                                                                                              select_file_args_dict = select_file_args_dict))
 
     def create_ffm_multifunc_widgets(self, ffm, om, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
@@ -425,7 +445,8 @@ class MultifunctionalBackbone(object):
                                  "plot_object" : self.opm.graph, "output_object" : self.opm.output,
                                  "entry_objects" : self.entry_objects, "purpose" : ffm.purpose}
         if self.purpose == "ms":
-            select_file_args_dict.update({"ms_inten_radiobtn_val" : om.inten_radiobtn_variable})
+            select_file_args_dict.update({"ms_inten_radiobtn_val" : om.inten_radiobtn_variable,
+                                          "mz_trim_radiobtn_val" : om.trim_radiobtn_variable})
             self.set_ms_inten_radiobtn_funcs(om = om, select_file_args_dict = select_file_args_dict)
 
         ffm.browse_btn = ctwc.Button(master = ffm.labelframes["file_input"], text = "Browse", 
