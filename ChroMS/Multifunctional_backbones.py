@@ -325,9 +325,9 @@ class MultifunctionalBackbone(object):
                             "provided_xlim" : (None, None), "provided_ylim" : (None, None)}
         
         if self.purpose == "chrom":
-            dict_update = {"xlabel1" : "Išėjimo laikas, min", "xlabel2" : "Išėjimo laikas, min",
-                           "ylabel1" : "EMS bangos ilgis\nλ, nm", "ylabel2" : "Sugerties intensyvumas, AU",
-                           "colorbar_label" : "Intensyvumas, AU", "colorbar_text_color" : "k",
+            dict_update = {"xlabel1" : "Time, min", "xlabel2" : "Time, min",
+                           "ylabel1" : "Wavelength\nλ, nm", "ylabel2" : "Absorption intensity, AU",
+                           "colorbar_label" : "Intensity, AU", "colorbar_text_color" : "k",
                            "colorbar_weight" : "bold", "colorbar_fontsize" : 14,
                            "data_wave_nm" : 0, "data_rt" : 0, "data_ab" : 0, "data_ab_all" : 0, "data_wv_all" : 0,
                            "intensity_min" : 0, "intensity_max" : 1, "peak_intensity" : 0, "peak_time" : 0,
@@ -338,10 +338,11 @@ class MultifunctionalBackbone(object):
             dict_update = {"need_title2" : True, "title2" : "", "title2_pos" : (0.5, 0.95),
                            "title2_text_color" : "k", "title2_weight" : "bold", "title2_fontsize" : 13,
                            "xlabel1" : "m/z", "xlabel2" : "m/z",
-                           "ylabel1" : "Absoliutus intensyvumas", "ylabel2" : "Absoliutus intensyvumas",
+                           "ylabel1" : "Absolute intensity", "ylabel2" : "Absolute intensity",
                            "data_mz1" : 0, "data_mz2" : 0, "data_inten1" : 0, "data_inten2" : 0,
                            "peak_dec_num" : 0, "show_peak_text1" : True, "show_peaks1" : True,
-                           "show_peak_text2" : True, "show_peaks2" : True}
+                           "show_peak_text2" : True, "show_peaks2" : True, "rem_perc1" : None, "rem_perc2" : None,
+                           "ran_perc1" : None, "ran_perc2" : None, "trimming_on1" : False, "trimming_on2" : False}
             Used_Diagram = MS_Diagram
             
         self.opm.graph_params.update(dict_update)
@@ -404,6 +405,7 @@ class MultifunctionalBackbone(object):
             self.om1 = self.create_option_man(outpltman = self.opm, purpose = "ms1")
             self.om2 = self.create_option_man(outpltman = self.opm, purpose = "ms2")
             self.ffms, self.oms = [self.ffm1, self.ffm2], [self.om1, self.om2]
+            self.update_opm_entry_object_dict()
             self.hist_file_names = [self.purpose + str(i) for i in range(1,3)]
             self.set_ms_radiobtn_frames_funcs()
             for i in [self.ffm2, self.om1, self.om2]:
@@ -412,9 +414,11 @@ class MultifunctionalBackbone(object):
             self.create_ffm_multifunc_widgets(ffm = ffm, om = om, hist_file_name = hf_name)
         self.set_ffm_to_options_btn_funcs()
         self.set_options_to_ffm_btn_funcs()
-  
         self.update_backbone()
         self.active_ffm = self.ffm1
+
+        #if self.purpose == "ms":
+        #    self.set_ms_trimming_radiobtn_funcs()
 
     def create_opm_entry_object_dict(self):
         self.entry_objects = {"x_min" : self.opm.x_min_entry,
@@ -431,14 +435,23 @@ class MultifunctionalBackbone(object):
             self.entry_objects.update({"find_mz1" : self.opm.find_mz1_entry,
                                        "find_mz2" : self.opm.find_mz2_entry})
     
+    def update_opm_entry_object_dict(self):
+        if self.purpose == "chrom":
+            pass
+        else:
+            self.entry_objects.update({"trim_perc1" : self.om1.trim_perc_entry,
+                                       "trim_perc2" : self.om2.trim_perc_entry,
+                                       "gen_randnum_perc1" : self.om1.gen_randnum_perc_entry,
+                                       "gen_randnum_perc2" : self.om2.gen_randnum_perc_entry})
+
     def set_ms_inten_radiobtn_funcs(self, om, select_file_args_dict):
         for i in om.inten_radiobuttons.radiobuttons:
             om.inten_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : wmf.select_file(**select_file_args_dict, 
                                                                                                         event_type = "ms_inten_radiobtn"))
         for i in om.trim_radiobuttons.radiobuttons:
             om.trim_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : self.enable_disable_mzs_trimming_entry(var = om.trim_radiobtn_variable,
-                                                                                                                              select_file_args_dict = select_file_args_dict))
-
+                                                                    select_file_args_dict = select_file_args_dict))
+        
     def create_ffm_multifunc_widgets(self, ffm, om, hist_file_name):
         """Creates ffm multifunctional widgets and binds events/keys to them"""
         select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,

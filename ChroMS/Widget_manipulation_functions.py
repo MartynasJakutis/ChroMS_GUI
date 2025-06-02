@@ -438,10 +438,10 @@ def find_and_set_ms_subplot_errors(errorkey, err_entry_names, plot_object):
     if type(err_entry_names) == str:
         split_char = " and " if errorkey == "both" else "\t"
         err_entry_names = err_entry_names.split(split_char)
-    print(err_entry_names,errorkey)
+    #print(err_entry_names,errorkey)
     ms_subplot_errors = [err_dict.get(i) for i in err_entry_names]
     plot_object.subplot_errors = ms_subplot_errors
-    print(plot_object.subplot_errors)
+    #print(plot_object.subplot_errors)
 
 def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_object, purpose):
     plot_object.subplot_errors = []
@@ -487,7 +487,7 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
     if result == False:
         warning_output(outputs_dict = outputs_dict, key = errorkey,
                        output_object = output_object, plot_object = plot_object, purpose = purpose, retain_data = True)
-    print(plot_object.subplot_errors)
+    #print(plot_object.subplot_errors)
     return result, mz1_values_fl, mz2_values_fl
 
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
@@ -614,7 +614,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         intensity_type_dict = {0 : "absolute",
                                1 : "relative_perc",
                                2 : "relative_frac"}
-        inten_type_num = ms_inten_radiobtn_val.get()
+        inten_type_num, is_trimming_on = ms_inten_radiobtn_val.get(), mz_trim_radiobtn_val.get()
         intensity_type = intensity_type_dict.get(inten_type_num)
         redraw_diagram_method_args, read_meth_args = {"purpose" : purpose}, {"intensity_type" : intensity_type}
 
@@ -642,9 +642,14 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         
     elif Data_Class == MS_Data:
         num = purpose[2]
+        rem_perc1, rem_perc2, ran_perc1, ran_perc2 = [int(entry_objects[i].entry.get()) if len(entry_objects[i].entry.get()) != 0 else None for i in 
+                                                      ["trim_perc1", "trim_perc2", "gen_randnum_perc1", "gen_randnum_perc2"]]
         dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.intensity,
-                       file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}"}
+                       file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}",
+                       f"trimming_on{num}" : is_trimming_on, "rem_perc1" : rem_perc1, "rem_perc2" : rem_perc2,
+                       "ran_perc1" : ran_perc1, "ran_perc2" : ran_perc2}
         redraw_diagram_method_args.update({"purpose" : purpose})
+        #print(rem_perc1, rem_perc2, ran_perc1, ran_perc2)
         main_param_dict.update(dict_update)
         plot_object.set_main_param_values(**main_param_dict)
         mz_exists, mz_pos_values1, mz_pos_values2 = check_mz_presence(ms_data_object = data, entry_mz1 = entry_objects["find_mz1"],
@@ -657,9 +662,11 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
             return
         else:
             plot_object.get_nearest_mz_values(mzs1 = mz_pos_values1, mzs2 = mz_pos_values2)
-            print(plot_object.mzs_provided)
-            print(plot_object.mzs_calculated)
-            print(plot_object.intensities_for_mzs)
+            #print(plot_object.mzs_provided)
+            #print(plot_object.mzs_calculated)
+            #print(plot_object.intensities_for_mzs)
+
+        
     
     x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
     are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 
@@ -816,7 +823,7 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         txt_f_processing_errors = list(outputs_dict.keys())
         txt_f_processing_errors.remove("OtherError")
         txt_f_processing_errors = tuple(txt_f_processing_errors)
-        select_file_func()
+        #select_file_func()
         #try:
         #    select_file_func()
         #except txt_f_processing_errors as err:
@@ -825,6 +832,14 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         #except:
         #    warning_output(outputs_dict = outputs_dict, key = "OtherError",
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
+        try:
+            select_file_func()
+        except txt_f_processing_errors as err:
+            warning_output(outputs_dict = outputs_dict, key = type(err),
+                           output_object = output_object, plot_object = plot_object, purpose = purpose)
+        except:
+            warning_output(outputs_dict = outputs_dict, key = "OtherError",
+                           output_object = output_object, plot_object = plot_object, purpose = purpose)
 
 
 def select_subplots(plot_object, listbox_object, output_object, entry_objects, purpose):

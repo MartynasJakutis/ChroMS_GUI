@@ -1,4 +1,8 @@
 import tkinter as tk
+from numpy.random import randint as np_random_randint
+from numpy import (where as np_where,
+                   concatenate as np_concat,
+                   zeros as np_zeros)
 
 from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
@@ -319,7 +323,7 @@ class MS_Diagram(Diagram):
                  matplotlib_style1, matplotlib_style2, state, 
                  master_labelframe, add_multiplier_w, add_multiplier_h, data_mz1, data_mz2, data_inten1,
                  data_inten2, radiobutton_var, screenheight, screenwidth, provided_xlim, provided_ylim, show_peak_text1, show_peaks1, 
-                 show_peak_text2, show_peaks2, peak_dec_num):
+                 show_peak_text2, show_peaks2, peak_dec_num, rem_perc1, rem_perc2, ran_perc1, ran_perc2, trimming_on1, trimming_on2):
         super().__init__(dpi, need_title1, title1, title1_pos, title1_text_color, 
                          title1_weight, title1_fontsize, xlabel1, xlabel2, ylabel1, ylabel2,
                          xlabel1_pos, xlabel2_pos, ylabel1_pos, ylabel2_pos, 
@@ -347,7 +351,12 @@ class MS_Diagram(Diagram):
         self.show_peaks2 = show_peaks2
         self.show_peak_text1 = show_peak_text1
         self.show_peak_text2 = show_peak_text2
-        
+        self.rem_perc1 = rem_perc1
+        self.rem_perc2 = rem_perc2
+        self.ran_perc1 = ran_perc1
+        self.ran_perc2 = ran_perc2
+        self.trimming_on1 = trimming_on1
+        self.trimming_on2 = trimming_on2
 
     def set_title_2nd_subplot(self, subplot):
         padding = self.num_subp_padding_dict.get(len(self.subplots_available))
@@ -380,7 +389,15 @@ class MS_Diagram(Diagram):
         """Shared plotting algorithm for both subplots."""
         
         if type(data_mz) != int:
-            subplot.plot(data_mz, data_inten)
+            trimming_var_dict = {"ms1" : self.trimming_on1, "ms2" : self.trimming_on2}
+            is_trimming_on = trimming_var_dict.get(purpose)
+            if is_trimming_on:
+                data_inten = self.filter_mz_inten_values(purpose)
+
+            y0 = [0] * data_inten.shape[0]
+            data_mz_term = np_concat(np_concat(([data_mz], [data_mz], [data_mz])).T)
+            data_inten_term = np_concat(np_concat(([y0], [data_inten], [y0])).T)
+            subplot.plot(data_mz_term, data_inten_term, c = "darkred", linewidth = 1)
             self.set_xlim_ylim_ms(subplot = subplot, data_mz = data_mz, data_inten = data_inten)
             self.mark_mz_peaks(subplot = subplot, data_inten = data_inten, purpose = purpose)
         else:
@@ -421,7 +438,6 @@ class MS_Diagram(Diagram):
         for k in self.saved_data_dict:
             self.zero_data_dict.update({k : 0})
         self.set_main_param_values(**self.zero_data_dict)
-        print(self.zero_data_dict)
 
     def reset_mz_and_inten_data(self):
         self.set_main_param_values(**self.saved_data_dict)
@@ -490,6 +506,38 @@ class MS_Diagram(Diagram):
             self.mzs_calculated.append(inner_list_mzs_calculated)
             self.intensities_for_mzs.append(inner_list_inten_for_mzs)
         return self.mzs_provided, self.mzs_calculated
+
+    def filter_mz_inten_values(self, purpose):
+        mz_data_dict = {"ms1" : {"name_mz" : "data_mz1", "name_inten" : "data_inten1",
+                                 "name_rem_perc" : "rem_perc1", "name_ran_perc" : "ran_perc1", "ind" : 0},
+                        "ms2" : {"name_mz" : "data_mz2", "name_inten" : "data_inten2",
+                                 "name_rem_perc" : "rem_perc2", "name_ran_perc" : "ran_perc2", "ind" : 1}}
+
+        key_names = ["name_mz", "name_inten", "name_rem_perc", "name_ran_perc", "ind"]
+        name_mz, name_inten, name_rem_perc, name_ran_perc, ind = [mz_data_dict.get(purpose).get(i) for i in key_names]
+        data_mz, data_inten, rem_perc, ran_perc = self.get_main_param_values(name_mz, name_inten, name_rem_perc, name_ran_perc)
+        used_intensities_for_mzs, used_mzs_calculated = [i[ind] for i in (self.intensities_for_mzs, self.mzs_calculated)]        
+        if (rem_perc == None) or len(used_intensities_for_mzs) == 0:
+            return data_inten
+        elif ran_perc == None:
+            ran_perc = 0
+        
+        min_data_inten = min(used_intensities_for_mzs)
+        is_higher_than_inten = data_inten >= min_data_inten * (rem_perc/100)
+        is_equal_to_calc_mz = True
+        for calc_mz in used_mzs_calculated:
+            is_equal_to_calc_mz = is_equal_to_calc_mz & (data_mz == calc_mz)
+
+        is_not_equal_to_calc_mz = ~ is_equal_to_calc_mz
+        condition = is_not_equal_to_calc_mz & is_higher_than_inten
+        random_percs = np_random_randint(low = 0, high = ran_perc + 1, size = data_inten.shape)
+        random_noise = min_data_inten * (random_percs/100)
+        data_inten_mod = np_where(condition, random_noise, data_inten)
+        return data_inten_mod
+        
+        
+#self.intensities_for_mzs
+
 ####
     def mark_mz_peaks(self, subplot, data_inten, purpose):
         show_peaks = self.show_peaks1 if purpose == "ms1" else self.show_peaks2

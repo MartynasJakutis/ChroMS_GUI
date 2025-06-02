@@ -452,6 +452,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                           row = 1, column = 0, padx = 2.5, pady = 0).create()
         widgets = [self.notebook_w_sb]
         if self.purpose in ["ms1", "ms2"] and self.ms_radiobutton_var:
+            pur_num = self.purpose[-1]
             self.inten_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
             self.trim_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
             inten_radiobtn_names = ["Absolute", "Relative (%)", "Relative (fraction)"]
@@ -460,11 +461,11 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                                              radiobtn_var = self.ms_radiobutton_var)
             self.inten_radiobuttons = SeveralRadiobuttons(master = self.frames["inten_radiobtn"], start_row = 0, 
                                                           start_col = 0, radiobtn_var = self.inten_radiobtn_variable, 
-                                                          radiobtn_names = inten_radiobtn_names, 
+                                                          radiobtn_names = inten_radiobtn_names,
                                                           orientation = "horizontal")
             self.trim_radiobuttons = SeveralRadiobuttons(master = self.frames["trim_radiobtn"], start_row = 0, 
                                                          start_col = 0, radiobtn_var = self.trim_radiobtn_variable, 
-                                                         radiobtn_names = trim_radiobtn_names, 
+                                                         radiobtn_names = trim_radiobtn_names,
                                                          orientation = "horizontal")
 
             self.trim_perc_entry = ctwc.Entry(master = self.frames["trim_perc"], style = "TEntry", 

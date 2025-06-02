@@ -143,3 +143,27 @@ class MS_Data(HPLC_MS_Data):
     def get_relative_intensity_frac(self):
         self.get_relative_intensity_perc()
         self.intensity = self.intensity / 100
+
+    #def find_mz_by_least_sqares(self, mz_provided, data_mz, data_inten):
+    #    sq_differences = (mz_provided - data_mz) ** 2
+    #    is_minimal_sq_diff = sq_differences == sq_differences.min()
+    #    tailored_mz = data_mz[is_minimal_sq_diff][0]
+    #    tailored_inten_for_mz = data_inten[is_minimal_sq_diff][0]
+    #    return tailored_mz, tailored_inten_for_mz
+
+    #def get_nearest_mz_values(self, mzs):
+    #    self.mzs_provided = mzs if mzs != None else []
+    #    self.mzs_calculated = []
+    #    self.intensities_for_mzs = []
+    #    data_mz_names, data_inten_names = ["data_mz", "data_inten"]
+    #    #for mzs_prov, data_mz_name, data_inten_name in zip(self.mzs_provided, data_mz_names, data_inten_names):
+    #    #inner_list_mzs_calculated, inner_list_inten_for_mzs = [], []
+    #    if not mzs_prov:
+    #        pass
+    #    else:
+    #        data_mz, data_inten = self.get_main_param_values(data_mz_name, data_inten_name)
+    #        for mz_prov in mzs_prov:
+    #            mz_calculated, inten_for_mz = self.find_mz_by_least_sqares(mz_provided = mz_prov, data_mz = self.mz,
+    #                                                                       data_inten = self.intensity)
+    #            self.mzs_calculated.append(mz_calculated)
+    #            self.intensities_for_mzs.append(inten_for_mz)
