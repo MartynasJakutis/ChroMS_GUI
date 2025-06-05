@@ -423,17 +423,17 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
         else:
             self.label_params = {"label1" : {"master" : self.labelframes["algorithms"], "text" : "Intensity: ", 
                                              "row" : 0, "column" : 0, "sticky" : tk.W},
-                                 "label2" : {"master" : self.labelframes["algorithms"], "text" : "Trim mzs: ", 
+                                 "label2" : {"master" : self.labelframes["algorithms"], "text" : "Trim m/zs: ", 
                                              "row" : 1, "column" : 0, "sticky" : tk.W},
                                  "label3" : {"master" : self.labelframes["algorithms"], "text" : "Trim pars: ", 
                                              "row" : 2, "column" : 0, "sticky" : tk.W},
                                  "label4" : {"master" : self.frames["trim_perc"], "text" : "Trim values >=", 
                                              "row" : 0, "column" : 0, "sticky" : tk.W},
-                                 "label5" : {"master" : self.frames["trim_perc"], "text" : "% of min mz", 
+                                 "label5" : {"master" : self.frames["trim_perc"], "text" : "% of min m/z", 
                                              "row" : 0, "column" : 2, "sticky" : tk.W},
                                  "label6" : {"master" : self.frames["gen_randnum_perc"], "text" : "Generate random numbers <=", 
                                              "row" : 0, "column" : 0, "sticky" : tk.W},
-                                 "label7" : {"master" : self.frames["gen_randnum_perc"], "text" : "% of min mz", 
+                                 "label7" : {"master" : self.frames["gen_randnum_perc"], "text" : "% of min m/z", 
                                              "row" : 0, "column" : 2, "sticky" : tk.W}}
 
         for label in self.label_params.keys():
@@ -455,7 +455,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
             pur_num = self.purpose[-1]
             self.inten_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
             self.trim_radiobtn_variable = tk.IntVar(master = self.labelframes["algorithms"], value = 0)
-            inten_radiobtn_names = ["Absolute", "Relative (%)", "Relative (fraction)"]
+            inten_radiobtn_names = ["Absolute", "Absolute (SciNot)","Relative (%)", "Relative (fraction)"]
             trim_radiobtn_names = ["Disabled", "Enabled"]
             self.ms_radiobutton_lf = MSRadiobuttonLabelFrame(master = self.frames["for_options"],
                                                              radiobtn_var = self.ms_radiobutton_var)

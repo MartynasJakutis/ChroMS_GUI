@@ -130,6 +130,7 @@ class MS_Data(HPLC_MS_Data):
         self.data_array = np_array(data_list)
         if self.data_array.dtype == np_float64:
             get_inten_meth_dict = {"absolute" : lambda : self.get_absolute_intensity(),
+                                   "absolute_scinot" : lambda : self.get_absolute_intensity(),
                                    "relative_perc" : lambda : self.get_relative_intensity_perc(),
                                    "relative_frac" : lambda : self.get_relative_intensity_frac()}
             self.mz = self.data_array[:, 0]

@@ -612,10 +612,12 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         redraw_diagram_method_args, read_meth_args = {}, {}
     else:
         intensity_type_dict = {0 : "absolute",
-                               1 : "relative_perc",
-                               2 : "relative_frac"}
+                               1 : "absolute_scinot",
+                               2 : "relative_perc",
+                               3 : "relative_frac"}
         inten_type_num, is_trimming_on = ms_inten_radiobtn_val.get(), mz_trim_radiobtn_val.get()
         intensity_type = intensity_type_dict.get(inten_type_num)
+        use_scinot = True if intensity_type == "absolute_scinot" else False
         redraw_diagram_method_args, read_meth_args = {"purpose" : purpose}, {"intensity_type" : intensity_type}
 
     path, truncated_file_name = get_txt_file_path(combobox_object, 
@@ -641,13 +643,15 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
             intensity_min, intensity_max = check_result[1]
         
     elif Data_Class == MS_Data:
-        num = purpose[2]
+        num = purpose[-1]
         rem_perc1, rem_perc2, ran_perc1, ran_perc2 = [int(entry_objects[i].entry.get()) if len(entry_objects[i].entry.get()) != 0 else None for i in 
                                                       ["trim_perc1", "trim_perc2", "gen_randnum_perc1", "gen_randnum_perc2"]]
+        space_3 = " " * 3
+        space_5 = " " * 4
         dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.intensity,
-                       file_title : truncated_file_name + f"\t{data.retention_time} min.\t{data.ionization_type}",
+                       file_title : space_3 + truncated_file_name + f"{space_5}{data.retention_time} min.{space_5}{data.ionization_type}",
                        f"trimming_on{num}" : is_trimming_on, "rem_perc1" : rem_perc1, "rem_perc2" : rem_perc2,
-                       "ran_perc1" : ran_perc1, "ran_perc2" : ran_perc2}
+                       "ran_perc1" : ran_perc1, "ran_perc2" : ran_perc2, f"use_scinot{num}" : use_scinot}
         redraw_diagram_method_args.update({"purpose" : purpose})
         #print(rem_perc1, rem_perc2, ran_perc1, ran_perc2)
         main_param_dict.update(dict_update)
@@ -715,12 +719,18 @@ def select_file_by_click(combobox_object, listbox_object, plot_object, output_ob
 
 def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
                                      ms_inten_radiobtn_val = None, mz_trim_radiobtn_val = None):
-    intensity_modes = {0 : "ABSOLUTE",
-                       1 : "RELATIVE (%)",
-                       2 : "RELATIVE (FRACTION)"}
+    intensity_modes = {0 : {"text" : "ABSOLUTE (DEFAULT)", "EN" : "Absolute intensity", "LT" : "Absoliutus intensyvumas"},
+                       1 : {"text" : "ABSOLUTE (SCINOT)", "EN" : "Absolute intensity", "LT" : "Absoliutus intensyvumas"},
+                       2 : {"text" : "RELATIVE (%)", "EN" : "Relative intensity, %", "LT" : "Santykinis intensyvumas, %"},
+                       3 : {"text" : "RELATIVE (FRACTION)", "EN" : "Relative intensity", "LT" : "Santykinis intensyvumas"}}
     pur_num = purpose[-1]
-    mod_text = f"MS{pur_num} intensity was set to {intensity_modes.get(ms_inten_radiobtn_val.get())}\n" 
+    intensity_mode_dict = intensity_modes.get(ms_inten_radiobtn_val.get())
+    intensity_mode = intensity_mode_dict.get("text")
+    ylabel_text = intensity_mode_dict.get("EN")
+    mod_text = f"MS{pur_num} intensity was set to {intensity_mode}\n" 
     output_text = mod_text
+
+    plot_object.set_main_param_values(**{f"ylabel{pur_num}" : ylabel_text})
     data_mz = plot_object.get_main_param_values(f"data_mz{pur_num}")[0]
     if type(data_mz) == int or plot_object.state == "initial":
         output_object.insert_text(text = output_text, output_type = "success")
@@ -733,10 +743,12 @@ def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_objec
     else:
         path, calc_time, draw_time = process_results
 
+
     data_path_text = f"File: '{path}'\n"
     calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
     output_text = data_path_text + mod_text + calc_draw_time        
     output_object.insert_text(text = output_text, output_type = "success")
+    
 
 def select_file_by_mz_trim_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
                                     mz_trim_radiobtn_val = None, ms_inten_radiobtn_val = None):
@@ -804,14 +816,15 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
                              "ms_inten_radiobtn_val" : ms_inten_radiobtn_val, "mz_trim_radiobtn_val" : mz_trim_radiobtn_val}
     select_file_funcs = {"click" : lambda : select_file_by_click(**select_file_func_args),
                          "ms_inten_radiobtn" : lambda : select_file_by_ms_inten_radiobtn(**select_file_func_args),
-                         "mz_trim_radiobtn" : lambda : select_file_by_mz_trim_radiobtn(**select_file_func_args)}
+                         "mz_trim_radiobtn" : lambda : select_file_by_mz_trim_radiobtn(**select_file_func_args),
+                         "find_entry_radiobtn" : lambda : select_file_by_find_entry_radiobtn(**select_file_func_args)}
     select_file_func = select_file_funcs.get(event_type)
     selected_file_dtype = {"chrom" : "HPLC 3D"}.get(purpose, "MS 2D")
     try:
         listbox_object.get_select_option()
         selected_file = listbox_object.selected_file[2:]
     except IndexError as indexerr:
-        if select_file_func in [select_file_funcs.get(i) for i in ("ms_inten_radiobtn", "mz_trim_radiobtn")]:
+        if select_file_func in [select_file_funcs.get(i) for i in ("ms_inten_radiobtn", "mz_trim_radiobtn", "find_entry_radiobtn")]:
           select_file_func()
           return
         else:
@@ -823,7 +836,7 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         txt_f_processing_errors = list(outputs_dict.keys())
         txt_f_processing_errors.remove("OtherError")
         txt_f_processing_errors = tuple(txt_f_processing_errors)
-        #select_file_func()
+        select_file_func()
         #try:
         #    select_file_func()
         #except txt_f_processing_errors as err:
@@ -832,14 +845,7 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         #except:
         #    warning_output(outputs_dict = outputs_dict, key = "OtherError",
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
-        try:
-            select_file_func()
-        except txt_f_processing_errors as err:
-            warning_output(outputs_dict = outputs_dict, key = type(err),
-                           output_object = output_object, plot_object = plot_object, purpose = purpose)
-        except:
-            warning_output(outputs_dict = outputs_dict, key = "OtherError",
-                           output_object = output_object, plot_object = plot_object, purpose = purpose)
+
 
 
 def select_subplots(plot_object, listbox_object, output_object, entry_objects, purpose):
@@ -854,6 +860,44 @@ def change_active_entries_and_radiobuttons(plot_object, entry_objects, purpose):
         pass
         #print(subplot_var_val)
         #print(entry_objects)
+
+def select_file_by_find_entry_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
+                                       mz_trim_radiobtn_val = None, ms_inten_radiobtn_val = None):
+    activity_modes = {str(tk.DISABLED) : "DISABLED",
+                      str(tk.NORMAL) : "ENABLED"}
+    pur_num = purpose[-1]
+
+    if purpose == "chrom":
+        kind_of_entry = "chromatogram peaks"
+        entry_object = entry_objects["peak_pos"]
+    else:
+        kind_of_entry = f"m/z {pur_num} peaks"
+        entry_object = entry_objects[f"find_mz{pur_num}"]
+
+    entry_activity_mode = str(entry_object.entry.cget("state")) 
+    activity_mode = activity_modes.get(entry_activity_mode)
+    
+    mod_text = f"Feature of showing {kind_of_entry} was set to {activity_mode}\n" 
+    output_text = mod_text
+    data_mz = plot_object.get_main_param_values(f"data_mz{pur_num}")[0]
+    if type(data_mz) == int or plot_object.state == "initial":
+        output_object.insert_text(text = output_text, output_type = "success")
+        #listbox_object.listbox.focus_set()
+        return
+
+    process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
+                                          purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
+    if process_results == None:
+        #listbox_object.listbox.focus_set()
+        return
+    else:
+        path, calc_time, draw_time = process_results
+
+    data_path_text = f"File: '{path}'\n"
+    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
+    output_text = data_path_text + mod_text + calc_draw_time        
+    output_object.insert_text(text = output_text, output_type = "success")
+    #listbox_object.listbox.focus_set()
 
 def only_drawing_and_time_output(plot_object, output_object, purpose, changing_entry_state = {}):
     start_time_calc = time.time()

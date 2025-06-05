@@ -223,44 +223,44 @@ class MultifunctionalBackbone(object):
     
     def create_radiobuttons_on_off_entry(self):
         """Creates radiobuttons for turning on or off the entry"""
-        self.opm.radiobuttons_for_mzs = {}
+        self.opm.radiobuttons_for_fe = {}
         if self.purpose == "chrom":
             master_frame = self.opm.frames["find_peaks"]
             self.opm.radiobutton_variable_on_off = tk.IntVar(master = self.window, value = 1)
-            self.opm.radiobutton_on_off_pars = {"ratiobutton_on" : {"master" : master_frame, "text" : "On", "row" : 0,
+            self.opm.radiobutton_on_off_pars = {"radiobutton_on" : {"master" : master_frame, "text" : "On", "row" : 0,
                                                                "column" : 4, "onvalue" : 1,
                                                                "var" : self.opm.radiobutton_variable_on_off,
-                                           "command" : lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off)},
+                                           "command" : None},
                                            "radiobutton_off" : {"master" : master_frame, "text" : "Off", "row" : 0,
                                                                 "column" : 5, "onvalue" : 0,
                                                                 "var" : self.opm.radiobutton_variable_on_off,
-                                           "command" : lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off)}}
+                                           "command" : None}}
 
         elif self.purpose == "ms":
             master_frame1, master_frame2 = [self.opm.frames[x] for x in ("find_mz1", "find_mz2")]
             self.opm.radiobutton_variable_on_off_mz1 = tk.IntVar(master = self.window, value = 1)
             self.opm.radiobutton_variable_on_off_mz2 = tk.IntVar(master = self.window, value = 1)
-            self.opm.radiobutton_on_off_pars = {"ratiobutton_on_mz1" : {"master" : master_frame1, "text" : "On", "row" : 0,
+            self.opm.radiobutton_on_off_pars = {"radiobutton_on_mz1" : {"master" : master_frame1, "text" : "On", "row" : 0,
                                                                    "column" : 1, "onvalue" : 1,
                                                                    "var" : self.opm.radiobutton_variable_on_off_mz1,
-                                           "command" : lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz1)},
+                                           "command" : None},
                                            "radiobutton_off_mz1" : {"master" : master_frame1, "text" : "Off", "row" : 0,
                                                                     "column" : 2, "onvalue" : 0,
                                                                     "var" : self.opm.radiobutton_variable_on_off_mz1,
-                                           "command" : lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz1)},
-                                           "ratiobutton_on_mz2" : {"master" : master_frame2, "text" : "On", "row" : 0,
+                                           "command" : None},
+                                           "radiobutton_on_mz2" : {"master" : master_frame2, "text" : "On", "row" : 0,
                                                                    "column" : 1, "onvalue" : 1,
                                                                    "var" : self.opm.radiobutton_variable_on_off_mz2,
-                                           "command" : lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz2)},
+                                           "command" : None},
                                            "radiobutton_off_mz2" : {"master" : master_frame2, "text" : "Off", "row" : 0,
                                                                     "column" : 2, "onvalue" : 0,
                                                                     "var" : self.opm.radiobutton_variable_on_off_mz2,
-                                           "command" : lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz2)}}
+                                           "command" : None}}
 
         for radiobutton in self.opm.radiobutton_on_off_pars.keys():
-            self.opm.radiobuttons_for_mzs[radiobutton] = ctwc.Radiobutton(padx = 2.5, pady = 0, 
+            self.opm.radiobuttons_for_fe[radiobutton] = ctwc.Radiobutton(padx = 2.5, pady = 0, 
                                                              **self.opm.radiobutton_on_off_pars[radiobutton])
-            self.opm.radiobuttons_for_mzs[radiobutton].create()
+            self.opm.radiobuttons_for_fe[radiobutton].create()
 
     def enable_disable_mzs_trimming_entry(self, var, select_file_args_dict):
         trim_vars_n_entries = {self.om1.trim_radiobtn_variable == var : {"entries" : [self.om1.trim_perc_entry, self.om1.gen_randnum_perc_entry],
@@ -275,13 +275,10 @@ class MultifunctionalBackbone(object):
         for entry in entries:
             entry.entry.config(state = state)
         wmf.select_file(**select_file_args_dict, event_type = "mz_trim_radiobtn")
-        #wmf.only_drawing_and_time_output(plot_object = self.opm.graph, output_object = self.opm.output, purpose = purpose,
-        #                                 changing_entry_state = {True : str_state})
         self.change_listbox_focus(ffm_to_show = self.active_ffm)   
 
-    def enable_disable_entry(self, var):
-        show_peaks_str = "show_peaks"
-        show_peaks_dict = {show_peaks_str : True}
+    def enable_disable_entry(self, var, select_file_args_dict):
+        show_peaks_str = "show_peaks"        
         if self.purpose == "chrom":
             entries = [self.opm.peak_value_entry, self.opm.peak_dev_entry]
             purpose = self.purpose
@@ -292,18 +289,18 @@ class MultifunctionalBackbone(object):
             purpose_dict = {var == var_mz : pur for var_mz, pur in zip(mz_variables, ["ms1", "ms2"])}
             entries = entry_dict.get(True)
             purpose = purpose_dict.get(True)
-            show_peaks_dict[show_peaks_str + purpose[-1]] = show_peaks_dict.pop(show_peaks_str)
+            show_peaks_str += purpose[-1]
         if var.get():
-            state, str_state = tk.NORMAL, "ENABLED"
+            state, str_state, show_peaks = tk.NORMAL, "ENABLED", True
         else:
-            state, str_state = tk.DISABLED, "DISABLED"
-            show_peaks_dict = {k : v for k, v in zip(show_peaks_dict, [False])}
-        self.opm.graph.set_main_param_values(**show_peaks_dict)
+            state, str_state, show_peaks = tk.DISABLED, "DISABLED", False
+        self.opm.graph.set_main_param_values(**{show_peaks_str : show_peaks})
         
         for entry in entries:
             entry.entry.config(state = state)
-        wmf.only_drawing_and_time_output(plot_object = self.opm.graph, output_object = self.opm.output, purpose = purpose,
-                                         changing_entry_state = {True : str_state})
+        #wmf.only_drawing_and_time_output(plot_object = self.opm.graph, output_object = self.opm.output, purpose = purpose,
+        #                                 changing_entry_state = {True : str_state})
+        wmf.select_file(**select_file_args_dict, event_type = "find_entry_radiobtn")
         self.change_listbox_focus(ffm_to_show = self.active_ffm)
 
     def create_graph(self):
@@ -342,7 +339,8 @@ class MultifunctionalBackbone(object):
                            "data_mz1" : 0, "data_mz2" : 0, "data_inten1" : 0, "data_inten2" : 0,
                            "peak_dec_num" : 0, "show_peak_text1" : True, "show_peaks1" : True,
                            "show_peak_text2" : True, "show_peaks2" : True, "rem_perc1" : None, "rem_perc2" : None,
-                           "ran_perc1" : None, "ran_perc2" : None, "trimming_on1" : False, "trimming_on2" : False}
+                           "ran_perc1" : None, "ran_perc2" : None, "trimming_on1" : False, "trimming_on2" : False,
+                           "use_scinot1" : False, "use_scinot2" : False}
             Used_Diagram = MS_Diagram
             
         self.opm.graph_params.update(dict_update)
@@ -402,6 +400,7 @@ class MultifunctionalBackbone(object):
             self.opm.radiobuttons["radiobutton3"].disable()
             self.ffm1 = self.create_file_folder_man(outpltman = self.opm, purpose = "ms1")
             self.ffm2 = self.create_file_folder_man(outpltman = self.opm, purpose = "ms2")
+
             self.om1 = self.create_option_man(outpltman = self.opm, purpose = "ms1")
             self.om2 = self.create_option_man(outpltman = self.opm, purpose = "ms2")
             self.ffms, self.oms = [self.ffm1, self.ffm2], [self.om1, self.om2]
@@ -412,14 +411,12 @@ class MultifunctionalBackbone(object):
                 self.hide_obj_man_labelframes(to_hide = i)
         for ffm, om, hf_name in zip(self.ffms, self.oms, self.hist_file_names):
             self.create_ffm_multifunc_widgets(ffm = ffm, om = om, hist_file_name = hf_name)
+        self.set_find_entry_radiobtn_funcs()
         self.set_ffm_to_options_btn_funcs()
         self.set_options_to_ffm_btn_funcs()
         self.update_backbone()
         self.active_ffm = self.ffm1
-
-        #if self.purpose == "ms":
-        #    self.set_ms_trimming_radiobtn_funcs()
-
+        
     def create_opm_entry_object_dict(self):
         self.entry_objects = {"x_min" : self.opm.x_min_entry,
                               "x_max" : self.opm.x_max_entry,
@@ -451,17 +448,45 @@ class MultifunctionalBackbone(object):
         for i in om.trim_radiobuttons.radiobuttons:
             om.trim_radiobuttons.radiobuttons[i].radiobutton.config(command = lambda : self.enable_disable_mzs_trimming_entry(var = om.trim_radiobtn_variable,
                                                                     select_file_args_dict = select_file_args_dict))
-        
-    def create_ffm_multifunc_widgets(self, ffm, om, hist_file_name):
-        """Creates ffm multifunctional widgets and binds events/keys to them"""
+
+    def set_find_entry_radiobtn_funcs(self):
+        if self.purpose == "chrom":
+            self.opm.radiobuttons_for_fe["radiobutton_on"].radiobutton.config(command = lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off,
+                                                                                 select_file_args_dict = self.ffm1.select_file_args_dict))
+            self.opm.radiobuttons_for_fe["radiobutton_off"].radiobutton.config(command = lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off,
+                                                                                 select_file_args_dict = self.ffm1.select_file_args_dict))
+
+        elif self.purpose == "ms":
+
+            self.opm.radiobuttons_for_fe["radiobutton_on_mz1"].radiobutton.config(command = lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz1,
+                                                                                 select_file_args_dict = self.ffm1.select_file_args_dict))
+            self.opm.radiobuttons_for_fe["radiobutton_off_mz1"].radiobutton.config(command = lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz1,
+                                                                                 select_file_args_dict = self.ffm1.select_file_args_dict))
+
+            self.opm.radiobuttons_for_fe["radiobutton_on_mz2"].radiobutton.config(command = lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz2,
+                                                                                 select_file_args_dict = self.ffm2.select_file_args_dict))
+            self.opm.radiobuttons_for_fe["radiobutton_off_mz2"].radiobutton.config(command = lambda: self.enable_disable_entry(var = self.opm.radiobutton_variable_on_off_mz2,
+                                                                                 select_file_args_dict = self.ffm2.select_file_args_dict))
+
+    def create_select_file_args_dict(self, ffm, om):
         select_file_args_dict = {"combobox_object" : ffm.combobox, "listbox_object" : ffm.listbox,
                                  "plot_object" : self.opm.graph, "output_object" : self.opm.output,
                                  "entry_objects" : self.entry_objects, "purpose" : ffm.purpose}
         if self.purpose == "ms":
             select_file_args_dict.update({"ms_inten_radiobtn_val" : om.inten_radiobtn_variable,
                                           "mz_trim_radiobtn_val" : om.trim_radiobtn_variable})
-            self.set_ms_inten_radiobtn_funcs(om = om, select_file_args_dict = select_file_args_dict)
 
+        if ffm == self.ffm1 and om == self.om1:
+            self.ffm1.select_file_args_dict = select_file_args_dict
+        elif ffm == self.ffm2 and om == self.om2:
+            self.ffm2.select_file_args_dict = select_file_args_dict
+
+    def create_ffm_multifunc_widgets(self, ffm, om, hist_file_name):
+        """Creates ffm multifunctional widgets and binds events/keys to them"""
+        
+        self.create_select_file_args_dict(ffm = ffm, om = om)
+        if self.purpose == "ms":
+            self.set_ms_inten_radiobtn_funcs(om = om, select_file_args_dict = ffm.select_file_args_dict)
         ffm.browse_btn = ctwc.Button(master = ffm.labelframes["file_input"], text = "Browse", 
                                      command = lambda : wmf.folder_search(combobox_object = ffm.combobox,
                                                                           listbox_object = ffm.listbox,
@@ -492,8 +517,8 @@ class MultifunctionalBackbone(object):
 
         ffm.listbox_binds = {"<Right>" : lambda event : ffm.listbox.going_up_down(direction = "down"),
                              "<Left>"  : lambda event : ffm.listbox.going_up_down(direction = "up"),
-                             "<<ListboxSelect>>" : lambda event : wmf.select_file(**select_file_args_dict, event_type = "click"),
-                             "<Return>" : lambda event : wmf.select_file(**select_file_args_dict, event_type = "click")}
+                             "<<ListboxSelect>>" : lambda event : wmf.select_file(**ffm.select_file_args_dict, event_type = "click"),
+                             "<Return>" : lambda event : wmf.select_file(**ffm.select_file_args_dict, event_type = "click")}
         ffm.file_search_entry_binds = {"<Return>" : lambda event : wmf.focus_and_activate_listbox(listbox_object = ffm.listbox)}
         
         widgets = [ffm.combobox, ffm.listbox, ffm.file_search_entry]
