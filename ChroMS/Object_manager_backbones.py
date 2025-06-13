@@ -150,8 +150,8 @@ class OutputPlotManagerBackbone(object):
             
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
-        self.output = ctwc.Outputwidget(master = self.labelframes["output"], width = 65, height = 6.5, 
-                                        font = ("DefaultTkFont", 12, "normal"), row = 0, column = 0, 
+        self.output = ctwc.Outputwidget(master = self.labelframes["output"], width = 72, height = 6.5, 
+                                        font = ("Consolas", 11, "normal"), row = 0, column = 0, 
                                         padx = 2.5, pady = 0)
         self.fill_set_ranges_frame(master = self.frames["set_ranges"])
         widgets = [self.output]

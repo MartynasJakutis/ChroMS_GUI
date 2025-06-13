@@ -121,6 +121,8 @@ class ChroMS_Application(object):
         elif selected_tab == self.ms_tab and selected_tab.ffm_ms_radiobutton_variable.get():
             selected_tab_listbox = selected_tab.ffm2.listbox
         else:
+            if selected_tab == self.ms_tab:
+                wmf.focus_and_activate_listbox(listbox_object = selected_tab.ffm2.listbox)
             selected_tab_listbox = selected_tab.ffm1.listbox
         wmf.focus_and_activate_listbox(listbox_object = selected_tab_listbox)
         

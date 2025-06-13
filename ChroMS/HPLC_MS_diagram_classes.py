@@ -390,7 +390,6 @@ class MS_Diagram(Diagram):
     
     def plotting_term_state_ms(self, subplot, data_mz, data_inten, purpose):
         """Shared plotting algorithm for both subplots."""
-        
         if type(data_mz) != int:
             trimming_var_dict = {"ms1" : self.trimming_on1, "ms2" : self.trimming_on2}
             use_scinot_dict = {"ms1" : self.use_scinot1, "ms2" : self.use_scinot2}
@@ -493,18 +492,19 @@ class MS_Diagram(Diagram):
         return tailored_mz, tailored_inten_for_mz
 
     def get_nearest_mz_values(self, mzs1, mzs2):
-        self.mzs_provided = [x if x != None else [] for x in (mzs1, mzs2)]
+        mzs = [mzs1, mzs2]
+        self.mzs_provided = [x if x != None else [] for x in mzs]
         self.mzs_calculated = []
         self.intensities_for_mzs = []
         mz_names, inten_names = ["data_mz", "data_inten"]
         data_mz_names, data_inten_names = [[f"{name}{num}" for num in range(1, 3)] for name in [mz_names, inten_names]]
         for mzs_prov, data_mz_name, data_inten_name in zip(self.mzs_provided, data_mz_names, data_inten_names):
             inner_list_mzs_calculated, inner_list_inten_for_mzs = [], []
-            if not mzs_prov:
+            data_mz, data_inten = self.get_main_param_values(data_mz_name, data_inten_name)
+            if not mzs_prov or type(data_mz) == int:
                 self.mzs_calculated.append(inner_list_mzs_calculated)
                 self.intensities_for_mzs.append(inner_list_inten_for_mzs)
                 continue
-            data_mz, data_inten = self.get_main_param_values(data_mz_name, data_inten_name)
             for mz_prov in mzs_prov:
                 mz_calculated, inten_for_mz = self.find_mz_by_least_sqares(mz_provided = mz_prov, data_mz = data_mz,
                                                                            data_inten = data_inten)

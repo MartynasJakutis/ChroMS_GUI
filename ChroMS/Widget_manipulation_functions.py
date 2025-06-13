@@ -339,13 +339,20 @@ def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_p
     poss_purposes = list(other_mz_name_dict.keys())
     mz_pos_values, mz_pos_values_fl = (mz_pos_values1, mz_pos_values2), (mz_pos_values_fl1, mz_pos_values_fl2) 
     
-    min_mz_curr, max_mz_curr = ms_data_object.mz.min(), ms_data_object.mz.max()
+    curr_mz = ms_data_object.mz
+    if type(curr_mz) != int:
+        min_mz_curr, max_mz_curr = curr_mz.min(), curr_mz.max()
+    else:
+        min_mz_curr, max_mz_curr = (None,) * 2
+
     other_mz_name = other_mz_name_dict.get(purpose)
     other_mz = ms_diag_object.get_data_mz(mz = other_mz_name)
+
     if type(other_mz) != int:
         min_mz_othr, max_mz_othr = other_mz.min(), other_mz.max()
     else:
         min_mz_othr, max_mz_othr = (None,) * 2
+
     min_mzs = [min_mz_curr, min_mz_othr] if purpose == poss_purposes[0] else [min_mz_othr, min_mz_curr]
     max_mzs = [max_mz_curr, max_mz_othr] if purpose == poss_purposes[0] else [max_mz_othr, max_mz_curr]
     
@@ -355,6 +362,8 @@ def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_p
                                                  min_rts = min_mzs, max_rts = max_mzs)
     entry_names = [n for n, th, tl in zip(entry_names_init, too_hi_mzs, too_lo_mzs) if th != [] or tl != []]
 
+    #normal_mzs = [n for n, th, tl in zip(entry_names_init, too_hi_mzs, too_lo_mzs) if th == [] and tl == []]
+    
     mz_ranges_ret = [ret_ranges_dict.get(entry_name) for entry_name in entry_names]
  
     too_hi_mzs_ret = [f"'{rts_for_return(rts = x)}'" for x in too_hi_mzs]
@@ -371,6 +380,7 @@ def compare_mz_positions(mz_pos_values1, mz_pos_values_fl1, mz_pos_values2, mz_p
                     "too_hi" : too_hi_mzs_ret,
                     "too_lo" : too_lo_mzs_ret,
                     "mz_ranges" : mz_ranges_ret}    
+    
 
     return result, errorkey, warning_args    
 
@@ -464,9 +474,10 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
         are_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = mz1_str, rt_dev_str = mz2_str,
                                                                         rt_pos_values = mz1_values, rt_dev_values = mz2_values,
                                                                         for_ms = True)
+        print(are_no_num_found, not are_no_num_found)
         err_entry_names = warning_args.get("entry_names")
     else:
-        return None, mz1_values_fl, mz2_values_fl
+        return None, mz1_values_fl, mz2_values_fl, None, None
     
     if not are_no_num_found:
         mz1_values_fl, mz2_values_fl = [list(map(float, x)) if x != None else None for x in [mz1_values, mz2_values]]
@@ -484,11 +495,15 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
         find_and_set_ms_subplot_errors(errorkey, err_entry_names, plot_object)
         outputs_dict = tof.set_peaks_warnings_val_mz(errorkey, **warning_args) if not outputs_dict else outputs_dict
 
-    if result == False:
-        warning_output(outputs_dict = outputs_dict, key = errorkey,
-                       output_object = output_object, plot_object = plot_object, purpose = purpose, retain_data = True)
-    #print(plot_object.subplot_errors)
-    return result, mz1_values_fl, mz2_values_fl
+    #if result == False:
+    #    warning_output(outputs_dict = outputs_dict, key = errorkey,
+    #                   output_object = output_object, plot_object = plot_object, purpose = purpose, retain_data = True)
+    for subplot in plot_object.subplot_errors:
+        if subplot == "subplot1":
+            mz1_values_fl = []
+        elif subplot == "subplot2":
+            mz2_values_fl = []
+    return result, mz1_values_fl, mz2_values_fl, outputs_dict, errorkey
 
 def check_rt_presence(hplc_3d_data_object, entry_pos, entry_dev, output_object, plot_object, purpose):
     result, outputs_dict, rt_pos_values, rt_dev_values = False, None, None, None
@@ -607,6 +622,8 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                         ms_inten_radiobtn_val, mz_trim_radiobtn_val):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
+    err_text = ""
+    mzs_text_str = ""
     main_param_dict = {}
     if purpose == "chrom":
         redraw_diagram_method_args, read_meth_args = {}, {}
@@ -646,39 +663,45 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         num = purpose[-1]
         rem_perc1, rem_perc2, ran_perc1, ran_perc2 = [int(entry_objects[i].entry.get()) if len(entry_objects[i].entry.get()) != 0 else None for i in 
                                                       ["trim_perc1", "trim_perc2", "gen_randnum_perc1", "gen_randnum_perc2"]]
-        space_3 = " " * 3
-        space_5 = " " * 4
+        space_3, space_4 = " " * 3, " " * 4
         dict_update = {f"data_mz{num}" : data.mz, f"data_inten{num}" : data.intensity,
-                       file_title : space_3 + truncated_file_name + f"{space_5}{data.retention_time} min.{space_5}{data.ionization_type}",
+                       file_title : space_3 + truncated_file_name + f"{space_4}{data.retention_time} min.{space_4}{data.ionization_type}",
                        f"trimming_on{num}" : is_trimming_on, "rem_perc1" : rem_perc1, "rem_perc2" : rem_perc2,
                        "ran_perc1" : ran_perc1, "ran_perc2" : ran_perc2, f"use_scinot{num}" : use_scinot}
-        redraw_diagram_method_args.update({"purpose" : purpose})
+        redraw_diagram_method_args.update({"purpose" : purpose, "ms_error" : True})
         #print(rem_perc1, rem_perc2, ran_perc1, ran_perc2)
         main_param_dict.update(dict_update)
         plot_object.set_main_param_values(**main_param_dict)
-        mz_exists, mz_pos_values1, mz_pos_values2 = check_mz_presence(ms_data_object = data, entry_mz1 = entry_objects["find_mz1"],
-                                                                      entry_mz2 = entry_objects["find_mz2"], output_object = output_object,
-                                                                      plot_object = plot_object, purpose = purpose)
+        check_mz_presence_results = check_mz_presence(ms_data_object = data, entry_mz1 = entry_objects["find_mz1"],
+                                                      entry_mz2 = entry_objects["find_mz2"], output_object = output_object,
+                                                      plot_object = plot_object, purpose = purpose)
+        mz_exists, mz_pos_values1, mz_pos_values2, outputs_dict, errorkey = check_mz_presence_results
         if mz_exists == None:
             plot_object.get_nearest_mz_values(mzs1 = mz_pos_values1, mzs2 = mz_pos_values2)
             #data.get_max_ab_intensities_by_rts(rt_pos = rt_pos_values, rt_dev = rt_dev_values)
         elif not mz_exists:
-            return
-        else:
             plot_object.get_nearest_mz_values(mzs1 = mz_pos_values1, mzs2 = mz_pos_values2)
-            #print(plot_object.mzs_provided)
-            #print(plot_object.mzs_calculated)
-            #print(plot_object.intensities_for_mzs)
+            mzs_prov, mzs_calc = plot_object.get_nearest_mz_values(mzs1 = mz_pos_values1, mzs2 = mz_pos_values2)
+            #print(mzs_prov, mzs_calc)
+            mzs_text_str = get_text_mzs_prov_calc(mzs_prov, mzs_calc)
+            out_type, out_text = outputs_dict[errorkey]
+            err_text = out_text
+        else:
+            mzs_prov, mzs_calc = plot_object.get_nearest_mz_values(mzs1 = mz_pos_values1, mzs2 = mz_pos_values2)
+            mzs_text_str = get_text_mzs_prov_calc(mzs_prov, mzs_calc)
+            #print(mzs_prov, mzs_calc)
 
         
-    
-    x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
-    are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 
-                                           output_object = output_object, plot_object = plot_object, purpose = purpose)
-    if are_limits_correct:
-        provided_xlim, provided_ylim = x_y_limit_processing(x_min, x_max, y_min, y_max)
+    if purpose != "chrom" and mz_exists == False:
+        provided_xlim, provided_ylim = (None, None), (None, None)
     else:
-        return
+        x_min, x_max, y_min, y_max = [entry_objects[x].entry.get() for x in ["x_min", "x_max", "y_min", "y_max"]]
+        are_limits_correct = check_axis_limits(x_min = x_min, x_max = x_max, y_min = y_min, y_max = y_max, 
+                                           output_object = output_object, plot_object = plot_object, purpose = purpose)
+        if are_limits_correct:
+            provided_xlim, provided_ylim = x_y_limit_processing(x_min, x_max, y_min, y_max)
+        else:
+            return
 
     if Data_Class == HPLC_3D_Data:
         dict_update = {"data_rt" : data.retention_time, "data_ab" : data.ab_intensity,
@@ -700,22 +723,107 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     plot_object.redraw_diagram(**redraw_diagram_method_args)
     draw_time = time.time() - start_time_draw
 
-    return path, calc_time, draw_time
+    return path, calc_time, draw_time, err_text, mzs_text_str
+
+def get_spacing_correction_for_values(mzs):
+    mzs_strs = [str(i) for i in mzs]
+    nums_aft_dec = [len(i[i.index(".") + 1 : ]) for i in mzs_strs]
+    max_nums_aft_dec = max(nums_aft_dec)
+    spacing_corr = [max_nums_aft_dec - i for i in nums_aft_dec]
+    return spacing_corr
+
+def get_text_mzs_prov_calc(mzs_prov, mzs_calc):
+    mzs_text_list = []
+    mz_labels = [f"m/z {i}" for i in range(1,3)]
+    for mz_label, mzs_p, mzs_c in zip(mz_labels, mzs_prov, mzs_calc):
+        if any([x == [] for x in (mzs_p, mzs_c)]):
+            continue
+        mz_prov_lab, mz_calc_lab = [mz_label + " " + i for i in ("provided", "calculated")]
+        mz_prov_l_spacing, mz_calc_l_spacing = len(mz_prov_lab) + 3, len(mz_calc_lab) + 5
+        title = f"{mz_prov_lab:>{mz_prov_l_spacing}}{mz_calc_lab:>{mz_calc_l_spacing}}"
+        mzs_text_list.append(title)
+        
+        mzs_p_corr = get_spacing_correction_for_values(mzs = mzs_p)
+        mzs_c_corr = get_spacing_correction_for_values(mzs = mzs_c)
+        
+        for mz_p, mz_c, mz_p_corr, mz_c_corr in zip(mzs_p, mzs_c, mzs_p_corr, mzs_c_corr):
+            mz_prov_v_spacing = mz_prov_l_spacing - mz_p_corr
+            mz_calc_v_spacing = mz_calc_l_spacing - mz_c_corr + mz_p_corr
+            mz_values = f"{mz_p:>{mz_prov_v_spacing}}{mz_c:>{mz_calc_v_spacing}}"
+            mzs_text_list.append(mz_values)
+        mzs_text_list.append("")
+    mzs_text_str = "\n".join(mzs_text_list)
+    return mzs_text_str
+
+def get_message_about_run_pars(running_from_entry, purpose, entry_objects):
+    def add_entry_msg_line(msg_dict, entry_name, var_type, ending, fixed_len = False):
+        if fixed_len:
+            entry_text = rts_for_return(entry_objects[entry_name].entry.get())
+        else:
+            entry_text = entry_objects[entry_name].entry.get()
+        msg_dict[entry_name] = f"{var_type} was set to {entry_text} {ending}.\n"
+    msg_dict = {}
+    if purpose == "chrom":
+        x_axis_dim, y_axis_dim = "min", "AU"
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "wv", var_type = "Wavelength", ending = "nm")
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "inten_min", var_type = "Minimum intensity", ending = "AU")
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "inten_max", var_type = "Maximum intensity", ending = "AU")
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "peak_pos", 
+                           var_type = "Peak positions sequence", ending = "min", fixed_len = True)
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "peak_dev", 
+                           var_type = "Peak deviations sequence", ending = "min", fixed_len = True)
+        #msg_dict = {"wv_entry" : f"Wavelength was set to {}"}
+    elif purpose in ["ms1", "ms2"]:
+        x_axis_dim, y_axis_dim = "m/z", "units"
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "find_mz1",
+                           var_type = "m/z 1 peak sequence", ending = x_axis_dim, fixed_len = True)
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "find_mz2", 
+                           var_type = "m/z 2 peak sequence", ending = x_axis_dim, fixed_len = True)
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "trim_perc1", var_type = "Trim percentage 1", ending = "% of min m/z")
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "trim_perc2", var_type = "Trim percentage 2", ending = "% of min m/z")
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "gen_randnum_perc1", 
+                           var_type = "Random number percentage 1", ending = "% of min m/z")
+        add_entry_msg_line(msg_dict = msg_dict, entry_name = "gen_randnum_perc2",
+                           var_type = "Random number percentage 2", ending = "% of min m/z")
+    add_entry_msg_line(msg_dict = msg_dict, entry_name = "x_min", var_type = "X axis minimum", ending = x_axis_dim)
+    add_entry_msg_line(msg_dict = msg_dict, entry_name = "x_max", var_type = "X axis maximum", ending = x_axis_dim)
+    add_entry_msg_line(msg_dict = msg_dict, entry_name = "y_min", var_type = "Y axis minimum", ending = y_axis_dim)
+    add_entry_msg_line(msg_dict = msg_dict, entry_name = "y_max", var_type = "Y axis maximum", ending = y_axis_dim)
+    msg = msg_dict.get(running_from_entry, "")
+    return msg
+#rts_for_return(rts)
+
+def make_file_processing_text_output(path, calc_time, draw_time, mod_text, err_text, output_object, plot_object, listbox_object, purpose):
+    data_path_text = f"File: '{path}'\n"
+    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
+    if mod_text:
+        output_text = data_path_text + "\n" + mod_text + "\n" + calc_draw_time
+    else:
+        output_text = data_path_text + "\n" + calc_draw_time
+    if not err_text:
+        output_object.insert_text(text = output_text, output_type = "success")
+    else:
+        output_object.insert_text(text = output_text, output_type = "warning")
+        set_ms_plot_state_to_initial(plot_object, purpose, retain_data = True)
+    listbox_object.listbox.focus_set()
 
 def select_file_by_click(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
-                         ms_inten_radiobtn_val = None, mz_trim_radiobtn_val = None):
+                         ms_inten_radiobtn_val = None, mz_trim_radiobtn_val = None, running_from_entry = None):
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
                                           purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
     if process_results == None:
         return
     else:
-        path, calc_time, draw_time = process_results
+        path, calc_time, draw_time, err_text, mzs_text_str = process_results
+        mod_text = get_message_about_run_pars(running_from_entry = running_from_entry, purpose = purpose, entry_objects = entry_objects)
+        if mzs_text_str:
+            mod_text += mzs_text_str        
+        if err_text:
+            mod_text += err_text + "\n"
 
-    data_path_text = f"File: '{path}'\n"
-    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
-    output_object.insert_text(text = data_path_text + calc_draw_time,
-                              output_type = "success")
-    listbox_object.listbox.focus_set()
+    make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
+                                     err_text = err_text, output_object = output_object, plot_object = plot_object, 
+                                     listbox_object = listbox_object, purpose = purpose)
 
 def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
                                      ms_inten_radiobtn_val = None, mz_trim_radiobtn_val = None):
@@ -741,15 +849,16 @@ def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_objec
     if process_results == None:
         return
     else:
-        path, calc_time, draw_time = process_results
-
-
-    data_path_text = f"File: '{path}'\n"
-    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
-    output_text = data_path_text + mod_text + calc_draw_time        
-    output_object.insert_text(text = output_text, output_type = "success")
+        path, calc_time, draw_time, err_text, mzs_text_str = process_results
+        if mzs_text_str:
+            mod_text += mzs_text_str        
+        if err_text:
+            mod_text += err_text + "\n"
+        
+    make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
+                                     err_text = err_text, output_object = output_object, plot_object = plot_object, 
+                                     listbox_object = listbox_object, purpose = purpose)
     
-
 def select_file_by_mz_trim_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
                                     mz_trim_radiobtn_val = None, ms_inten_radiobtn_val = None):
     trimming_modes = {0 : "DISABLED",
@@ -767,15 +876,20 @@ def select_file_by_mz_trim_radiobtn(combobox_object, listbox_object, plot_object
     if process_results == None:
         return
     else:
-        path, calc_time, draw_time = process_results
+        path, calc_time, draw_time, err_text, mzs_text_str = process_results
+        if mzs_text_str:
+            mod_text += mzs_text_str        
+        if err_text:
+            mod_text += err_text + "\n"
+        
+    make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
+                                     err_text = err_text, output_object = output_object, plot_object = plot_object, 
+                                     listbox_object = listbox_object, purpose = purpose)
 
-    data_path_text = f"File: '{path}'\n"
-    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
-    output_text = data_path_text + mod_text + calc_draw_time        
-    output_object.insert_text(text = output_text, output_type = "success")
+
 
 def create_data_calc_draw_text(calc_time, draw_time):
-    data_calc_text = f"""{"Calc time"}: {calc_time :>10.3f} s\n"""
+    data_calc_text = f"""{"Calc time"}: {calc_time :>9.3f} s\n"""
     data_draw_text = f"""{"Draw time"}: {draw_time :>9.3f} s"""
     return data_calc_text + data_draw_text
 
@@ -808,23 +922,25 @@ def set_ms_plot_state_to_initial(plot_object, purpose, retain_data = False):
         plot_object.redraw_diagram(purpose = purpose)
 
 def select_file(combobox_object, listbox_object, plot_object, output_object, entry_objects, purpose = "chrom", ms_inten_radiobtn_val = None,
-                event_type = "click", mz_trim_radiobtn_val = None):
+                event_type = "click", mz_trim_radiobtn_val = None, running_from_entry = None):
     """Selects file and removes 2 space symbols. Selected file is used for data processing. If thats not possible, will be
     raised exceptions and provided respective text output."""
     select_file_func_args = {"combobox_object" : combobox_object, "listbox_object" : listbox_object, "plot_object" : plot_object,
                              "output_object" : output_object, "entry_objects" : entry_objects, "purpose" : purpose,
                              "ms_inten_radiobtn_val" : ms_inten_radiobtn_val, "mz_trim_radiobtn_val" : mz_trim_radiobtn_val}
-    select_file_funcs = {"click" : lambda : select_file_by_click(**select_file_func_args),
+    select_file_funcs = {"click" : lambda : select_file_by_click(**select_file_func_args, running_from_entry = running_from_entry),
                          "ms_inten_radiobtn" : lambda : select_file_by_ms_inten_radiobtn(**select_file_func_args),
                          "mz_trim_radiobtn" : lambda : select_file_by_mz_trim_radiobtn(**select_file_func_args),
-                         "find_entry_radiobtn" : lambda : select_file_by_find_entry_radiobtn(**select_file_func_args)}
+                         "find_entry_radiobtn" : lambda : select_file_by_find_entry_radiobtn(**select_file_func_args),
+                         "change_subplots_radiobtn": lambda : select_file_by_subplots_radiobtn(**select_file_func_args)}
     select_file_func = select_file_funcs.get(event_type)
     selected_file_dtype = {"chrom" : "HPLC 3D"}.get(purpose, "MS 2D")
     try:
         listbox_object.get_select_option()
         selected_file = listbox_object.selected_file[2:]
     except IndexError as indexerr:
-        if select_file_func in [select_file_funcs.get(i) for i in ("ms_inten_radiobtn", "mz_trim_radiobtn", "find_entry_radiobtn")]:
+        if select_file_func in [select_file_funcs.get(i) for i in ("ms_inten_radiobtn", "mz_trim_radiobtn",
+                                                                   "find_entry_radiobtn")]:
           select_file_func()
           return
         else:
@@ -836,7 +952,7 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         txt_f_processing_errors = list(outputs_dict.keys())
         txt_f_processing_errors.remove("OtherError")
         txt_f_processing_errors = tuple(txt_f_processing_errors)
-        select_file_func()
+        #select_file_func()
         #try:
         #    select_file_func()
         #except txt_f_processing_errors as err:
@@ -847,6 +963,54 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
 
 
+        #try:
+        #    select_file_func()
+        #except txt_f_processing_errors as err:
+        #    warning_output(outputs_dict = outputs_dict, key = type(err),
+        #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
+        #except:
+        #    warning_output(outputs_dict = outputs_dict, key = "OtherError",
+        #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
+
+        try:
+            select_file_func()
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+
+def select_file_by_subplots_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
+                                    mz_trim_radiobtn_val = None, ms_inten_radiobtn_val = None):
+    pur_num = purpose[-1]
+    subplots_options = {0 : "BOTH",
+                        1 : "SUBPLOT1",
+                        2 : "SUBPLOT2"}
+    data_dict = {"chrom" : {"data_name" : "data_rt", "redraw_method" : lambda x : x.redraw_diagram()},
+                 "ms1" : {"data_name" : f"data_mz{pur_num}", "redraw_method" : lambda x : x.redraw_diagram(purpose = purpose, ms_error = True)},
+                 "ms2" : {"data_name" : f"data_mz{pur_num}", "redraw_method" : lambda x : x.redraw_diagram(purpose = purpose, ms_error = True)}}
+    selected_subplots = subplots_options.get(plot_object.radiobutton_var.get())
+
+    mod_text = f"""Selection of subplots was changed to {selected_subplots}\n"""
+    output_text = mod_text
+    data_objects = data_dict.get(purpose)
+    data_name = data_objects.get("data_name")
+    redraw_diag = data_objects.get("redraw_method")
+    #data = plot_object.get_main_param_values(data_name)[0]
+
+    process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
+                                          purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
+    if process_results == None:
+        redraw_diag(plot_object)
+        return
+    else:
+        path, calc_time, draw_time, err_text, mzs_text_str = process_results
+        if mzs_text_str:
+            mod_text += mzs_text_str        
+        if err_text:
+            mod_text += err_text + "\n"
+        
+    make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
+                                     err_text = err_text, output_object = output_object, plot_object = plot_object, 
+                                     listbox_object = listbox_object, purpose = purpose)
 
 def select_subplots(plot_object, listbox_object, output_object, entry_objects, purpose):
     """Changes number of shown subplots by redrawing diagram."""
@@ -880,24 +1044,37 @@ def select_file_by_find_entry_radiobtn(combobox_object, listbox_object, plot_obj
     mod_text = f"Feature of showing {kind_of_entry} was set to {activity_mode}\n" 
     output_text = mod_text
     data_mz = plot_object.get_main_param_values(f"data_mz{pur_num}")[0]
-    if type(data_mz) == int or plot_object.state == "initial":
-        output_object.insert_text(text = output_text, output_type = "success")
-        #listbox_object.listbox.focus_set()
-        return
+    #if type(data_mz) == int or plot_object.state == "initial":
+    #    output_object.insert_text(text = output_text, output_type = "success")
+    #    return
 
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
                                           purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
     if process_results == None:
-        #listbox_object.listbox.focus_set()
         return
     else:
-        path, calc_time, draw_time = process_results
+        path, calc_time, draw_time, err_text, mzs_text_str = process_results
+        if mzs_text_str:
+            mod_text += mzs_text_str        
+        if err_text:
+            mod_text += err_text + "\n"
+        
+    make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
+                                     err_text = err_text, output_object = output_object, plot_object = plot_object, 
+                                     listbox_object = listbox_object, purpose = purpose)
 
-    data_path_text = f"File: '{path}'\n"
-    calc_draw_time = create_data_calc_draw_text(calc_time, draw_time)
-    output_text = data_path_text + mod_text + calc_draw_time        
-    output_object.insert_text(text = output_text, output_type = "success")
-    #listbox_object.listbox.focus_set()
+def select_file_depending_on_ffm(ffm_radiobtn_var, ffm, active_ffm, running_from_entry):
+    ffm_radiobtn_val = ffm_radiobtn_var.get()
+    select_file_args_dict = ffm.select_file_args_dict
+    if running_from_entry == "find_mz1":
+        is_current_ffm = ffm_radiobtn_val == 0
+    elif running_from_entry == "find_mz2":
+        is_current_ffm = ffm_radiobtn_val == 1
+    select_file(**select_file_args_dict, event_type = "click",
+                running_from_entry = running_from_entry)
+    if not is_current_ffm:
+        listbox_object = active_ffm.listbox
+        focus_and_activate_listbox(listbox_object)
 
 def only_drawing_and_time_output(plot_object, output_object, purpose, changing_entry_state = {}):
     start_time_calc = time.time()

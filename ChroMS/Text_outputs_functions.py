@@ -99,7 +99,7 @@ def set_peaks_warnings_val_mz(errorkey, entry_names, too_hi, too_lo, mz_ranges):
         if th != "''":
             new_line = new_line_init + f"Too high values: {th}."
             if tl != "''":
-                new_line += "\n" + " " * 23 + f"Too low values: {tl}."
+                new_line += "\n" + " " * 15 + f"Too low values: {tl}."
         elif tl != "''":
             new_line = new_line_init + f"Too low values: {tl}"
         else:
