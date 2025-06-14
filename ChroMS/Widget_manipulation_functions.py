@@ -273,7 +273,7 @@ def check_for_not_num_rt(rt_pos_str, rt_dev_str, rt_pos_values, rt_dev_values, f
     poss_ent_names = ["'Find m/z 1'", "'Find m/z 2'"] if for_ms else ["'Peak positions'", "'Peak deviations'"]
     ent_names = [n for n, s in zip(poss_ent_names, strings) if s != None]
     used_strs = [x for x in strings if x != None]
-    used_values = [x for x in values if x != None]
+    used_values = [x for x in values if x != []]
 
     are_not_num = [x.replace(".", "").replace(",", "") == "" for x in used_strs]
     are_dot_num = [calculate_only_dot_values(data_values = x) for x in used_values]
@@ -474,7 +474,6 @@ def check_mz_presence(ms_data_object, entry_mz1, entry_mz2, output_object, plot_
         are_no_num_found, errorkey, warning_args = check_for_not_num_rt(rt_pos_str = mz1_str, rt_dev_str = mz2_str,
                                                                         rt_pos_values = mz1_values, rt_dev_values = mz2_values,
                                                                         for_ms = True)
-        print(are_no_num_found, not are_no_num_found)
         err_entry_names = warning_args.get("entry_names")
     else:
         return None, mz1_values_fl, mz2_values_fl, None, None
@@ -622,6 +621,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                         ms_inten_radiobtn_val, mz_trim_radiobtn_val):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
+    start_time_calc = time.time()
     err_text = ""
     mzs_text_str = ""
     main_param_dict = {}
@@ -646,8 +646,6 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     Data_Class = data_classes.get(purpose).get("class")
     file_title = data_classes.get(purpose).get("title_arg")
     data_class_args = {"file" : path}
-
-    start_time_calc = time.time()
 
     data = Data_Class(**data_class_args)
     data.read(**read_meth_args)
@@ -715,11 +713,13 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
         main_param_dict.update(dict_update)
         plot_object.set_main_param_values(**main_param_dict)
 
-    calc_time = time.time() - start_time_calc
+    
 
-    start_time_draw = time.time()
+    
     plot_object.set_main_param_values(**{"state" : "not_initial", "provided_xlim" : provided_xlim,
                                          "provided_ylim" : provided_ylim})
+    calc_time = time.time() - start_time_calc    
+    start_time_draw = time.time()
     plot_object.redraw_diagram(**redraw_diagram_method_args)
     draw_time = time.time() - start_time_draw
 
@@ -807,6 +807,13 @@ def make_file_processing_text_output(path, calc_time, draw_time, mod_text, err_t
         set_ms_plot_state_to_initial(plot_object, purpose, retain_data = True)
     listbox_object.listbox.focus_set()
 
+def append_to_output_text(mod_text, mzs_text_str, err_text):
+    if mzs_text_str:
+        mod_text += mzs_text_str        
+    if err_text:
+        mod_text += err_text + "\n"
+    return mod_text
+
 def select_file_by_click(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
                          ms_inten_radiobtn_val = None, mz_trim_radiobtn_val = None, running_from_entry = None):
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
@@ -816,11 +823,7 @@ def select_file_by_click(combobox_object, listbox_object, plot_object, output_ob
     else:
         path, calc_time, draw_time, err_text, mzs_text_str = process_results
         mod_text = get_message_about_run_pars(running_from_entry = running_from_entry, purpose = purpose, entry_objects = entry_objects)
-        if mzs_text_str:
-            mod_text += mzs_text_str        
-        if err_text:
-            mod_text += err_text + "\n"
-
+        mod_text = append_to_output_text(mod_text, mzs_text_str, err_text)
     make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
                                      err_text = err_text, output_object = output_object, plot_object = plot_object, 
                                      listbox_object = listbox_object, purpose = purpose)
@@ -843,18 +846,15 @@ def select_file_by_ms_inten_radiobtn(combobox_object, listbox_object, plot_objec
     if type(data_mz) == int or plot_object.state == "initial":
         output_object.insert_text(text = output_text, output_type = "success")
         return
-
+    
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
                                           purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
+    
     if process_results == None:
         return
     else:
         path, calc_time, draw_time, err_text, mzs_text_str = process_results
-        if mzs_text_str:
-            mod_text += mzs_text_str        
-        if err_text:
-            mod_text += err_text + "\n"
-        
+        mod_text = append_to_output_text(mod_text, mzs_text_str, err_text)
     make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
                                      err_text = err_text, output_object = output_object, plot_object = plot_object, 
                                      listbox_object = listbox_object, purpose = purpose)
@@ -870,18 +870,13 @@ def select_file_by_mz_trim_radiobtn(combobox_object, listbox_object, plot_object
     if type(data_mz) == int or plot_object.state == "initial":
         output_object.insert_text(text = output_text, output_type = "success")
         return
-
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
                                           purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
     if process_results == None:
         return
     else:
         path, calc_time, draw_time, err_text, mzs_text_str = process_results
-        if mzs_text_str:
-            mod_text += mzs_text_str        
-        if err_text:
-            mod_text += err_text + "\n"
-        
+        mod_text = append_to_output_text(mod_text, mzs_text_str, err_text)
     make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
                                      err_text = err_text, output_object = output_object, plot_object = plot_object, 
                                      listbox_object = listbox_object, purpose = purpose)
@@ -963,20 +958,20 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
 
 
-        #try:
-        #    select_file_func()
-        #except txt_f_processing_errors as err:
-        #    warning_output(outputs_dict = outputs_dict, key = type(err),
-        #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
-        #except:
-        #    warning_output(outputs_dict = outputs_dict, key = "OtherError",
-        #                   output_object = output_object, plot_object = plot_object, purpose = purpose)
-
         try:
             select_file_func()
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
+        except txt_f_processing_errors as err:
+            warning_output(outputs_dict = outputs_dict, key = type(err),
+                           output_object = output_object, plot_object = plot_object, purpose = purpose)
+        except:
+            warning_output(outputs_dict = outputs_dict, key = "OtherError",
+                           output_object = output_object, plot_object = plot_object, purpose = purpose)
+
+        #try:
+        #    select_file_func()
+        #except Exception as e:
+        #    import traceback
+        #    traceback.print_exc()
 
 def select_file_by_subplots_radiobtn(combobox_object, listbox_object, plot_object, output_object, purpose, entry_objects = None, 
                                     mz_trim_radiobtn_val = None, ms_inten_radiobtn_val = None):
@@ -1003,11 +998,7 @@ def select_file_by_subplots_radiobtn(combobox_object, listbox_object, plot_objec
         return
     else:
         path, calc_time, draw_time, err_text, mzs_text_str = process_results
-        if mzs_text_str:
-            mod_text += mzs_text_str        
-        if err_text:
-            mod_text += err_text + "\n"
-        
+        mod_text = append_to_output_text(mod_text, mzs_text_str, err_text)
     make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
                                      err_text = err_text, output_object = output_object, plot_object = plot_object, 
                                      listbox_object = listbox_object, purpose = purpose)
@@ -1047,18 +1038,13 @@ def select_file_by_find_entry_radiobtn(combobox_object, listbox_object, plot_obj
     #if type(data_mz) == int or plot_object.state == "initial":
     #    output_object.insert_text(text = output_text, output_type = "success")
     #    return
-
     process_results = txt_file_processing(combobox_object, listbox_object, plot_object, output_object, 
                                           purpose, entry_objects, ms_inten_radiobtn_val, mz_trim_radiobtn_val)
     if process_results == None:
         return
     else:
         path, calc_time, draw_time, err_text, mzs_text_str = process_results
-        if mzs_text_str:
-            mod_text += mzs_text_str        
-        if err_text:
-            mod_text += err_text + "\n"
-        
+        mod_text = append_to_output_text(mod_text, mzs_text_str, err_text)
     make_file_processing_text_output(path = path, calc_time = calc_time, draw_time = draw_time, mod_text = mod_text,
                                      err_text = err_text, output_object = output_object, plot_object = plot_object, 
                                      listbox_object = listbox_object, purpose = purpose)
