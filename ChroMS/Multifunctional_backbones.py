@@ -1,4 +1,5 @@
-import tkinter as tk
+﻿import tkinter as tk
+from matplotlib import style as stl
 
 from Object_manager_backbones import OutputPlotManagerBackbone, FileFolderManagerBackbone, OptionManagerBackbone
 from HPLC_MS_diagram_classes import HPLC_Diagram, MS_Diagram
@@ -7,6 +8,12 @@ import Custom_tkinter_widget_classes as ctwc
 import Widget_manipulation_functions as wmf
 
 import Main_GUI_parameters as mgp
+
+identifiers = mgp.DEFAULT_MATPLOTLIB_STYLE_IDENTIFIERS
+check_for_identifiers = lambda name, ids : all([i in name for i in ids]) 
+
+default_matplotlib_styles = [s for s in stl.available if check_for_identifiers(name = s, ids = identifiers)]
+default_matplotlib_style = default_matplotlib_styles[0]
 
 class MultifunctionalBackbone(object):
     """Class which has methods to create Output and Plot, File and Folder managers (opm, ffm), concatenate 
@@ -349,7 +356,8 @@ class MultifunctionalBackbone(object):
                             "ylabel1_weight" : "bold", "ylabel2_weight" : "bold",
                             "xlabel1_fontsize" : 14, "xlabel2_fontsize" : 14,
                             "ylabel1_fontsize" : 14, "ylabel2_fontsize" : 14,
-                            "matplotlib_style1" : "seaborn-v0_8-ticks", "matplotlib_style2" : "seaborn-v0_8-ticks",
+                            "matplotlib_style1" : default_matplotlib_style, 
+                            "matplotlib_style2" : default_matplotlib_style,
                             "master_labelframe" : self.opm.labelframes["chrom/ms"], 
                             "add_multiplier_w" : 0.98, "add_multiplier_h" : 0.90,
                             "radiobutton_var" : self.opm.radiobutton_variable, "state" : "initial", 

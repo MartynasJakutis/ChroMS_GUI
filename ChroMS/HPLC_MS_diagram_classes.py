@@ -1,4 +1,4 @@
-import tkinter as tk
+﻿import tkinter as tk
 from numpy.random import randint as np_random_randint
 from numpy import (where as np_where,
                    concatenate as np_concat,
@@ -21,6 +21,7 @@ NavigationToolbar2.toolitems = 3 * (NONE_TUPLE,) + (('Home', 'Reset original vie
                                3 * (NONE_TUPLE,) + (('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),) +\
                                5 * (NONE_TUPLE,) + (('Save', 'Save the figure', 'filesave', 'save_figure'),) +\
                                3 * (NONE_TUPLE,)
+
 
 class Diagram(object):
     """Parent class of HPLC_Diagram and MS_Diagram. Includes shared attributes and methods."""
@@ -68,14 +69,17 @@ class Diagram(object):
         self.screenheight = screenheight
         self.add_multiplier_w = add_multiplier_w
         self.add_multiplier_h = add_multiplier_h
-        self.figsize = (self.screenwidth/(1.9 * self.dpi) * self.add_multiplier_w, 
-                        self.screenheight/(1.2 * self.dpi) * self.add_multiplier_h)
+
         self.radiobutton_var = radiobutton_var
-        self.num_subp_padding_dict = {1 : 25, 2 : 15}
+
         self.provided_xlim = provided_xlim
         self.provided_ylim = provided_ylim
-          
-        self.selected_layout = None        
+        
+        self.figsize = (self.screenwidth/(1.9 * self.dpi) * self.add_multiplier_w, 
+                        self.screenheight/(1.2 * self.dpi) * self.add_multiplier_h)
+        self.num_subp_padding_dict = {1 : 25, 2 : 15}
+        self.selected_layout = None
+ 
 
     def create_a_figure(self):
         """Creates Figure canvas containing matplotlib.Figure object with its 
@@ -137,8 +141,12 @@ class Diagram(object):
         layouts_dict = {"initial" : None,
                         "not_initial" : "constrained"}
         self.selected_layout = layouts_dict.get(self.state)
-        self.fig.set_layout_engine(self.selected_layout)
-   
+        try:
+            self.fig.set_layout_engine(self.selected_layout)
+        except:
+            need_cl = True if self.selected_layout != None else False
+            self.fig.set_constrained_layout(need_cl)
+
     def adjust_figure_subplots(self):
         if self.radiobutton_var.get() == 0 and self.selected_layout == None:
             self.fig.subplots_adjust(hspace = 0.4)
@@ -264,7 +272,7 @@ class HPLC_Diagram(Diagram):
                                      vmin = self.intensity_min, vmax = self.intensity_max)
         self.set_labels_1st_subplot(subplot = subplot)
         subplot.set_ylim(max(self.data_wv_all), min(self.data_wv_all))
-        cbar = self.fig.colorbar(heatmap)
+        cbar = self.fig.colorbar(heatmap, ax = subplot)
         cbar.set_label(label = self.colorbar_label, weight = self.colorbar_weight,
                        fontsize = self.colorbar_fontsize, color = self.colorbar_text_color,
                        rotation = 90, loc = "center")

@@ -1,4 +1,4 @@
-------------
+﻿------------
 DESCRIPTION
 ------------
 HPLC-MS (High-Performance Liquid Chromatography–Mass Spectrometry) data is 
@@ -23,12 +23,18 @@ design cusotmization features.
 ------------
 INSTALATION
 ------------
-ChroMS_GUI is compatible with Windows 10.
+ChroMS_GUI is compatible with Windows 7 and Windows 10 OS.
 However, it is currently not supported on Linux operating systems.
 
-To ensure optimal functionality of the ChroMS_GUI, make sure that you have
-Python version 3.12.4 (optional) and packages with corresponding versions
-provided in 'requirements.txt' file.
+To ensure functionality of the ChroMS_GUI, make sure that you have
+Python version 3.12.4 (for optimal functionality version should be >= 3.7.4) and 
+packages with corresponding versions provided in 'requirements.txt' file.
+
+Package versions (while running the code) should be at least:
+numpy		1.21.5
+matplotlib	3.5.3
+tk		8.6.14
+
 If you are using Python 3, tkinter should be already bound to your Python.
 Otherwise you can use 'conda install tk' or 'pip install tk' in your 
 terminal or cmd to install it.
@@ -52,7 +58,7 @@ x Execution of ChroMS_GUI:
    *You take the responsibility for the errors you made by irresponsible
     behaviour in every .py file in 'ChroMS' folder.
 
----Default 'Main_GUI_parameters.py' file contents:
+---Default 'Main_GUI_parameters.py' file contents (old data):
    *The following script (no identations):
     TAB_1_NAME = "Blank Page"
     HPLC_TAB_NAME = "HPLC"
@@ -83,7 +89,9 @@ x Execution of ChroMS_GUI:
     -Execute the program by running the code inside 'Notebook_script.ipynb'.
 
    *Number 4 (Use compiled project version):
-    -Execute the program by running its executable file on Windows 10.
+    -Execute the program by running its executable file supported on your OS.
+     #Windows 7
+     #Windows 10
  
 ------------
 USAGE NOTES
