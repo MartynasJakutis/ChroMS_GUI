@@ -1,7 +1,7 @@
 ﻿------------
 DESCRIPTION
 ------------
-HPLC-MS (High-Performance Liquid Chromatography–Mass Spectrometry) data is 
+HPLC-MS (High-Performance Liquid Chromatography-Mass Spectrometry) data is 
 usually analyzed using commercial data analysis software. However, such software 
 often ties users to a specific workplace and forces them to take illegal actions 
 to create more convenient working conditions.
@@ -24,8 +24,10 @@ design cusotmization features.
 INSTALATION
 ------------
 ChroMS_GUI is compatible with Windows 7 and Windows 10 OS.
-However, it is currently not supported on Linux operating systems.
+Additionally, it is supported on Linux operating systems (tested on Lubuntu
+24.04.2 LTS distro).
 
+If you are executing ChroMS_GUI as a Python script:
 To ensure functionality of the ChroMS_GUI, make sure that you have
 Python version 3.12.4 (for optimal functionality version should be >= 3.7.4) and 
 packages with corresponding versions provided in 'requirements.txt' file.
@@ -72,7 +74,7 @@ x Execution of ChroMS_GUI:
     -Run 'python ChroMS_application.py' in your terminal that has Python 
      installed.
     -Before that set your current working directory to 
-     YOUR_PATH/ChroMS_GUI/ChroMS using 'cd' function
+     YOUR_PATH(change this part)/ChroMS_GUI/ChroMS using 'cd' function
     -YOUR_PATH is the path where the ChroMS_GUI project can be found.
    *Number 2 (Writing script in Jupyter notebook or including in other .py file
     that is executed):
@@ -92,6 +94,16 @@ x Execution of ChroMS_GUI:
     -Execute the program by running its executable file supported on your OS.
      #Windows 7
      #Windows 10
+     #Linux
+    -On Linux you can create a YOUR_NAME.desktop file to enable more convenient startup.
+     Edit this file by adding the following lines (no identations):
+
+     [Desktop Entry]
+     Type=Application
+     Name=YOUR_PROVIDED_NAME
+     Exec=PATH TO THE EXECUTABLE FILE (ENDS WITH:  /ChroMS_GUI_Linux/chroms_gui/chroms_gui)
+     Icon=PATH TO THE ICON FILE (ENDS WITH:  /ChroMS_GUI_Linux/chroms_gui/_internal/icons/ChroMS_icon.png)
+     Terminal=false
  
 ------------
 USAGE NOTES
