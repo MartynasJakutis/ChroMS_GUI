@@ -4,7 +4,8 @@ import tkinter.messagebox
 
 import Custom_tkinter_widget_classes as ctwc
 from Multifunctional_backbones import MultifunctionalBackbone
-import Widget_manipulation_functions as wmf
+from Widget_manipulation_functions import (focus_and_activate_listbox as wmf_focus_and_activate_listbox)
+from Path_manipulation_functions import (create_dir_if_not_present as pmf_create_dir_if_not_present)
 
 import Main_GUI_parameters as mgp
 
@@ -26,7 +27,7 @@ class ChroMS_Application(object):
 
     def create_folders(self):
         for folder in self.folder_name_list:
-            wmf.create_dir_if_not_present(dir_name = folder)
+            pmf_create_dir_if_not_present(dir_name = folder)
 
     def set_window_params(self):
         self.screenwidth = self.window.winfo_screenwidth()
@@ -34,6 +35,8 @@ class ChroMS_Application(object):
         self.window.state(self.window_state)
         self.window.title(self.window_title)
         self.window.geometry(f"{self.screenwidth}x{self.screenheight}")
+        icon = tk.PhotoImage(file = mgp.WINDOW_ICON_PATH)
+        self.window.iconphoto(True, icon)
         
     def define_and_set_styles(self):
         """Sets random tab background color and random tkinter theme."""
@@ -46,37 +49,37 @@ class ChroMS_Application(object):
         self.theme = style_themes[random.randint(0, len(style_themes) - 1)]
 
         self.tk_styles.theme_use(self.theme)
-
         self.widget_styles = {"NewNotebook.TNotebook" : {"background" : self.tab_bg_color, "foreground" : "green"},
                               "Main.TNotebook.Tab" : {"background" : "green", "foreground" : "black", 
-                                                 "font" : ("URW Gothic L", 16, "bold"), "padding" : [0, 0], "width" : 10,
+                                                 "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_PRIMARY, "bold"), "padding" : [0, 0], "width" : 12,
                                                  "anchor" : "center"},
                               "Opt.TNotebook.Tab" : {"background" : "green", "foreground" : "black", 
-                                                    "font" : ("URW Gothic L", 14, "normal"), "padding" : [0, 0], "width" : 5,
+                                                    "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_SECONDARY, "normal"), "padding" : [0, 0], "width" : 5,
                                                     "anchor" : "center"},
                               "NewTabFrame.TFrame" : {"background" : self.tab_bg_color, "padding" : [0, 0]},
-                              "NewCusFrame.TFrame" : {"background" : "SystemButtonFace", "padding" : [0, 0]},
-                              "TLabelframe" : {"foreground" : "black", "background" : "SystemButtonFace",
-                                               "font": ("TkDefaultFont", 16, "normal")},
-                              "Font.TLabelframe" : {"foreground" : "black", "background" : "SystemButtonFace",
-                                                    "font" : ("TkDefaultFont", 16, "normal"), 
+                              "NewCusFrame.TFrame" : {"background" : mgp.DEFAULT_LABEL_COLOR, "padding" : [0, 0]},
+                              "TLabelframe" : {"foreground" : "black", "background" : mgp.DEFAULT_LABEL_COLOR,
+                                               "font": (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_PRIMARY, "normal")},
+                              "Font.TLabelframe" : {"foreground" : "black", "background" : mgp.DEFAULT_LABEL_COLOR,
+                                                    "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_PRIMARY, "normal"), 
                                                     "relief" : "solid"},
-                              "Bold.TLabel" : {"background" : "SystemButtonFace",
-                                               "font" : ("TkDefaultFont", 16, "bold")},
-                              "Normal.TLabel" : {"background" : "SystemButtonFace", 
-                                                 "font" : ("TkDefaultFont", 12, "normal")},
-                              "NegMessage.TLabel" : {"background" : "SystemButtonFace", 
-                                                     "font" : ("TkDefaultFont", 12, "underline"),
+                              "Bold.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR,
+                                               "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_PRIMARY, "bold")},
+                              "Normal.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR, 
+                                                 "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal")},
+                              "NegMessage.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR, 
+                                                     "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "underline"),
                                                      "foreground" : "red"}, 
-                              "PosMessage.TLabel" : {"background" : "SystemButtonFace", 
-                                                     "font" : ("TkDefaultFont", 12, "underline"),
+                              "PosMessage.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR, 
+                                                     "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "underline"),
                                                      "foreground" : "green"},
-                              "TEntry" : {"font": ("TkDefaultFont", 16, "bold")},
+                              "TEntry" : {"font": (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_PRIMARY, "bold")},
                               #"NoSelect.TEntry" : {"font": ("TkDefaultFont", 16, "bold")},
                               "TButton" : {"background" : "green", 
-                                           "font" : ("TkDefaultFont", 12, "normal")},
-                              "TCheckbutton" : {"background" : "SystemButtonFace"},
-                              "TRadiobutton" : {"background" : "SystemButtonFace"}
+                                           "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), "width" : 10,
+                                           "padding" : (0,0)},
+                              "TCheckbutton" : {"background" : mgp.DEFAULT_LABEL_COLOR},
+                              "TRadiobutton" : {"background" : mgp.DEFAULT_LABEL_COLOR}
                             }
         #self.widget_dynamic_styles = {"NoSelect.TEntry" : {"selectbackground" : [("focus", "white"), ("!focus", "white")],
         #                                                   "selectforeground" : [("focus", "black"), ("!focus", "black")],
@@ -122,9 +125,9 @@ class ChroMS_Application(object):
             selected_tab_listbox = selected_tab.ffm2.listbox
         else:
             if selected_tab == self.ms_tab:
-                wmf.focus_and_activate_listbox(listbox_object = selected_tab.ffm2.listbox)
+                wmf_focus_and_activate_listbox(listbox_object = selected_tab.ffm2.listbox)
             selected_tab_listbox = selected_tab.ffm1.listbox
-        wmf.focus_and_activate_listbox(listbox_object = selected_tab_listbox)
+        wmf_focus_and_activate_listbox(listbox_object = selected_tab_listbox)
         
     def close_window(self):
         if tkinter.messagebox.askokcancel("Quit", "Are you sure about that?"):

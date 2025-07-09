@@ -144,14 +144,14 @@ class OutputPlotManagerBackbone(object):
             
         for label in self.label_params.keys():
             padx = (5, 20) if label == "label9" else (5, 0)
-            self.labels[label] = ctwc.Label(padx = padx, pady = 0, background = "SystemButtonFace",
+            self.labels[label] = ctwc.Label(padx = padx, pady = 0, background = mgp.DEFAULT_LABEL_COLOR,
                                             style = "Normal.TLabel", **self.label_params[label]).create()
         
             
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
-        self.output = ctwc.Outputwidget(master = self.labelframes["output"], width = 72, height = 6.5, 
-                                        font = ("Consolas", 11, "normal"), row = 0, column = 0, 
+        self.output = ctwc.Outputwidget(master = self.labelframes["output"], width = mgp.CONSOLE_WIDTH, height = 6.5, 
+                                        font = (mgp.DEFAULT_CONSOLE_SCHRIFT, 11, "normal"), row = 0, column = 0, 
                                         padx = 2.5, pady = 0)
         self.fill_set_ranges_frame(master = self.frames["set_ranges"])
         widgets = [self.output]
@@ -159,13 +159,13 @@ class OutputPlotManagerBackbone(object):
         self.create_entries_for_peak_search()
         if self.purpose == "chrom":
             self.wv_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 5, 
+                                       font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 5, 
                                        row = 0, column = 0, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             self.inten_min_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 8, 
+                                       font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 8, 
                                        row = 0, column = 3, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             self.inten_max_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
-                                       font = ("TkDefaultFont", 12, "normal"), width = 8, 
+                                       font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 8, 
                                        row = 0, column = 5, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             
             entries_list = [self.wv_entry, self.inten_min_entry, self.inten_max_entry, 
@@ -247,48 +247,48 @@ class OutputPlotManagerBackbone(object):
         x_units, y_units = ("min.", "AU") if self.purpose == "chrom" else ("m/z", "I")
         self.set_ranges_label_params = {"label1" : {"master" : master, "text" : "X [", 
                                                     "row" : 0, "column" : 0, "sticky" : tk.E},
-                                        "label2" : {"master" : master, "text" : "–", 
+                                        "label2" : {"master" : master, "text" : "-", 
                                                     "row" : 0, "column" : 2, "sticky" : tk.E + tk.W},
                                         "label3" : {"master" : master, "text" : f"] {x_units}", 
                                                      "row" : 0, "column" : 4, "sticky" : tk.W},
                                         "label4" : {"master" : master, "text" : "Y [", 
                                                      "row" : 0, "column" : 5, "sticky" : tk.E},
-                                        "label5" : {"master" : master, "text" : "–", 
+                                        "label5" : {"master" : master, "text" : "-", 
                                                      "row" : 0, "column" : 7, "sticky" : tk.E + tk.W},
                                         "label6" : {"master" : master, "text" : f"] {y_units}", 
                                                      "row" : 0, "column" : 9, "sticky" : tk.W}}
         for label in self.set_ranges_label_params.keys():
             padx = (5, 0)
-            self.set_ranges_labels[label] = ctwc.Label(padx = padx, pady = 0, background = "SystemButtonFace",
+            self.set_ranges_labels[label] = ctwc.Label(padx = padx, pady = 0, background = mgp.DEFAULT_LABEL_COLOR,
                                                        style = "Normal.TLabel", **self.set_ranges_label_params[label]).create()
         
         self.x_min_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
                                       row = 0, column = 1, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.x_max_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
                                       row = 0, column = 3, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.y_min_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
                                       row = 0, column = 6, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.y_max_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = ("TkDefaultFont", 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
                                       row = 0, column = 8, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
 
     def create_entries_for_peak_search(self):
         if self.purpose == "chrom":
             self.peak_value_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
-                                               font = ("TkDefaultFont", 12, "normal"), width = 15, 
+                                               font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 15, 
                                                row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
             self.peak_dev_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
-                                             font = ("TkDefaultFont", 12, "normal"), width = 8, 
+                                             font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 8, 
                                              row = 0, column = 2, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         elif self.purpose == "ms":
             self.find_mz1_entry = ctwc.Entry(master = self.frames["find_mz1"], style = "TEntry", 
-                                               font = ("TkDefaultFont", 12, "normal"), width = 15, 
+                                               font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 15, 
                                                row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
             self.find_mz2_entry = ctwc.Entry(master = self.frames["find_mz2"], style = "TEntry", 
-                                               font = ("TkDefaultFont", 12, "normal"), width = 15, 
+                                               font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 15, 
                                                row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.ctrl_entries = self.return_controlled_entries()
     def return_controlled_entries(self):
@@ -348,17 +348,19 @@ class FileFolderManagerBackbone(OutputPlotManagerBackbone):
         self.label_params = self.label_params_func(input_lf = self.labelframes["file_input"],
                                                    filter_lf = self.labelframes["file_filter"])
         for label in self.label_params.keys():
-            self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = "SystemButtonFace",
+            self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = mgp.DEFAULT_LABEL_COLOR,
                                             style = "Normal.TLabel", **self.label_params[label]).create()
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
         self.combobox = ctwc.ComboBox(master = self.labelframes["file_input"],
-                                      width = 70, row = 0, column = 1)
-        self.listbox = ctwc.Listbox(master = self.frames["listbox"], background = 'black', foreground = 'green', width = 70, 
+                                      width = mgp.FOLDER_COMBOBOX_WIDTH, row = 0, column = 1)
+        self.listbox = ctwc.Listbox(master = self.frames["listbox"], background = 'black', foreground = 'green',
+                                    width = mgp.FILE_LISTBOX_WIDTH, 
                                     height = 10, selectbackground = 'gray', selectforeground = 'black', row = 0, column = 0, 
                                     padx = (0, 0), pady = 0, padx_scroll = 0, pady_scroll = 0, exportselection = False)
         self.file_search_entry = ctwc.Entry(master = self.frames["file_search"], style = "TEntry", 
-                                            font = ("TkDefaultFont", 12, "normal"), width = 55, 
+                                            font = (mgp.DEFAULT_SCHRIFT, 12, "normal"),
+                                            width = mgp.FILE_SEARCH_ENTRY_WIDTH, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
         self.to_options_btn = ctwc.Button(master = self.frames["for_options"], text = "To options", 
                                           command = lambda : None,
@@ -437,7 +439,7 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                              "row" : 0, "column" : 2, "sticky" : tk.W}}
 
         for label in self.label_params.keys():
-            self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = "SystemButtonFace",
+            self.labels[label] = ctwc.Label(padx = (5, 0), pady = 0, background = mgp.DEFAULT_LABEL_COLOR,
                                             style = "Normal.TLabel", **self.label_params[label]).create()
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
@@ -469,11 +471,11 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                                          orientation = "horizontal")
 
             self.trim_perc_entry = ctwc.Entry(master = self.frames["trim_perc"], style = "TEntry", 
-                                            font = ("TkDefaultFont", 12, "normal"), width = 5, 
+                                            font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 5, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
 
             self.gen_randnum_perc_entry = ctwc.Entry(master = self.frames["gen_randnum_perc"], style = "TEntry", 
-                                            font = ("TkDefaultFont", 12, "normal"), width = 5, 
+                                            font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 5, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
 
             entries_list = [self.trim_perc_entry, self.gen_randnum_perc_entry]

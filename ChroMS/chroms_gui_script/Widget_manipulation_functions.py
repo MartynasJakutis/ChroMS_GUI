@@ -1,27 +1,16 @@
 import tkinter as tk
-import os
-import time
 
 from HPLC_MS_data_classes import HPLC_3D_Data, MS_Data
+from time import (time as time_time)
 
 import Text_outputs_functions as tof
 import Main_GUI_parameters as mgp
+import Path_manipulation_functions as pmf
 
 def write_output_type_n_text(outputs_dict, key, output_object):
     """Uses output dictionary whose text is inserted into Outputwidget using specific output type."""
     out_type, out_text = outputs_dict[key]
     output_object.insert_text(text = out_text, output_type = out_type)
-
-def get_path(folder, file):
-    """Returns path consisting of folder and file. folder, file - str."""
-    return os.path.join(folder, file)
-
-def create_dir_if_not_present(dir_name, parent_dir = os.getcwd()):
-    """Creates a directory in specific parent_dir if the dir_name is not present there.
-    dir_name, parent_dir - str."""
-    if dir_name not in os.listdir(parent_dir):
-        new_path = get_path(parent_dir, dir_name)
-        os.mkdir(new_path)
 
 def fast_filter(symbol, filter_str, check_str):
     """Checks if filter_str is suitable to find check_str. Symbol is such character which indicates missing parts of the text or
@@ -62,12 +51,12 @@ def filter_by_file_name(combobox_object, listbox_object, FILE_EXT, entry_object)
                     FILE_EXT = FILE_EXT, entry_object = entry_object, save_hist = False)
     
 def update_combobox(combobox_object, listbox_object, FILE_EXT, entry_object,
-                    hist_folder = "my_browsing_history", hist_file_name = "chrom", save_hist = True):
+                    hist_file_name = "chrom", save_hist = True):
     """Updates combobox (also listbox) and saves combobox contents into history file."""
     combobox_object.get_select_option()
-    if os.path.isdir(combobox_object.selected_folder):
+    if pmf.isdir(combobox_object.selected_folder):
         if save_hist:
-            combobox_object.save(folder = hist_folder, name = hist_file_name)
+            combobox_object.save(name = hist_file_name)
         file_search(combobox_object = combobox_object, listbox_object = listbox_object, FILE_EXT = FILE_EXT,
                     entry_object = entry_object)
     
@@ -92,7 +81,7 @@ def check_dir_presence(combobox_object, listbox_object, FILE_EXT, entry_object,
                        outputs_dict, output_object, folder, hist_file_name):
     """Checks if directory is found and modifies combobox. 
     Returns is_dir - bool"""
-    is_dir = os.path.isdir(folder)
+    is_dir = pmf.isdir(folder) if folder != () else False
     if is_dir:
         mod_and_update_combobox(combobox_object, listbox_object, FILE_EXT, entry_object, folder, hist_file_name)
     else:
@@ -110,7 +99,8 @@ def file_search(combobox_object, listbox_object, FILE_EXT, entry_object):
         
     selected_folder = combobox_object.selected_folder
     listbox_object.clear()
-    file_list = os.listdir(selected_folder)
+    file_list_unsorted = pmf.listdir(selected_folder)
+    file_list = sorted(file_list_unsorted)
     for file in file_list:
         condition4 = FILE_NAME_FILTER.lower() in file.lower()
         condition5 = fast_filter(symbol = "*", filter_str = FILE_NAME_FILTER.lower(),
@@ -119,7 +109,7 @@ def file_search(combobox_object, listbox_object, FILE_EXT, entry_object):
         if not FILE_EXT and any([condition4, condition5]):
             insert_to_listbox()
         else:
-            is_folder = os.path.isdir(selected_folder + "\\"+ file)
+            is_folder = pmf.isdir(pmf.get_path(selected_folder, file))
             condition1 = "folder" in FILE_EXT and is_folder
             condition2 = any([ext in file for ext in FILE_EXT if (ext != "folder" and ext != "")])
             condition3 = all([("" in FILE_EXT) and (".txt" not in file) and not is_folder])
@@ -130,8 +120,9 @@ def file_search(combobox_object, listbox_object, FILE_EXT, entry_object):
 
 def folder_search(combobox_object, listbox_object, FILE_EXT, entry_object, output_object, hist_file_name):
     """Folder search through filedialog."""
-    create_dir_if_not_present(dir_name = mgp.DATA_FOLDER_NAMES[0])
-    folder = tk.filedialog.askdirectory(initialdir = mgp.DATA_FOLDER_NAMES[0])
+    pmf.create_dir_if_not_present(dir_name = mgp.DATA_FOLDER_NAMES[0])
+    initial_search_dir = pmf.get_path(mgp.SCRIPT_PATH_FATHER, mgp.DATA_FOLDER_NAMES[0])
+    folder = tk.filedialog.askdirectory(initialdir = initial_search_dir)
     outputs_dict = tof.load_folder_outputs_mod(folder)
     check_dir_presence(combobox_object = combobox_object, listbox_object = listbox_object, FILE_EXT = FILE_EXT,
                        entry_object = entry_object, outputs_dict = outputs_dict, output_object = output_object,
@@ -173,7 +164,7 @@ def get_txt_file_path(combobox_object, listbox_object, purpose = "chrom"):
     for end in end_of_txt_file:
         truncated_file_name = truncated_file_name.replace(end, "")
     folder_name = combobox_object.selected_folder
-    path = get_path(folder_name, file_name)
+    path = pmf.get_path(folder_name, file_name)
     return path, truncated_file_name
 
 def get_nearest_values(possible_values, sq_differences, num = 10, ret_type = int):
@@ -621,7 +612,7 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
                         ms_inten_radiobtn_val, mz_trim_radiobtn_val):
     """HPLC and MS data processing. Reads files, saves the data in data classes, draws diagrams and calculates time used to 
     complete these processes."""
-    start_time_calc = time.time()
+    start_time_calc = time_time()
     err_text = ""
     mzs_text_str = ""
     main_param_dict = {}
@@ -718,10 +709,10 @@ def txt_file_processing(combobox_object, listbox_object, plot_object, output_obj
     
     plot_object.set_main_param_values(**{"state" : "not_initial", "provided_xlim" : provided_xlim,
                                          "provided_ylim" : provided_ylim})
-    calc_time = time.time() - start_time_calc    
-    start_time_draw = time.time()
+    calc_time = time_time() - start_time_calc    
+    start_time_draw = time_time()
     plot_object.redraw_diagram(**redraw_diagram_method_args)
-    draw_time = time.time() - start_time_draw
+    draw_time = time_time() - start_time_draw
 
     return path, calc_time, draw_time, err_text, mzs_text_str
 
@@ -934,8 +925,8 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
         listbox_object.get_select_option()
         selected_file = listbox_object.selected_file[2:]
     except IndexError as indexerr:
-        if select_file_func in [select_file_funcs.get(i) for i in ("ms_inten_radiobtn", "mz_trim_radiobtn",
-                                                                   "find_entry_radiobtn")]:
+        if select_file_func in [select_file_funcs.get(i) for i in ("ms_inten_radiobtn",
+                                                                   "mz_trim_radiobtn")]:
           select_file_func()
           return
         else:
@@ -964,6 +955,8 @@ def select_file(combobox_object, listbox_object, plot_object, output_object, ent
             warning_output(outputs_dict = outputs_dict, key = type(err),
                            output_object = output_object, plot_object = plot_object, purpose = purpose)
         except:
+            #import traceback
+            #traceback.print_exc()
             warning_output(outputs_dict = outputs_dict, key = "OtherError",
                            output_object = output_object, plot_object = plot_object, purpose = purpose)
 
@@ -1063,16 +1056,16 @@ def select_file_depending_on_ffm(ffm_radiobtn_var, ffm, active_ffm, running_from
         focus_and_activate_listbox(listbox_object)
 
 def only_drawing_and_time_output(plot_object, output_object, purpose, changing_entry_state = {}):
-    start_time_calc = time.time()
-    data_calc_text = f"""\n Calc time: {time.time() - start_time_calc :.3f} s\n"""
-    start_time_draw = time.time()
+    start_time_calc = time_time()
+    data_calc_text = f"""\n Calc time: {time_time() - start_time_calc :.3f} s\n"""
+    start_time_draw = time_time()
     if purpose == "chrom":
         plot_object.redraw_diagram()
         kind_of_entry = "chromatogram peaks"
     else:
         kind_of_entry = f"m/z {purpose[-1]} peaks"
         plot_object.redraw_diagram(purpose = purpose, ms_error = True)
-    data_draw_text = f"Draw time: {time.time() - start_time_draw :.3f} s"
+    data_draw_text = f"Draw time: {time_time() - start_time_draw :.3f} s"
     if changing_entry_state:
         first_line = f"""Feature of showing {kind_of_entry} is {changing_entry_state[True]}:"""
     else:

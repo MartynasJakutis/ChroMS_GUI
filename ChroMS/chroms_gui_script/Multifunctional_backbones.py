@@ -402,7 +402,8 @@ class MultifunctionalBackbone(object):
     def update_backbone(self):
         """Updates ffm: loads browsing history to combobox and updates listbox."""
         for ffm, hist_file_name in zip(self.ffms, self.hist_file_names):
-            ffm.combobox.load(folder = "my_browsing_history", name = hist_file_name)
+            ffm.combobox.set_history_folder(folder = mgp.MY_BROWSING_HISTORY_DIRNAME)
+            ffm.combobox.load(name = hist_file_name)
             wmf.update_combobox(combobox_object = ffm.combobox, listbox_object = ffm.listbox,
                             FILE_EXT = ffm.FILE_EXT, entry_object = ffm.file_search_entry,
                             save_hist = False)

@@ -18,7 +18,9 @@ select_file_warnings = lambda file, file_type : {IndexError : ("warning", f"Choo
                                                  AttributeError : ("warning", f"Chosen object\n'{file}'\nis not a proper file, " +\
                                                            f"because it contains '{file_type}' data which is corrupted."),
                                                  "OtherError" : ("warning", f"An unexpected error occured while opening object\n" +\
-                                                     f"'{file}'.\nContact martynasjk@gmail.com to inform about this error.")}
+                                                     f"'{file}'.\nContact martynasjk@gmail.com to inform about this error."),
+                                                 IsADirectoryError : ("warning", f"Chosen object\n'{file}'\nis not a proper file, " +\
+                                                        f"most probably it is a folder.")}
 
 set_wavelength_warnings = lambda wv, compared_to_wvs, wv_min, wv_max : {"Outside range" : ("warning", "The selected wavelength:\n" +\
                                                                                            f"{wv} nm is {compared_to_wvs}.\n" +\

@@ -2,10 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.scrolledtext as tk_st
 
-import Widget_manipulation_functions as wmf
+import Path_manipulation_functions as pmf
 
-import time
-import os
+from time import (strftime as time_strftime)
 
 class Hauptwidget_Grid(object):
     """Parent of other tkinter custom widget classes."""
@@ -322,7 +321,13 @@ class Button(Hauptwidget_Grid):
         self.pady = pady
         
     def create(self):
-        self.button = ttk.Button(master = self.master, text = self.text, command = self.command)
+        self.tk_styles = ttk.Style()
+        tk_style_theme = self.tk_styles.theme_use()
+        if tk_style_theme == "classic":
+            self.button = ttk.Button(master = self.master, text = self.text, command = self.command,
+                                     width = 9, padding = (0,0))
+        else:
+            self.button = ttk.Button(master = self.master, text = self.text, command = self.command)
         self.button.grid(row = self.row, column = self.column, padx = self.padx, pady = self.pady)
         return self.button
     
@@ -337,6 +342,13 @@ class ComboBox(Hauptwidget_Grid):
                                      textvariable = self.textvar)
         self.combobox.grid(row = self.row, column = self.column)
         return self.combobox
+
+    def set_history_folder(self, folder):
+        folder_obj = pmf.MyDir(dir_name = folder)
+        folder_obj.create()
+        self.hist_folder_name = folder
+        self.hist_folder_path = folder_obj.path
+
         
     def add(self, value):
         """Adds new value into combobox. The maximum size of combobox - 10 items. Every item appears once per item list.
@@ -356,25 +368,25 @@ class ComboBox(Hauptwidget_Grid):
                                      ins_value = value)
         self.combobox["values"] = tuple(list_of_tuple)
         
-    def save(self, folder, name):
+    def save(self, name):
         """Saves contents of combobox to the 'name'(str) + '_history.txt' file which will be located in the folder.
         folder, name - str."""
-        wmf.create_dir_if_not_present(dir_name = folder)
-        file = open(wmf.get_path(folder, name + "_history.txt"), "w", encoding = "utf-8")
+        self.set_history_folder(folder = self.hist_folder_name)
+        file = open(pmf.get_path(self.hist_folder_path, name + "_history.txt"), "w", encoding = "utf-8")
         for i in self.combobox["values"]:
             file.write(i + "\n")
         file.close()
         
-    def load(self, folder, name):
+    def load(self, name):
         """Loads contents of history file located in specified folder in to combobox. folder, name - str."""
-        wmf.create_dir_if_not_present(dir_name = folder)
-        if name + "_history.txt" in os.listdir(folder):
-            file = open(wmf.get_path(folder, name + "_history.txt"), "r", encoding = "utf-8")
+        self.set_history_folder(folder = self.hist_folder_name)
+        if name + "_history.txt" in pmf.listdir(self.hist_folder_path):
+            file = open(pmf.get_path(self.hist_folder_path, name + "_history.txt"), "r", encoding = "utf-8")
             list_of_file = file.readlines()
             file.close()
             for i in list_of_file[::-1]:
                 i_without_endl = i[:-1]
-                if os.path.isdir(i_without_endl):
+                if pmf.isdir(i_without_endl):
                     self.add(value = i_without_endl)
             if len(self.combobox["values"]) != 0:
                 self.combobox.current(0)
@@ -536,7 +548,7 @@ class Outputwidget(Hauptwidget_Grid):
                         "warning" : "?"}
         symbol = output_types.get(output_type)
         symbol_line = symbol * self.width
-        current_time = time.strftime("%Y/%m/%d   %H:%M:%S")
+        current_time = time_strftime("%Y/%m/%d   %H:%M:%S")
         time_str = "{0:{1}<{2}}\n".format(current_time, symbol, self.width)
         term_text = symbol_line + "\n" + current_time + "\n" + text + "\n" + symbol_line
         self.text_out.insert(tk.END, term_text)
