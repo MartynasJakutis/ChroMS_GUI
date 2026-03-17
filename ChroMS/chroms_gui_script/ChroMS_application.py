@@ -47,7 +47,7 @@ class ChroMS_Application(object):
         
         self.tab_bg_color = tab_bg_colors[random.randint(0, len(tab_bg_colors) - 1)]
         self.theme = style_themes[random.randint(0, len(style_themes) - 1)]
-
+        #print(self.theme, style_themes)
         self.tk_styles.theme_use(self.theme)
         self.widget_styles = {"NewNotebook.TNotebook" : {"background" : self.tab_bg_color, "foreground" : "green"},
                               "Main.TNotebook.Tab" : {"background" : "green", "foreground" : "black", 
@@ -66,20 +66,22 @@ class ChroMS_Application(object):
                               "Bold.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR,
                                                "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_PRIMARY, "bold")},
                               "Normal.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR, 
-                                                 "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal")},
+                                                 "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_QUATERNARY, "normal")},
                               "NegMessage.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR, 
-                                                     "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "underline"),
+                                                     "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_QUATERNARY, "underline"),
                                                      "foreground" : "red"}, 
                               "PosMessage.TLabel" : {"background" : mgp.DEFAULT_LABEL_COLOR, 
-                                                     "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "underline"),
+                                                     "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_QUATERNARY, "underline"),
                                                      "foreground" : "green"},
                               "TEntry" : {"font": (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_PRIMARY, "bold")},
                               #"NoSelect.TEntry" : {"font": ("TkDefaultFont", 16, "bold")},
                               "TButton" : {"background" : "green", 
-                                           "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), "width" : 10,
+                                           "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_QUATERNARY, "normal"), "width" : 10,
                                            "padding" : (0,0)},
-                              "TCheckbutton" : {"background" : mgp.DEFAULT_LABEL_COLOR},
-                              "TRadiobutton" : {"background" : mgp.DEFAULT_LABEL_COLOR}
+                              "TCheckbutton" : {"background" : mgp.DEFAULT_LABEL_COLOR,
+                                                "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal")},
+                              "TRadiobutton" : {"background" : mgp.DEFAULT_LABEL_COLOR,
+                                                "font" : (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal")}
                             }
         #self.widget_dynamic_styles = {"NoSelect.TEntry" : {"selectbackground" : [("focus", "white"), ("!focus", "white")],
         #                                                   "selectforeground" : [("focus", "black"), ("!focus", "black")],
@@ -87,6 +89,8 @@ class ChroMS_Application(object):
 
         for style in self.widget_styles.keys():
             self.tk_styles.configure(style = style, **self.widget_styles[style])
+        dropdown_font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal")
+        self.window.option_add("*TCombobox*Listbox.font", dropdown_font)
         #for dynamic_style in self.widget_dynamic_styles.keys():
         #    self.tk_styles.map(style = dynamic_style, ** self.widget_dynamic_styles[dynamic_style])
         

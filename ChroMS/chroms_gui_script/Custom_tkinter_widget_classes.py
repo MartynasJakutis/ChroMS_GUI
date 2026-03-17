@@ -39,9 +39,10 @@ class Frame(Hauptwidget_Grid):
         return self.frame
 
 class NotebookWithSbFrames(Hauptwidget_Grid):
-    def __init__(self, master, style, sticky, row, column, padx, pady, tab_names):
+    def __init__(self, master, style, labelstyle, sticky, row, column, padx, pady, tab_names):
         super().__init__(master, row, column)
         self.style = style
+        self.labelstyle = labelstyle
         self.sticky = sticky
         self.tab_names = tab_names
         self.tabs = {}
@@ -52,7 +53,7 @@ class NotebookWithSbFrames(Hauptwidget_Grid):
     def add_tabs(self):
         for tab_name in self.tab_names:
             self.tabs[tab_name] = Tab(master = self.notebook, text = tab_name, style = "NewCusFrame.TFrame").create()
-            self.sb_frames[tab_name] = ScrollableFrame(master = self.tabs[tab_name], style = "NewCusFrame.TFrame", sticky = tk.E + tk.W,
+            self.sb_frames[tab_name] = ScrollableFrame(master = self.tabs[tab_name], style = "NewCusFrame.TFrame", labelstyle = self.labelstyle, sticky = tk.E + tk.W,
                                                        row = 0, column = 0)
             self.sb_frames[tab_name].create()
 
@@ -62,9 +63,10 @@ class NotebookWithSbFrames(Hauptwidget_Grid):
         self.notebook.grid(row = self.row, column = self.column, sticky = self.sticky, padx = self.padx, pady = self.pady)
 
 class ScrollableFrame(Hauptwidget_Grid):
-    def __init__(self, master, style, sticky, row, column):
+    def __init__(self, master, style, labelstyle, sticky, row, column):
         super().__init__(master, row, column)
         self.style = style
+        self.labelstyle = labelstyle
         self.sticky = sticky
 
     def onFrameConfigure(self, event):
@@ -74,15 +76,15 @@ class ScrollableFrame(Hauptwidget_Grid):
     def populate(self):
         '''Put in some fake data'''
         for row in range(100):
-            tk.Label(self.frame, text="%s" % row, width=3, borderwidth="1",
-                     relief="solid").grid(row=row, column=0)
+            ttk.Label(self.frame, text="%s" % row, width=3, borderwidth="1",
+                     relief="solid", style = self.labelstyle).grid(row=row, column=0)
             t="this is the second column for row %s" %row
-            tk.Label(self.frame, text=t).grid(row=row, column=1)
+            ttk.Label(self.frame, text=t, style = self.labelstyle).grid(row=row, column=1)
         
     def create(self):
         self.outer_frame = ttk.Frame(master = self.master, style = self.style)
         self.canvas = tk.Canvas(master = self.outer_frame, 
-                                borderwidth = 0, background = "#ffffff", width = 450, height = 220)
+                                borderwidth = 0, background = "#ffffff", width = 385, height = 220)
         self.frame = ttk.Frame(master = self.canvas)
         self.vsb = tk.Scrollbar(master = self.outer_frame, orient = "vertical",
                                 command = self.canvas.yview)
@@ -91,7 +93,7 @@ class ScrollableFrame(Hauptwidget_Grid):
         self.canvas.pack(side = "left", fill = "both", expand = True)
         self.canvas.create_window((4,4), window = self.frame, anchor = "nw",
                                   tags = "self.frame")
-        self.outer_frame.pack(side="top", fill="both", expand=True)
+        self.outer_frame.pack(side="top", fill="both", expand = True)
         self.frame.bind("<Configure>", self.onFrameConfigure)
         self.populate()
 
@@ -326,19 +328,23 @@ class Button(Hauptwidget_Grid):
         if tk_style_theme == "classic":
             self.button = ttk.Button(master = self.master, text = self.text, command = self.command,
                                      width = 9, padding = (0,0))
+        elif tk_style_theme == "aqua":
+            self.button = ttk.Button(master = self.master, text = self.text, command = self.command,
+                                     width = 5.5, padding = (0,0))
         else:
             self.button = ttk.Button(master = self.master, text = self.text, command = self.command)
         self.button.grid(row = self.row, column = self.column, padx = self.padx, pady = self.pady)
         return self.button
     
 class ComboBox(Hauptwidget_Grid):
-    def __init__(self, master, width, row, column):
+    def __init__(self, master, width, font, row, column):
         super().__init__(master, row, column)
         self.width =  width
-        
+        self.font = font
     def create(self):
         self.textvar = tk.StringVar()
         self.combobox = ttk.Combobox(master = self.master, width = self.width, 
+                                     font = self.font, 
                                      textvariable = self.textvar)
         self.combobox.grid(row = self.row, column = self.column)
         return self.combobox
@@ -407,13 +413,14 @@ class ComboBox(Hauptwidget_Grid):
         self.combobox.bind(key_or_event, func)
 
 class Listbox(Hauptwidget_Grid):
-    def __init__(self, master, background, foreground, width, height, selectbackground, selectforeground,
+    def __init__(self, master, background, foreground, width, height, font, selectbackground, selectforeground,
                  row, column, padx, pady, padx_scroll, pady_scroll, exportselection):
         super().__init__(master, row, column)
         self.background = background
         self.foreground = foreground
         self.width = width
         self.height = height
+        self.font = font
         self.selectbackground = selectbackground
         self.selectforeground = selectforeground
         self.padx = padx
@@ -425,7 +432,8 @@ class Listbox(Hauptwidget_Grid):
     def create(self):
         self.listbox = tk.Listbox(master = self.master, background = self.background, 
                                   foreground = self.foreground, width = self.width, 
-                                  height = self.height, selectbackground = self.selectbackground, 
+                                  height = self.height, font = self.font,
+				  selectbackground = self.selectbackground, 
                                   selectforeground = self.selectforeground,
                                   exportselection = self.exportselection)
         self.listbox.grid(row = self.row, column = self.column, padx = self.padx, pady = self.pady)
@@ -507,7 +515,8 @@ class Radiobutton(Hauptwidget_Grid):
         
     def create(self):
         self.radiobutton = ttk.Radiobutton(master = self.master,
-                                           text = self.text, variable = self.var, 
+                                           text = self.text,
+                                           variable = self.var, 
                                            value = self.onvalue, command = self.command)
         self.radiobutton.grid(row = self.row, column = self.column, padx = self.padx, pady = self.pady)
         

@@ -3,31 +3,51 @@ from Path_manipulation_functions import (get_absolute_script_path as pmf_get_abs
                                          get_path as pmf_get_path)
 
 machine_os = platform_system()
+ADD_MULTIPLIER_H = 0.90
+ADD_MULTIPLIER_W = 0.98
+OUTPUTWIDGET_HEIGHT = 6.5
 if machine_os == "Windows":
     WINDOW_STATE = "zoomed"
     DEFAULT_LABEL_COLOR = "SystemButtonFace"
     DEFAULT_CONSOLE_SCHRIFT = "Consolas"
     DEFAULT_SCHRIFT = "TkDefaultFont"
     FONTSIZE_PRIMARY = 16
-    FONTSIZE_SECONDARY = 14
-    FONTSIZE_TERTIARY = 12
+    FONTSIZE_SECONDARY = 14		      #Fontsize of the text in option frame tabs.
+    FONTSIZE_TERTIARY = 12                    #Fontsize of the text in entry widgets, listbox.
+    FONTSIZE_QUATERNARY = 12                  #Fontsize of the labels in the labelframes (without radiobutton labels)
     FILE_SEARCH_ENTRY_WIDTH = 55
     FILE_LISTBOX_WIDTH = 70
     CONSOLE_WIDTH = 72
     FOLDER_COMBOBOX_WIDTH = 70
-else:
+elif machine_os == "Linux":
     WINDOW_STATE = "normal"
     DEFAULT_LABEL_COLOR = "white"
     DEFAULT_CONSOLE_SCHRIFT = "fixed"
     DEFAULT_SCHRIFT = "helvetica"
     FONTSIZE_PRIMARY = 15
     FONTSIZE_SECONDARY = 13
-    FONTSIZE_TERTIARY = 11
+    FONTSIZE_TERTIARY = 12
+    FONTSIZE_QUATERNARY = 11
     FILE_SEARCH_ENTRY_WIDTH = 52
     FILE_LISTBOX_WIDTH = 60
     CONSOLE_WIDTH = 64
     FOLDER_COMBOBOX_WIDTH = 60
-
+else:
+    WINDOW_STATE = "zoomed"
+    DEFAULT_LABEL_COLOR = "white"
+    DEFAULT_CONSOLE_SCHRIFT = "Menlo"
+    DEFAULT_SCHRIFT = "Helvetica"
+    FONTSIZE_PRIMARY = 15
+    FONTSIZE_SECONDARY = 13
+    FONTSIZE_TERTIARY = 12
+    FONTSIZE_QUATERNARY = 12
+    FILE_SEARCH_ENTRY_WIDTH = 45
+    FILE_LISTBOX_WIDTH = 50
+    CONSOLE_WIDTH = 66
+    FOLDER_COMBOBOX_WIDTH = 50
+    ADD_MULTIPLIER_H = 0.84
+    ADD_MULTIPLIER_W = 0.98
+    OUTPUTWIDGET_HEIGHT = 9.0
 MY_BROWSING_HISTORY_DIRNAME = "my_browsing_history"
 WINDOW_ICON_REL_PATH = pmf_get_path("icons", "ChroMS_icon.png")
 DATA_FOLDER_NAMES = ["data"]

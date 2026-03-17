@@ -251,7 +251,8 @@ class MultifunctionalBackbone(object):
                                                                                  "column" : 2, "onvalue" : 2}}
         self.opm.radiobutton_pars = self.opm.radiobutton_pars_func(subplot1, subplot2)
         for radiobutton in self.opm.radiobutton_pars.keys():
-            self.opm.radiobuttons[radiobutton] = ctwc.Radiobutton(master = self.opm.frames["radiobutton"], padx = 2.5, pady = 0,
+            self.opm.radiobuttons[radiobutton] = ctwc.Radiobutton(master = self.opm.frames["radiobutton"], 
+                                                             padx = 2.5, pady = 0, 
                                                              var = self.opm.radiobutton_variable, 
                                                              command = None,
                                                              **self.opm.radiobutton_pars[radiobutton])
@@ -295,7 +296,7 @@ class MultifunctionalBackbone(object):
 
         for radiobutton in self.opm.radiobutton_on_off_pars.keys():
             self.opm.radiobuttons_for_fe[radiobutton] = ctwc.Radiobutton(padx = 2.5, pady = 0, 
-                                                             **self.opm.radiobutton_on_off_pars[radiobutton])
+                                                                         **self.opm.radiobutton_on_off_pars[radiobutton])
             self.opm.radiobuttons_for_fe[radiobutton].create()
 
     def enable_disable_mzs_trimming_entry(self, var, select_file_args_dict):
@@ -359,7 +360,8 @@ class MultifunctionalBackbone(object):
                             "matplotlib_style1" : default_matplotlib_style, 
                             "matplotlib_style2" : default_matplotlib_style,
                             "master_labelframe" : self.opm.labelframes["chrom/ms"], 
-                            "add_multiplier_w" : 0.98, "add_multiplier_h" : 0.90,
+                            "add_multiplier_w" : mgp.ADD_MULTIPLIER_W, 
+                            "add_multiplier_h" : mgp.ADD_MULTIPLIER_H,
                             "radiobutton_var" : self.opm.radiobutton_variable, "state" : "initial", 
                             "screenheight" : self.screenheight, "screenwidth" : self.screenwidth,
                             "provided_xlim" : (None, None), "provided_ylim" : (None, None)}

@@ -26,7 +26,7 @@ class SeveralRadiobuttons(object):
         self.set_params()
         for radiobutton in self.radiobutton_pars.keys():
             self.radiobuttons[radiobutton] = ctwc.Radiobutton(master = self.master, padx = 2.5, pady = 0,
-                                                              var = self.radiobtn_var, 
+                                                              var = self.radiobtn_var,
                                                               command = None,
                                                               **self.radiobutton_pars[radiobutton])
             self.radiobuttons[radiobutton].create()             
@@ -150,8 +150,9 @@ class OutputPlotManagerBackbone(object):
             
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
-        self.output = ctwc.Outputwidget(master = self.labelframes["output"], width = mgp.CONSOLE_WIDTH, height = 6.5, 
-                                        font = (mgp.DEFAULT_CONSOLE_SCHRIFT, 11, "normal"), row = 0, column = 0, 
+        self.output = ctwc.Outputwidget(master = self.labelframes["output"], width = mgp.CONSOLE_WIDTH, 
+                                        height = mgp.OUTPUTWIDGET_HEIGHT, 
+                                        font = (mgp.DEFAULT_CONSOLE_SCHRIFT, mgp.FONTSIZE_QUATERNARY, "normal"), row = 0, column = 0, 
                                         padx = 2.5, pady = 0)
         self.fill_set_ranges_frame(master = self.frames["set_ranges"])
         widgets = [self.output]
@@ -159,13 +160,13 @@ class OutputPlotManagerBackbone(object):
         self.create_entries_for_peak_search()
         if self.purpose == "chrom":
             self.wv_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
-                                       font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 5, 
+                                       font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 5, 
                                        row = 0, column = 0, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             self.inten_min_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
-                                       font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 8, 
+                                       font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 8, 
                                        row = 0, column = 3, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             self.inten_max_entry = ctwc.Entry(master = self.frames["wavelength"], style = "TEntry", 
-                                       font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 8, 
+                                       font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 8, 
                                        row = 0, column = 5, padx = 2.5, pady = (2.5, 1.25), sticky = tk.E + tk.W)
             
             entries_list = [self.wv_entry, self.inten_min_entry, self.inten_max_entry, 
@@ -263,32 +264,32 @@ class OutputPlotManagerBackbone(object):
                                                        style = "Normal.TLabel", **self.set_ranges_label_params[label]).create()
         
         self.x_min_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 7, 
                                       row = 0, column = 1, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.x_max_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 7, 
                                       row = 0, column = 3, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.y_min_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 7, 
                                       row = 0, column = 6, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.y_max_entry = ctwc.Entry(master = master, style = "TEntry", 
-                                      font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 7, 
+                                      font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 7, 
                                       row = 0, column = 8, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
 
     def create_entries_for_peak_search(self):
         if self.purpose == "chrom":
             self.peak_value_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
-                                               font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 15, 
+                                               font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 15, 
                                                row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
             self.peak_dev_entry = ctwc.Entry(master = self.frames["find_peaks"], style = "TEntry", 
-                                             font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 8, 
+                                             font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 8, 
                                              row = 0, column = 2, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         elif self.purpose == "ms":
             self.find_mz1_entry = ctwc.Entry(master = self.frames["find_mz1"], style = "TEntry", 
-                                               font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 15, 
+                                               font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 15, 
                                                row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
             self.find_mz2_entry = ctwc.Entry(master = self.frames["find_mz2"], style = "TEntry", 
-                                               font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 15, 
+                                               font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 15, 
                                                row = 0, column = 0, padx = 2.5, pady = 1.25, sticky = tk.E + tk.W)
         self.ctrl_entries = self.return_controlled_entries()
     def return_controlled_entries(self):
@@ -353,16 +354,19 @@ class FileFolderManagerBackbone(OutputPlotManagerBackbone):
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
         self.combobox = ctwc.ComboBox(master = self.labelframes["file_input"],
-                                      width = mgp.FOLDER_COMBOBOX_WIDTH, row = 0, column = 1)
+                                      width = mgp.FOLDER_COMBOBOX_WIDTH,
+                                      font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"),
+                                      row = 0, column = 1)
         self.listbox = ctwc.Listbox(master = self.frames["listbox"], background = 'black', foreground = 'green',
                                     width = mgp.FILE_LISTBOX_WIDTH, 
+				    font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"),
                                     height = 10, selectbackground = 'gray', selectforeground = 'black', row = 0, column = 0, 
                                     padx = (0, 0), pady = 0, padx_scroll = 0, pady_scroll = 0, exportselection = False)
         self.file_search_entry = ctwc.Entry(master = self.frames["file_search"], style = "TEntry", 
-                                            font = (mgp.DEFAULT_SCHRIFT, 12, "normal"),
+                                            font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"),
                                             width = mgp.FILE_SEARCH_ENTRY_WIDTH, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
-        self.to_options_btn = ctwc.Button(master = self.frames["for_options"], text = "To options", 
+        self.to_options_btn = ctwc.Button(master = self.frames["for_options"], text = "Options", 
                                           command = lambda : None,
                                           row = 1, column = 0, padx = 2.5, pady = 0).create()
         self.file_search_entry.create_file_name_filter()
@@ -444,12 +448,14 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
     def create_advanced_widgets(self):
         """Creates widgets which are supposed to have additional functionality"""
         self.notebook_w_sb = ctwc.NotebookWithSbFrames(master = self.frames["opt_notebook"], 
-                                                       style = "Opt.TNotebook", sticky = tk.W,
+                                                       style = "Opt.TNotebook",
+                                                       labelstyle = "Normal.TLabel",
+                                                       sticky = tk.W,
                                                        row = 0, column = 0,
                                                        padx = (10, 0), pady = (5, 10),
                                                        tab_names = [f"{i}" for i in range(5)])
                 
-        self.to_ffm_btn = ctwc.Button(master = self.frames["for_options"], text = "Go back", 
+        self.to_ffm_btn = ctwc.Button(master = self.frames["for_options"], text = "Return", 
                                           command = lambda : None,
                                           row = 1, column = 0, padx = 2.5, pady = 0).create()
         widgets = [self.notebook_w_sb]
@@ -469,13 +475,12 @@ class OptionManagerBackbone(OutputPlotManagerBackbone):
                                                          start_col = 0, radiobtn_var = self.trim_radiobtn_variable, 
                                                          radiobtn_names = trim_radiobtn_names,
                                                          orientation = "horizontal")
-
             self.trim_perc_entry = ctwc.Entry(master = self.frames["trim_perc"], style = "TEntry", 
-                                            font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 5, 
+                                            font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 5, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
 
             self.gen_randnum_perc_entry = ctwc.Entry(master = self.frames["gen_randnum_perc"], style = "TEntry", 
-                                            font = (mgp.DEFAULT_SCHRIFT, 12, "normal"), width = 5, 
+                                            font = (mgp.DEFAULT_SCHRIFT, mgp.FONTSIZE_TERTIARY, "normal"), width = 5, 
                                             row = 0, column = 1, padx = 2.5, pady = 2.5, sticky = tk.E + tk.W)
 
             entries_list = [self.trim_perc_entry, self.gen_randnum_perc_entry]
