@@ -1,20 +1,8 @@
-﻿# H1
-## H2
-### H3
-
-**bold text**
-
+﻿
 *italicized text*
 
 > blockquote
 
-1. First item
-2. Second item
-3. Third item
-
-- First item
-- Second item
-- Third item
 
 `code`
 
@@ -52,13 +40,9 @@ term
 - [ ] Update the website
 - [ ] Contact the media 
 
-That is so funny! :joy: 
-
-I need to highlight these ==very important words==. 
-
 H~2~O 
 
-X^2^ 
+X^2^O
 
 
 # DESCRIPTION
@@ -82,7 +66,8 @@ enables users to analyze and visualize 3D HPLC and 2D MS data files and to save
 the generated graphs anytime and anywhere. Also, this tool offers basic graph 
 design cusotmization features.
 
-In the future, there is a possibility to improve diagram design customization.
+In the future, diagram design customization will be improved.
+
 
 # OS COMPATIBILITY
 
@@ -90,55 +75,52 @@ In the future, there is a possibility to improve diagram design customization.
 - macOS (tested with MacOS Monterey 12.7.4)
 - Windows 7/10
 
-* ChroMS_GUI version for Windows7 is supported on Windows10
-* **There is need to test ChroMS_GUI with other OS (e.g. Windows 11)**
+* ChroMS_GUI version for Windows7 is also supported on Windows10
+* **Testing is still needed for other OS (e.g., Windows 11)**
+
 
 # REQUIREMENTS
 
 These requirements should be considered if ChroMS_GUI is launched as a Python script.
-**These can be skipped if the application is lauched using the compiled files.**
+**They can be skipped if the application is launched using compiled files.**
 
-To ensure functionality of the application, make sure that you have
-Python version ==3.12.4== (for optimal functionality version should be ==>= 3.7.4==) and 
-packages with corresponding versions provided in 'requirements.txt' file.
+## Python Version
 
-Package versions should be at least:
-numpy		1.21.5
-matplotlib	3.5.3
-tk		8.6.14
+| Recommended | 3.12.4 |
+| :--- | ---: |
+| Minimal | >= 3.7.4 |
 
-If you are using Python 3, tkinter should be already bound to your Python.
-Otherwise you can use 'conda install tk' or 'pip install tk' in your 
-terminal or cmd to install it.
-For other packages you can use:
+## Package Versions 
 
-'conda install matplotlib' or 'pip install matplotlib'
-'conda install numpy' or 'pip install numpy'
+The minimal package versions are listed below.
+For optimal versions, refer to the `requirements.txt` file.
 
-Download the ChroMS_GUI repository. The code files will be in ChroMS folder.
+| Package | Version |
+| :--- | ---: |
+| numpy | 1.21.5 |
+| matplotlib | 3.5.3 |
+| tk | 8.6.14 |
 
 
-# INSTALATION
+# INSTALLATION
 
-If you are executing ChroMS_GUI as a Python script:
-To ensure functionality of the ChroMS_GUI, make sure that you have
-Python version 3.12.4 (for optimal functionality version should be >= 3.7.4) and 
-packages with corresponding versions provided in 'requirements.txt' file.
+Both the ChroMS_GUI script and release versions include a `data` directory
+containing HPLC, MS and other files that can be used for testing the application.
 
-Package versions (while running the code) should be at least:
-numpy		1.21.5
-matplotlib	3.5.3
-tk		8.6.14
+## ChroMS_GUI Code
 
-If you are using Python 3, tkinter should be already bound to your Python.
-Otherwise you can use 'conda install tk' or 'pip install tk' in your 
-terminal or cmd to install it.
-For other packages you can use:
+**Relevant only if ChroMS_GUI is launched as Python script**
 
-'conda install matplotlib' or 'pip install matplotlib'
-'conda install numpy' or 'pip install numpy'
+Download the ChroMS_GUI repository. 
+The code files will be located in the `ChroMS/chroms_gui_script` directory.
 
-Download the ChroMS_GUI repository. The code files will be in ChroMS folder.
+## Compiled ChroMS_GUI Project
+
+Windows / Linux / macOS:
+- Download `.zip` file and unzip the application
+
+Additional option for Windows:
+- Download `.exe` file and install the application
 
 # SETUP AND EXECUTION
 
@@ -171,13 +153,16 @@ x Execution of ChroMS_GUI:
    *Number 2 (Writing script in Jupyter notebook or including in other .py file
     that is executed):
     -The following script (no identations):
- 
-     from ChroMS_application import ChroMS_Application
-     import Main_GUI_parameters as mgp
-     app = ChroMS_Application(folder_name_list = mgp.DATA_FOLDER_NAMES,
-                              window_state = mgp.WINDOW_STATE, window_title = mgp.WINDOW_TITLE)
-     app.create_folders()
-     app.create_application_body()
+
+```
+from ChroMS_application import ChroMS_Application
+import Main_GUI_parameters as mgp
+app = ChroMS_Application(folder_name_list = mgp.DATA_FOLDER_NAMES,
+                         window_state = mgp.WINDOW_STATE,
+                         window_title = mgp.WINDOW_TITLE)
+app.create_folders()
+app.create_application_body()
+```
 
    *Number 3 (Number 2 code in .ipynb file):
     -Execute the program by running the code inside 'Notebook_script.ipynb'.
