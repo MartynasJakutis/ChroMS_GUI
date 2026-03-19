@@ -1,29 +1,13 @@
-﻿
+﻿# ChroMS_GUI Manual
+
+<!---
 *italicized text*
 
 > blockquote
 
-
-`code`
-
----
-
 [title](https://www.example.com)
 
 ![alt text](image.jpg)
-
-| Syntax | Description |
-| ----------- | ----------- |
-| Header | Title |
-| Paragraph | Text | 
-
-```
-{
-  "firstName": "John",
-  "lastName": "Smith",
-  "age": 25
-}
-``` 
 
 Here's a sentence with a footnote. [^1]
 
@@ -43,9 +27,9 @@ term
 H~2~O 
 
 X^2^O
+-->
 
-
-# DESCRIPTION
+## DESCRIPTION
 
 HPLC-MS (High-Performance Liquid Chromatography-Mass Spectrometry) data is 
 usually analyzed using commercial data analysis software. However, such software 
@@ -69,7 +53,7 @@ design cusotmization features.
 In the future, diagram design customization will be improved.
 
 
-# OS COMPATIBILITY
+## OS COMPATIBILITY
 
 - Linux (tested with Lubuntu 24.04.2 LTS distro)
 - macOS (tested with MacOS Monterey 12.7.4)
@@ -79,18 +63,18 @@ In the future, diagram design customization will be improved.
 * **Testing is still needed for other OS (e.g., Windows 11)**
 
 
-# REQUIREMENTS
+## REQUIREMENTS
 
 These requirements should be considered if ChroMS_GUI is launched as a Python script.
 **They can be skipped if the application is launched using compiled files.**
 
-## Python Version
+### Python Version
 
 | Recommended | 3.12.4 |
 | :--- | ---: |
 | Minimal | >= 3.7.4 |
 
-## Package Versions 
+### Package Versions 
 
 The minimal package versions are listed below.
 For optimal versions, refer to the `requirements.txt` file.
@@ -102,19 +86,19 @@ For optimal versions, refer to the `requirements.txt` file.
 | tk | 8.6.14 |
 
 
-# INSTALLATION
+## INSTALLATION
 
 Both the ChroMS_GUI script and release versions include a `data` directory
 containing HPLC, MS and other files that can be used for testing the application.
 
-## ChroMS_GUI Code
+### ChroMS_GUI Code
 
 **Relevant only if ChroMS_GUI is launched as Python script**
 
 Download the ChroMS_GUI repository. 
 The code files will be located in the `ChroMS/chroms_gui_script` directory.
 
-## Compiled ChroMS_GUI Project
+### ChroMS_GUI Release
 
 Windows / Linux / macOS:
 - Download `.zip` file and unzip the application
@@ -122,38 +106,33 @@ Windows / Linux / macOS:
 Additional option for Windows:
 - Download `.exe` file and install the application
 
-# SETUP AND EXECUTION
+## SETUP AND EXECUTION
 
-Setting up and executing ChroMS_GUI:
-x Execution of ChroMS_GUI:
----The provided code should not be modified - there are no user inputs before
-   running the code.
-   *Except 'DATA_FOLDER_NAMES' in the 'Main_GUI_parameters.py' file. You can
-    provide several folder names in the working directory. The list should not
-    be empty.
-   *You take the responsibility for the errors you made by irresponsible
-    behaviour in every .py file in 'ChroMS' folder.
+### ChroMS_GUI Code
 
----Default 'Main_GUI_parameters.py' file contents (old data):
-   *The following script (no identations):
-    TAB_1_NAME = "Blank Page"
-    HPLC_TAB_NAME = "HPLC"
-    MS_TAB_NAME = "MS"
-    DATA_FOLDER_NAMES = ["data"]
-    WINDOW_STATE = "zoomed"
-    WINDOW_TITLE = "ChroMS_GUI"
+**Relevant only if ChroMS_GUI is launched as Python script**
 
----ChroMS_GUI execution possible by several methods:
-   *Number 1 (Using terminal):
-    -Run 'python ChroMS_application.py' in your terminal that has Python 
-     installed.
-    -Before that set your current working directory to 
-     YOUR_PATH(change this part)/ChroMS_GUI/ChroMS using 'cd' function
-    -YOUR_PATH is the path where the ChroMS_GUI project can be found.
-   *Number 2 (Writing script in Jupyter notebook or including in other .py file
-    that is executed):
-    -The following script (no identations):
+Code modifications:
+- The provided code should not be modified, except the `Main_GUI_parameters.py` code file.
+- The code modifications are only recommended, but **not mandatory**.
+- GUI parameters should be modified responsibly (preferably if the changes are
+necessary due to personal or system needs).
+- Some parameter changes can lead to unpredictable behaviours that can affect overall
+application quality and utilization.
+- Modifications of most of the GUI parameters have low value of practical use, except
+default values of entry widgets (e.g., `DEFAULT_WAVELENGTH`, `DEFAULT_MIN_INTENSITY`)
+which will be described on further sections of the manual.
+- It is possible to create several directories in the working directory by providing
+several directory names in `DATA_FOLDER_NAMES`. This list should not be empty.
 
+Approaches to run ChroMS_GUI code:
+1. Using terminal or cmd:
+   - Set the working directory in `./ChroMS/chroms_gui_script` directory (navigating in the repository level):
+`cd ./ChroMS/chroms_gui_script`
+   - Run the application:
+`python ChroMS_application.py`
+2. Launching from other `.py` file (ignoring `ChroMS_application.py`):
+   - Write and run the following code:
 ```
 from ChroMS_application import ChroMS_Application
 import Main_GUI_parameters as mgp
@@ -164,25 +143,45 @@ app.create_folders()
 app.create_application_body()
 ```
 
-   *Number 3 (Number 2 code in .ipynb file):
-    -Execute the program by running the code inside 'Notebook_script.ipynb'.
+3. Running code (from the previous section) from `.ipynb` file:
+   - Execute the program by running the code inside 'Notebook_script.ipynb'.
 
-   *Number 4 (Use compiled project version):
-    -Execute the program by running its executable file supported on your OS.
-     #Windows 7
-     #Windows 10
-     #Linux
-    -On Linux you can create a YOUR_NAME.desktop file to enable more convenient startup.
-     Edit this file by adding the following lines (no identations):
+### ChroMS_GUI Release
 
-     [Desktop Entry]
-     Type=Application
-     Name=YOUR_PROVIDED_NAME
-     Exec=PATH TO THE EXECUTABLE FILE (ENDS WITH:  /ChroMS_GUI_Linux/chroms_gui/chroms_gui)
-     Icon=PATH TO THE ICON FILE (ENDS WITH:  /ChroMS_GUI_Linux/chroms_gui/_internal/icons/ChroMS_icon.png)
-     Terminal=false
- 
-# USAGE NOTES
+-Execute the program by running its executable file supported on your OS. Paths of the application:
+  - `ChroMS_GUI_Windows7\chroms_gui\chroms_gui.exe`
+  - `ChroMS_GUI_Windows10\chroms_gui\chroms_gui.exe`
+  - `ChroMS_GUI_MacOS/ChroMS_application.app`
+  - `ChroMS_GUI_Linux/chroms_gui/chroms_gui`
+
+-On Linux you can create a YOUR_NAME.desktop file to enable more convenient startup.
+Edit this file by adding the following lines:
+
+```
+[Desktop Entry]
+Type=Application
+Name=YOUR_PROVIDED_NAME
+Exec=ABSPATH TO THE EXECUTABLE FILE (ENDS WITH:  /ChroMS_GUI_Linux/chroms_gui/chroms_gui)
+Icon=ABSPATH TO THE ICON FILE (ENDS WITH:  /ChroMS_GUI_Linux/chroms_gui/_internal/icons/ChroMS_icon.png)
+Terminal=false
+```
+
+## DEFAULT LOCATION OF DATA FILES
+
+Location of `data` directory:
+
+### ChroMS_GUI Code
+
+`ChroMS_GUI/ChroMS/data`
+
+### ChroMS_GUI Release
+
+- `ChroMS_GUI_Windows7\data`
+- `ChroMS_GUI_Windows10\chroms_gui\data`
+- `ChroMS_GUI_MacOS/ChroMS_application.app/Contents/data`
+- `ChroMS_GUI_Linux/chroms_gui/data`
+
+## USAGE NOTES
 
 x Design / Selecting different tabs:
 ---The GUI has 3 different tabs inside - "Blank Page", "HPLC" and "MS"
@@ -470,7 +469,7 @@ x There might be some errors unrelated to data processing.
 ---Loading files or folders which are currently removed.
 ---Some bugs of data visualization are possible.
 
-# AUTHOR
+## AUTHOR
 
 Martynas Jakutis
 
