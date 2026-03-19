@@ -65,7 +65,7 @@ In the future, diagram design customization will be improved.
 
 ## REQUIREMENTS
 
-These requirements should be considered if ChroMS_GUI is launched as a Python script.
+These requirements should be considered if ChroMS_GUI is launched as a Python script. 
 **They can be skipped if the application is launched using compiled files.**
 
 ### Python Version
@@ -106,6 +106,7 @@ Windows / Linux / macOS:
 Additional option for Windows:
 - Download `.exe` file and install the application
 
+
 ## SETUP AND EXECUTION
 
 ### ChroMS_GUI Code
@@ -127,10 +128,19 @@ several directory names in `DATA_FOLDER_NAMES`. This list should not be empty.
 
 Approaches to run ChroMS_GUI code:
 1. Using terminal or cmd:
-   - Set the working directory in `./ChroMS/chroms_gui_script` directory (navigating in the repository level):
-`cd ./ChroMS/chroms_gui_script`
-   - Run the application:
-`python ChroMS_application.py`
+- Set the working directory in `./ChroMS/chroms_gui_script` directory
+(navigating in the repository level):
+
+```
+cd ./ChroMS/chroms_gui_script
+```
+
+- Run the application:
+
+```
+python ChroMS_application.py
+```
+
 2. Launching from other `.py` file (ignoring `ChroMS_application.py`):
    - Write and run the following code:
 ```
@@ -180,6 +190,7 @@ Location of `data` directory:
 - `ChroMS_GUI_Windows10\chroms_gui\data`
 - `ChroMS_GUI_MacOS/ChroMS_application.app/Contents/data`
 - `ChroMS_GUI_Linux/chroms_gui/data`
+
 
 ## USAGE NOTES
 
