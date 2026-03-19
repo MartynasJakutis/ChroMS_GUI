@@ -93,7 +93,7 @@ containing HPLC, MS and other files that can be used for testing the application
 
 ### ChroMS_GUI Code
 
-**Relevant only if ChroMS_GUI is launched as Python script**
+**Relevant only if ChroMS_GUI is launched as a Python script**
 
 Download the ChroMS_GUI repository. 
 The code files will be located in the `ChroMS/chroms_gui_script` directory.
@@ -111,37 +111,36 @@ Additional option for Windows:
 
 ### ChroMS_GUI Code
 
-**Relevant only if ChroMS_GUI is launched as Python script**
+**Relevant only if ChroMS_GUI is launched as a Python script**
 
 Code modifications:
-- The provided code should not be modified, except the `Main_GUI_parameters.py` code file.
-- The code modifications are only recommended, but **not mandatory**.
-- GUI parameters should be modified responsibly (preferably if the changes are
-necessary due to personal or system needs).
-- Some parameter changes can lead to unpredictable behaviours that can affect overall
-application quality and utilization.
-- Modifications of most of the GUI parameters have low value of practical use, except
-default values of entry widgets (e.g., `DEFAULT_WAVELENGTH`, `DEFAULT_MIN_INTENSITY`)
-which will be described on further sections of the manual.
-- It is possible to create several directories in the working directory by providing
-several directory names in `DATA_FOLDER_NAMES`. This list should not be empty.
+- The provided code should not be modified, except the `Main_GUI_parameters.py` file.
+- The code modifications are only recommended but **not mandatory**.
+- GUI parameters should be modified responsibly (preferably only when necessary 
+due to personal or system needs).
+- Some parameter changes may lead to unpredictable behavior that can affect overall
+application quality and usability.
+- Modifying most GUI parameters has limited practical value, except for default 
+values of entry widgets (e.g., `DEFAULT_WAVELENGTH`, `DEFAULT_MIN_INTENSITY`)
+which are described in the later sections of the manual.
+- It is possible to create multiple directories in the working directory by specifying
+several directory names in `DATA_FOLDER_NAMES`. This list must not be empty.
 
-Approaches to run ChroMS_GUI code:
+Ways to run ChroMS_GUI code:
 1. Using terminal or cmd:
-- Set the working directory in `./ChroMS/chroms_gui_script` directory
-(navigating in the repository level):
+   - Set the working directory to `./ChroMS/chroms_gui_script` (from the repository root):
 
 ```
 cd ./ChroMS/chroms_gui_script
 ```
 
-- Run the application:
+   - Run the application:
 
 ```
 python ChroMS_application.py
 ```
 
-2. Launching from other `.py` file (ignoring `ChroMS_application.py`):
+2. Launching from other `.py` file (without using `ChroMS_application.py`):
    - Write and run the following code:
 ```
 from ChroMS_application import ChroMS_Application
@@ -153,12 +152,12 @@ app.create_folders()
 app.create_application_body()
 ```
 
-3. Running code (from the previous section) from `.ipynb` file:
-   - Execute the program by running the code inside 'Notebook_script.ipynb'.
+3. Running code from a `.ipynb` file:
+   - Execute the program by running the code in `Notebook_script.ipynb`.
 
 ### ChroMS_GUI Release
 
--Execute the program by running its executable file supported on your OS. Paths of the application:
+-Execute the program by running the executable file for your OS. Application paths:
   - `ChroMS_GUI_Windows7\chroms_gui\chroms_gui.exe`
   - `ChroMS_GUI_Windows10\chroms_gui\chroms_gui.exe`
   - `ChroMS_GUI_MacOS/ChroMS_application.app`
@@ -178,11 +177,11 @@ Terminal=false
 
 ## DEFAULT LOCATION OF DATA FILES
 
-Location of `data` directory:
+Location of the `data` directory:
 
 ### ChroMS_GUI Code
 
-`ChroMS_GUI/ChroMS/data`
+- `ChroMS_GUI/ChroMS/data`
 
 ### ChroMS_GUI Release
 
