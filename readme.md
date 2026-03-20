@@ -191,102 +191,139 @@ Location of the `data` directory:
 - `ChroMS_GUI_Linux/chroms_gui/data`
 
 
-## USAGE NOTES
+## DESIGN AND FUNCTIONALITY
 
-x Design / Selecting different tabs:
----The GUI has 3 different tabs inside - "Blank Page", "HPLC" and "MS"
-   *Possibility to switch between all of the tabs without any data loss.
-   *Every time when "HPLC" or "MS" tab is chosen, listbox widget (with files 
-    inside) will take the focus. 
-    -If there were any selections in listbox, they will be not changed. 
-    -If there were no selections, the first file will be selected (but not 
+### Tabs:
+
+The GUI has 3 different tabs inside:
+- `Blank Page` (Currently does nothing)
+- `HPLC` (For HPLC data visualization and analysis)
+- `MS` (For MS data visualization and analysis)
+
+Features:
+- Possibility to switch between all of the tabs without any data loss.
+- Every time when `HPLC` or `MS` tab is chosen, listbox widget (with files 
+inside) will take the focus:
+   - If there were any selections in listbox, they will be not changed. 
+   - If there were no selections, the first file will be selected (but not 
      activated).
-    -If there were no files, there will not be any selections.
+   - If there were no files, there will not be any selections.
 
-x Tabs for HPLC-MS result analysis and their contents:
----"HPLC" and "MS" tabs consists of:
-   *File Folder Manager (ffm)
-    -Combobox for folder search
-    -Button for folder browsing
-    -Listbox for file browsing
-    -Checkbuttons for file filtering by extension
-    -Entry for file filtering by file names or specific pattern
-   *Output Plot Manager (opm)
-    -Radiobuttons for selecting which subplots to show
-    -Text output which shows additional information (errors and etc.)
-    -Diagram in which the processed data from the files will be plotted.
-   *P.S. There are 2 ffms in the MS tab. They can be chosen by radiobuttons
-    below file browsing button. Each provides different ffm which can be used
-    to plot data from 2 different files. By default, MS1 files are supposed to
-    be positive ionization files, while MS2 should be for negative ionization.
-    However, you are completely free to plot any type of MS files in any 
-    subplot you like.
+### Inside the Tabs:
 
-File Folder Manager Functionality:
-x Folder search:
----There are several different folder search methods:
-   *Folder search through filedialog
-    -Use Browse button
-    -The filedialog default directory for the search is the first directory
-     provided in 'FILE_FOLDER_NAMES' in 'Main_GUI_parameters.py' file.
-   *Folder search manually
-    -Write inside Folder search entry and press ENTER
-   *Folder search by selecting item present in combobox
-   *Automatic folder search
-    -Every time by running ChroMS GUI with browsing history present
+`HPLC` and `MS` tabs consists of managers that include widgets:
+- File Folder Manager (ffm)
+   - Combobox
+      - Folder search
+   - Listbox
+      - File browsing
+   - Checkbuttons
+      - File filtering by extension
+   - Entry
+      - File filtering by file names or specific pattern
+   - Buttons
+      - Folder browsing
+      - Navigating to options
+   - Radiobuttons (in `MS` tab only)
+      - Navigating to another ffm
+- Output Plot Manager (opm)
+   - Radiobuttons
+      - Selecting which subplots to show
+      - Turning on/off find mz entries (in `MS` tab only)
+   - Entries
+      - Plotting customization parameters
+   - Text output
+      - Shows additional information (errors, warnings, etc.)
+   - Diagram
+      - Plotting the processed data from the files.
+- Option Manager (om)
+   - Currently has no purpose in `HPLC` tab
+   - Button
+      - Returning to ffm and opm
+   - Scrollable notebook
+      - each tab has independent scrollbar
+      - currently does nothing interesting
+   - Radiobuttons (in `MS` tab only)
+      - turn on/off mz value trimming 
+      - change variable of intensity axis
+   - Entries (in `MS` tab only)
+      - editting mz value trimming percentages
 
----Combobox which contains folder paths, can have up to 10 different items.
-   Every time using previously described methods a folder will be selected. 
-   During the selection, listbox containing files will be updated and the focus
-   will be passed on the listbox.
-   *Exceptions:
-    -Providing path of non-existing folder. After pressing ENTER the focus will
-     remain on the folder browsing entry.
-    -Text output will be provided with an error.
+> P.S. There are 2 ffms in the `MS` tab. They can be chosen by radiobuttons
+below file browsing button. Each provides different ffm which can be used
+to plot data from 2 different files. By default, `MS1` files are supposed to
+be **positive ionization** files, while `MS2` should be for **negative ionization**.
+However, you are completely free to plot any type of MS files in any 
+subplot you like.
 
----There are possible 3 different files containing folder browsing history for
-   different ffms.
-   *Types:
-    -chrom_history.txt
-    -ms1_history.txt
-    -ms2_history.txt
-   *Each of these files can be modified manually.
-   *Non-existing folder paths inside the files are not loaded to the combobox.
-   *Paths which were not found will be cleared after the first combobox 
-    changes.
-   *The latest used path will be at the top of the path list.
-    -If there will be to many paths, only the last 10 will be used to update
-     combobox.
+### File Folder Manager (ffm):
 
----Browsing history '.txt' files will be updated every time after changes in
-   combobox widget item list.
-   *Includes:
-    -Every operation which changes order of combobox items.
-     #Even if there were no new paths added.
-    -Every opperation which adds new paths.
-   *Does not include:
-    -Loading folder paths during startup.
-    -Browsing for non-existing folder.
+#### Folder search:
 
----Deleting file browsing history.
-   *By searching for new folders which will replace the oldest one.
-    - Manually or automatically (with Browse button).
-    - Manually by deleting history text files.
-      #All browsing history will be removed. At the next GUI startup there
-       will be clear combobox.
+There are several different folder search methods:
+- Folder search through filedialog
+   - Use `Browse` button
+   - You **MUST** choose the folder, otherwise you will get a warning message
+   - **For code users**: the filedialog default directory for the search is the first directory
+     provided in `FILE_FOLDER_NAMES` in `Main_GUI_parameters.py` file.
+- Folder search manually
+   - Write inside Folder search entry and press `RETURN`
+- Folder search by selecting item present in combobox
+- Automatic folder search
+   - Every time by running `ChroMS_GUI` with browsing history present
 
-x File browsing:
----There are several functions to navigate between files:
-   *Using UP and DOWN arrows. Navigates up or down and executes the files
-    immediately.
-   *Using ENTER button. Executes currently selected file.
-   *Using LEFT-CLICK of mouse. Executes file below the cursor.
-   *Using LEFT-CLICK of mouse WITHOUT RELEASING. Goes throug the files
-    currently present below the cursor and executes them.
-   *Using LEFT and RIGHT arrows. Navigates through files without executing
-    them. Useful for fast navigation. For execution use ENTER button.
-    #Disadvantage - while using UP and DOWN arrows, the slider position will
-     not be changed.
+Combobox which contains folder paths and can include up to 10 unique items.
+Every time using previously described methods a folder will be selected. 
+During the selection, listbox containing files will be updated and the focus
+will be passed on the listbox. Exceptions:
+- Providing path of non-existing folder. After pressing `RETURN` the focus will
+  remain on the folder browsing entry.
+- Text output will be provided with an error.
+
+Browsing history:
+- Files containing folder browsing history (`my_browsing_history`) for individual ffms:
+   - `chrom_history.txt`
+   - `ms1_history.txt`
+   - `ms2_history.txt`
+- Each of these files can be modified manually.
+- Non-existing folder paths inside the files are not loaded to the combobox.
+- Paths which were not found will be cleared after the first combobox changes.
+- The latest used path will be at the top of the path list.
+- If there will be to many paths, only the last 10 will be used to update combobox.
+
+Browsing history updates:
+- Occurs every single time after changes in combobox widget item list
+   - Every operation which changes order of combobox items.
+      - Even if there were no new paths added.
+    - Every opperation which adds new paths.
+- The updates does not occur when:
+   - Loading folder paths during startup.
+   - Browsing for non-existing folder.
+
+Deleting file browsing history:
+- Automatically by searching for new folders which will replace the oldest one.
+   - Manual browsing or automatically (with `Browse` button).
+- Manually by deleting history text files.
+   - All browsing history will be removed.
+   - At the next GUI startup there will be clear combobox.
+
+#### File browsing:
+
+Multiple approaches to navigate between files:
+- Using `UP` and `DOWN` arrows. Navigates up or down and executes the files immediately.
+   - Disadvantage - while using `UP` and `DOWN` arrows, the listbox slider position will 
+not be changed.
+- Using `RETURN` button. Executes currently selected file.
+- Using `LEFT-CLICK` of mouse. Executes file below the cursor.
+- Using `LEFT-CLICK` of mouse WITHOUT RELEASING. Goes throug the files currently
+present below the cursor and executes them.
+- Using `LEFT` and `RIGHT` arrows. Navigates through files without executing them.
+   - Useful for fast navigation
+   - For execution use `RETURN` button.
+
+Listbox sliders:
+- Listbox has a horizontal and vertical slider (scrollbar)
+- Lenght of file names should be limited to maintain optimal functionality
 
 ---There are sliders for listbox. You can have as many files as you like.
    However, the lenght of file names should be limited to maintain optimal
