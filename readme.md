@@ -76,7 +76,7 @@ These requirements should be considered if ChroMS_GUI is launched as a Python sc
 
 ### Package Versions 
 
-The minimal package versions are listed below.
+The minimal package versions are listed below. 
 For optimal versions, refer to the `requirements.txt` file.
 
 | Package | Version |
@@ -88,7 +88,7 @@ For optimal versions, refer to the `requirements.txt` file.
 
 ## INSTALLATION
 
-Both the ChroMS_GUI script and release versions include a `data` directory
+Both the ChroMS_GUI script and release versions include a `data` directory.
 containing HPLC, MS and other files that can be used for testing the application.
 
 ### ChroMS_GUI Code
@@ -105,6 +105,9 @@ Windows / Linux / macOS:
 
 Additional option for Windows:
 - Download `.exe` file and install the application
+   - During the installation `data` directory is also created
+   - Such installation may affect default data file names
+   - extracting `.zip` archive remains a recommended option
 
 
 ## SETUP AND EXECUTION
@@ -114,17 +117,17 @@ Additional option for Windows:
 **Relevant only if ChroMS_GUI is launched as a Python script**
 
 Code modifications:
-- The provided code should not be modified, except the `Main_GUI_parameters.py` file.
-- The code modifications are only recommended but **not mandatory**.
+- The provided code should not be modified, except the `Main_GUI_parameters.py` file
+- The code modifications are only recommended but **not mandatory**
 - GUI parameters should be modified responsibly (preferably only when necessary 
-due to personal or system needs).
+due to personal or system needs)
 - Some parameter changes may lead to unpredictable behavior that can affect overall
-application quality and usability.
+application quality and usability
 - Modifying most GUI parameters has limited practical value, except for default 
 values of entry widgets (e.g., `DEFAULT_WAVELENGTH`, `DEFAULT_MIN_INTENSITY`)
-which are described in the later sections of the manual.
+which are described in the later sections of the manual
 - It is possible to create multiple directories in the working directory by specifying
-several directory names in `DATA_FOLDER_NAMES`. This list must not be empty.
+several directory names in `DATA_FOLDER_NAMES`. This list must not be empty
 
 Ways to run ChroMS_GUI code:
 1. Using terminal or cmd:
@@ -153,17 +156,17 @@ app.create_application_body()
 ```
 
 3. Running code from a `.ipynb` file:
-   - Execute the program by running the code in `Notebook_script.ipynb`.
+   - Execute the program by running the code in `Notebook_script.ipynb`
 
 ### ChroMS_GUI Release
 
--Execute the program by running the executable file for your OS. Application paths:
+- Execute the program by running the executable file for your OS. Application paths:
   - `ChroMS_GUI_Windows7\chroms_gui\chroms_gui.exe`
   - `ChroMS_GUI_Windows10\chroms_gui\chroms_gui.exe`
   - `ChroMS_GUI_MacOS/ChroMS_application.app`
   - `ChroMS_GUI_Linux/chroms_gui/chroms_gui`
 
--On Linux you can create a YOUR_NAME.desktop file to enable more convenient startup.
+- On Linux you can create a YOUR_NAME.desktop file to enable more convenient startup.
 Edit this file by adding the following lines:
 
 ```
@@ -201,18 +204,18 @@ The GUI has 3 different tabs inside:
 - `MS` (For MS data visualization and analysis)
 
 Features:
-- Possibility to switch between all of the tabs without any data loss.
+- Possibility to switch between all of the tabs without any data loss
 - Every time when `HPLC` or `MS` tab is chosen, listbox widget (with files 
 inside) will take the focus:
-   - If there were any selections in listbox, they will be not changed. 
+   - If there were any selections in listbox, they will be not changed  
    - If there were no selections, the first file will be selected (but not 
-     activated).
-   - If there were no files, there will not be any selections.
+     activated)
+   - If there were no files, there will not be any selections
 
 ### Inside the Tabs:
 
 `HPLC` and `MS` tabs consists of managers that include widgets:
-- File Folder Manager (ffm)
+- File Folder Manager (FFM)
    - Combobox
       - Folder search
    - Listbox
@@ -225,8 +228,8 @@ inside) will take the focus:
       - Folder browsing
       - Navigating to options
    - Radiobuttons (in `MS` tab only)
-      - Navigating to another ffm
-- Output Plot Manager (opm)
+      - Navigating to another FFM
+- Output Plot Manager (OPM)
    - Radiobuttons
       - Selecting which subplots to show
       - Turning on/off find mz entries (in `MS` tab only)
@@ -236,10 +239,10 @@ inside) will take the focus:
       - Shows additional information (errors, warnings, etc.)
    - Diagram
       - Plotting the processed data from the files.
-- Option Manager (om)
+- Option Manager (OM)
    - Currently has no purpose in `HPLC` tab
    - Button
-      - Returning to ffm and opm
+      - Returning to FFM and OPM
    - Scrollable notebook
       - each tab has independent scrollbar
       - currently does nothing interesting
@@ -249,14 +252,22 @@ inside) will take the focus:
    - Entries (in `MS` tab only)
       - editting mz value trimming percentages
 
-> P.S. There are 2 ffms in the `MS` tab. They can be chosen by radiobuttons
-below file browsing button. Each provides different ffm which can be used
-to plot data from 2 different files. By default, `MS1` files are supposed to
-be **positive ionization** files, while `MS2` should be for **negative ionization**.
-However, you are completely free to plot any type of MS files in any 
-subplot you like.
+- There is a single FFM in the `HPLC` tab
+- There are 2 FFMs in the `MS` tab:
+   - The FFMs can be chosen by `Choose MS file` radiobuttons below the `Browse` button
+   - Each provides different FFM which can be used to plot data from 2 different files  
+- Each FFM has assigned single OM to them:
+   - The OMs can be chosen by `Options` button present in the FFM
+   - In `MS` tab you can use `Choose MS file` radiobuttons to navigate between the OMs
 
-### File Folder Manager (ffm):
+> OM occupies area of FFM and OPM. By clicking `Options` button you appear in the OM but
+also hide FFM and OPM at the same time.
+
+> By default, `MS1` files are supposed to be **positive ionization** files, while 
+`MS2` should be for **negative ionization**. However, you are completely free to plot
+any type of MS files in any subplot you like.
+
+### File Folder Manager (FFM):
 
 #### Folder search:
 
@@ -265,256 +276,274 @@ There are several different folder search methods:
    - Use `Browse` button
    - You **MUST** choose the folder, otherwise you will get a warning message
    - **For code users**: the filedialog default directory for the search is the first directory
-     provided in `FILE_FOLDER_NAMES` in `Main_GUI_parameters.py` file.
+     provided in `FILE_FOLDER_NAMES` in `Main_GUI_parameters.py` file
 - Folder search manually
-   - Write inside Folder search entry and press `RETURN`
+   - Write inside `Folder` combobox and press `RETURN`
 - Folder search by selecting item present in combobox
 - Automatic folder search
    - Every time by running `ChroMS_GUI` with browsing history present
 
-Combobox which contains folder paths and can include up to 10 unique items.
-Every time using previously described methods a folder will be selected. 
-During the selection, listbox containing files will be updated and the focus
-will be passed on the listbox. Exceptions:
+`Folder` combobox which contains folder paths and can include up to 10 unique items
+Every time using previously described methods a folder will be selected  
+During the selection, `Files` listbox will be updated and the focus
+will be passed on this listbox. Exceptions:
 - Providing path of non-existing folder. After pressing `RETURN` the focus will
-  remain on the folder browsing entry.
-- Text output will be provided with an error.
+  remain on the `Folder` combobox entry
+- `Text output` will be provided with an error
 
 Browsing history:
-- Files containing folder browsing history (`my_browsing_history`) for individual ffms:
+- Files containing folder browsing history (`my_browsing_history`) for individual FFMs:
    - `chrom_history.txt`
    - `ms1_history.txt`
    - `ms2_history.txt`
-- Each of these files can be modified manually.
-- Non-existing folder paths inside the files are not loaded to the combobox.
-- Paths which were not found will be cleared after the first combobox changes.
-- The latest used path will be at the top of the path list.
-- If there will be to many paths, only the last 10 will be used to update combobox.
+- Each of these files can be modified manually
+- Non-existing folder paths inside the files are not loaded to the combobox
+- Paths which were not found will be cleared after the first combobox changes
+- The latest used path will be at the top of the path list
+- If there will be to many paths, only the last 10 will be used to update combobox
 
 Browsing history updates:
-- Occurs every single time after changes in combobox widget item list
-   - Every operation which changes order of combobox items.
-      - Even if there were no new paths added.
-    - Every opperation which adds new paths.
+- Occurs every single time after changes in `Folder` combobox item list:
+   - Every operation which changes order of `Folder` combobox items
+      - Even if there were no new paths added (browsing paths already present in the history)
+    - Every opperation which adds new paths
 - The updates does not occur when:
-   - Loading folder paths during startup.
-   - Browsing for non-existing folder.
+   - Loading folder paths during startup
+   - Browsing for non-existing folder
 
 Deleting file browsing history:
-- Automatically by searching for new folders which will replace the oldest one.
-   - Manual browsing or automatically (with `Browse` button).
-- Manually by deleting history text files.
-   - All browsing history will be removed.
-   - At the next GUI startup there will be clear combobox.
+- Automatically by searching for new folders which will replace the oldest one
+   - Manual browsing or automatically (with `Browse` button)
+- Manually by deleting history `.txt` files
+   - All browsing history will be removed
+   - At the next GUI startup there will be clear combobox
 
 #### File browsing:
 
-Multiple approaches to navigate between files:
-- Using `UP` and `DOWN` arrows. Navigates up or down and executes the files immediately.
-   - Disadvantage - while using `UP` and `DOWN` arrows, the listbox slider position will 
-not be changed.
-- Using `RETURN` button. Executes currently selected file.
-- Using `LEFT-CLICK` of mouse. Executes file below the cursor.
-- Using `LEFT-CLICK` of mouse WITHOUT RELEASING. Goes throug the files currently
-present below the cursor and executes them.
-- Using `LEFT` and `RIGHT` arrows. Navigates through files without executing them.
-   - Useful for fast navigation
-   - For execution use `RETURN` button.
+**Important things**:
+- It is strongly recommended to design your data folders with your data files before the `ChroMS_GUI` runtime
+- `Files` listbox includes only files that were present at the moment in the provided folder during the browsing
+- `Files` listbox is not updated automatically
+   - Files removed from the actual directory will remain in the `Files` listbox
+   - Files added to the actual directory will not appear in the `Files` listbox
+- After adding or removing files, you should do one of the folowing steps:
+   - Browse for the same folder again (using either technique)
+   - Select and unselect `Show ONLY` checkbutton
+   - Write and delete text in `Find files` entry
 
-Listbox sliders:
+Multiple approaches to navigate between files in `File` listbox:
+- Using `UP` and `DOWN` arrows. Navigates up or down and executes the files immediately
+   - Does not allow to directly navigate from the first item to the last item and other way
+- Using `RETURN` button. Executes currently selected file
+- Using `LEFT-CLICK` of mouse. Executes file below the cursor
+- Using `LEFT-CLICK` of mouse WITHOUT RELEASING. Goes through the files currently
+present below the cursor and executes them
+- Using `LEFT` and `RIGHT` arrows
+   - Useful for fast navigation
+   - Allows to directly navigate from the first item to the last item and other way
+   - No file execution
+   - For execution use `RETURN` button.
+   - Disadvantage - while navigation, the `File` listbox slider position will not be changed
+
+`File` listbox sliders:
 - Listbox has a horizontal and vertical slider (scrollbar)
 - Lenght of file names should be limited to maintain optimal functionality
+- Too long file names may result in unpredicted behaviour
+   - Moving slider at the same time with `LEFT` or `RIGHT` arrow navigation
 
----There are sliders for listbox. You can have as many files as you like.
-   However, the lenght of file names should be limited to maintain optimal
-   functionality. With the file extension the file name should not be longer 
-   than 68 characters. Otherwise, UP and DOWN arrows function will be corrupted
-   by horizontal slider.
+During the file execution:
+- Either success message or warning provided in the `Text output`
+- Diagrams are plotted or not
 
----During the file execution there will be either success message or warning
-   provided in the text output. Also, the diagrams are plotted or not.
+#### File filtering:
 
-x File filtering:
----Filtering files by file extensions (checkbuttons):
-   *Default option will be set with predefined file extensions to better
-    navigate between different types of files. Different default checkbutton
-    values for different ffms:
-    -HPLC file		chromatogram_file_name_chrom.txt	(_chrom.txt)	
-    -MS1 file		positive_ionization_file_name_ms_+.txt	(_ms_+.txt)	
-    -MS2 file		negative_ionization_file_name_ms_-.txt	(_ms_-.txt)
-   *You can show all the accessible files in the folder by selecting all
-    checkbuttons or by deselecting the first checkbutton (in none of the others
-    are selected)
-   *Combined use with file filter entry.
-   *Every time by checking checkbutton, the listbox contents will be updated.
-    Also, the focus will be set on the listbox widget.
+File filtering is performed for files in the folder which is provided in the `Folder` combobox.  
+Filtering files by file extensions using `Show ONLY` checkbuttons:
+- Default option will be set with predefined file extensions to better navigate 
+between different types of files
+- Different default checkbutton values for different FFMs
+   - HPLC file
+      - `chromatogram_file_name_chrom.txt	(_chrom.txt)`	
+   - MS1 file
+      - `positive_ionization_file_name_ms_+.txt	(_ms_+.txt)`	
+   - MS2 file
+      - `negative_ionization_file_name_ms_-.txt	(_ms_-.txt)`
+- You can show all the accessible files in the folder by selecting all checkbuttons
+or by deselecting the first checkbutton (if none of the others are selected)
+- Every time by selecting checkbutton
+   - The `File` listbox contents are updated
+   - The focus is set on the `File` listbox
+   - File selection set on the first item
+      - The file is not executed
+- Can be combined with `Find files` entry
 
----Filtering files by file name (entry):
-   *Default option - empty string ("")
-   *Case insensitive!
-   *Possible filtering by file name. You should provide specific part of the
-    file which is present in the current directory.
-    -The files can be filtered by writing their extensions inside.
-    -You can filter file names by specific fragments of text and connecting
-     them with "*" symbol.
-     #Example: By writing "test*measurement*2024_*_10" the corresponding
-      name would be found - "test_A_measurement_100_2024_10_10".
-     #Writing "**" (or n times "*") instead of "*" will not change the 
-      filtering result. "*" can also present empty string.
-     #By using "*" the separated fragments will be searched in files for
-      filtering in ordered manner: "c" will be searched after "b" which comes
-      after "a" in the string "a*b*c".
-   *Filtering by file name is executed in real-time by writing inside the
-    entry.
-   *Combined use with checkbuttons of file extension filtering.
-   *You can use ENTER button to set the focus on the listbox object.
+Filtering files by file name using `Find files` entry:
+- Default option - empty string ("")
+   - Empty field was meant here
+- Case insensitive!
+   - result for "ab" is the same as for "AB", "Ab", "aB"
+- You should provide specific part of the file name which is present in the current directory
+- The files can be filtered by writing their extensions inside
+   - E.g.: ".txt", "_chrom.txt", "_ms_+.txt", "_ms_-.txt"
+-You can filter file names by specific name fragments of text and connecting them with "*" symbol
+   - E.g.: by writing "test*measurement*2024_*_10" the corresponding name would be
+found - "test_A_measurement_100_2024_10_10"
+   - Writing "**" (or n times "*") instead of "*" will not change the filtering result
+   - "*" can also represent empty string ("")
+   - By using "*" the separated fragments will be searched in files for 
+filtering in ordered manner
+      - "c" will be searched after "b" which comes after "a" in the string "a*b*c"
+- Filtering by file name is executed in real-time by writing inside the `Find files` entry
+- Can be combined with `Show ONLY` checkbuttons
+- After writing you can use `RETURN` button to set the focus on the listbox object
 
-x Additional functionality in MS ffms:
----Radiobuttons for MS file selection:
-   *By pressing them, ffm for specific MS file is selected
-   *Because of that you can have 2 comboboxes, 2 listboxes, and 2 sets of file
-    filtering features.
-   *The latter structures are independent but works almost the same.
-    -Exceptions: disabled radiobutton for subplot selection and the subplot
-     which is used for drawing.
-   *During the startup of ChroMS ffm for MS1 file is shown and ffm for MS2 file
-    is hidden
-   *While hiding MS1 or MS2 ffm, one of radiobuttons for subplot selection is
-    also hidden (Subplot1 or Subplot2 respectively).
-    -This behaviour changed by selecting other ffm.
-   *If subplot selection radiobutton is set to Subplot1 or Subplot2, activating
-    different ffm will change active subplot selection radiobutton and will
-    redraw the graph.
-    -If Both subplots option is selected then there will not be such changes.
-   *Changing ffms also sets the focus on the listbox widget.
+#### Additional functionality in MS FFMs:
 
----There are several different folder search methods:
-   *Folder search through filedialog
-    -Use Browse button
+`Choose MS file` radiobuttons:
+- By pressing them, FFM for specific MS file is selected
+- Because of that you have 2 `Folder` comboboxes, 2 `File` listboxes, 2 sets of file filtering
+features and 2 sets of additional plotting options (OMs)
+- The latter structures are independent but works almost the same. Exceptions:
+   - Disabled `Select subplots` radiobutton and the subplot which is used for drawing
+   - During the startup of ChroMS FFM for MS1 file is shown and FFM for MS2 file is hidden
+   - While hiding MS1 or MS2 FFM, one of `Select subplots` radiobuttons is also hidden
+(Subplot1 or Subplot2 respectively)
+      - This behaviour changed by selecting other FFM
+   - If subplot selection radiobutton is set to Subplot1 or Subplot2, activating different
+FFM will change active subplot selection radiobutton and will redraw the graph
+      - If Both subplots option is selected then there will not be such changes
+   - `Options` button leads to OM for MS1 if current location is FFM for MS1 and to OM for MS2 if otherwise
+- Changing FFMs also sets the focus on the `File` listbox
 
-Output Plot Manager Functionality:
-x Radiobuttons for subplot selection:
----Posibility of selecting specific subplots to draw:
-   *Both suplots
-   *Subplot1 (HPLC: 'Heatmap', 		MS : 'MS1')
-   *Subplot2 (HPLC : 'Chromatogram', 	MS : 'MS2')
 
----By selecting specific radiobutton the diagram will be redrawn by provided
-   option automatically.
-   *For one HPLC and one MS ffm both graphs will be drawn if Both subplots
-    option is selected.
-   *However for HPLC files there are 2 datasets to visualize while in MS files
-    there is only one - so only one subplot will be updated with new data.
-    Another will be unchanged.
-   *You can even plot the diagram which has initial state alone.
-   *Using these radiobuttons will set focus on the listbox object.
+### Output Plot Manager (OPM):
 
----The radiobuttons are affected by MS ffm selecting radiobuttons as described
-   previously in "Additional functionality in MS ffms".
+#### Selecting subplots
 
-x Text output for additional information / errors:
----Provides information about:
-   *Initial greeting
-   *Folder search (success).
-   *File execution (success).
-   *Errors during folder search or file execution.
-    #Disadvantage - no output during diagram redraw while changing MS ffms or
-     selecting different subplot selection option.
+You can select which subplots to draw and show by using `Select subplots` radiobuttons:
+- Both suplots
+- Subplot1
+   - `HPLC: Heatmap`
+   - `MS : MS1`
+- Subplot2
+   - `HPLC : Chromatogram`
+   - `MS : MS2`
 
----There are 3 different types of output:
-   *Greeting message is inserted inside two lines of "#" symbols
-   *Success message is inserted inside two lines of "+" symbols
-   *Warning message is inserted inside two lines of "?" symbols
+By selecting specific `Select subplots` radiobutton the diagram will be redrawn by provided option
+- For one HPLC and one MS FFM both graphs will be drawn if `Both subplots` option is selected
+   - In `HPLC` tab both subplots will be updated
+   - In `MS` tab only one subplot will be updated
+      - Data for drawing was meant here
+      - Other subplot can be updated if additional plotting parameters are provided
+- Using these radiobuttons will set focus on the `Files` listbox object.
+- The radiobuttons are affected by MS FFM selecting radiobuttons as described previously
+in `Additional functionality in MS FFMs`
 
----The message can contain information about:
-   *Consistent output:
-    -2 lines of "#" or "+" or "?" symbols
-    -Current time (in YYYY/MM/DD hh:mm:ss format)
-   *Other outputs are more dynamic:
-    -Folder path (if folder browsing was executed)
-    -File path (if file was executed)
-    -Calculated time for data reading and drawing (3 digits after decimal) (if
-     file was executed successfully through selecting option in listbox)
-    -Was the event successful or not
-   *Sometimes the output can contain only message about error (for example -
-    selecting in empty listbox).
+#### Text output
 
----Every time when new lines of output are added to the end of the text, the
-   scrollbar of text output widget is slided to the end.
+`Text output` prints information:
+- Initial greeting
+- Successes and errors during
+   - Folder search
+   - File execution
+   - Parameter setting
 
----The text output is modified automatically and cannot be modified manually.
+- There are 3 different types of output:
+   - Greeting message is inserted inside two lines of "#" symbols
+   - Success message is inserted inside two lines of "+" symbols
+   - Warning message is inserted inside two lines of "?" symbols
 
-x Diagrams:
----Maximum - 2 subplots, minimum - 1 subplot:
-   *Depends on selected radiobutton for subplot selection
-   *X-axis between 2 subplots is shared.
-   *Labels of X and Y-axes are predefined
-    -Y-axis label of HPLC chromatogram is dynamic - changes according to 
-     wavelength (cannot observed yet but it will be possible in the future).
+- The message contains:
+   - Consistent output:
+      - 2 lines of "#" or "+" or "?" symbols
+      - Current time (in YYYY/MM/DD hh:mm:ss format)
+   - Dynamic output:
+      - Folder path (if folder browsing was executed)
+      - File path (if file was executed)
+      - Calculated time for data reading and drawing 
+         - if file was executed successfully
+         - 3 digits after decimal 
 
----Every diagram has its own state
-   *initial - no data drawn, text "Specimen" is shown.
-   *not-initial - data is drawn
+- Every time when new lines of output are added to the end of the text, the scrollbar 
+of `Text output` widget is slided to the end
+- The text output is modified automatically and cannot be modified manually
 
----Two possible diagram layouts:
-   *None. Set when at least one of the subplots does not contain any data.
-   *constrained. Set when all subplots has its own data.
+#### Diagrams:
 
----When a file execution error is observed, the graph for corresponding data
-   file will be resetted to initial state and replotted.
-   *Executed with all layout changes
-   *Does not apply on folder search errors.
+`HPLC 3D heatmap and/or chromatogram`, `Mass spectrum/spectra`
 
----Diagrams are interactive
-   *Default matplotlib figure and toolbar features (with modifications):
-    -Current x and y values are shown in the toolbar
-    -Resetting to original view
-    -Going back to previous view
-    -Going forward to next view
-    -Subplot draging
-    -Subplot zooming
-    -Saving the figure
-   *Default feature Configure subplots was ommited because it was incompatible
-    with constrained layouts.
-   *However, its completelly enough to visualize and analyse HPLC-MS data.
+Maximum - 2 subplots, minimum - 1 subplot:
+- Depends on selected radiobutton for subplot selection
+- X-axis between 2 subplots is shared
+- Labels of X and Y-axes are predefined
+   -Y-axis label of HPLC chromatogram is dynamic - changes according to wavelength
+
+- Every diagram has its own state
+   - initial - no data drawn, text "Specimen" is shown
+   - not-initial - data is drawn
+
+- Two possible diagram layouts:
+   - None
+      - When at least one of the subplots does not contain any data
+   - Constrained
+      - When all subplots has its own data
+
+- When a file execution error is observed, the graph for corresponding data file will be 
+resetted to initial state and replotted
+   - Executed with all layout changes
+   - Does not apply on folder search errors
+
+- Diagrams are interactive
+   - Default `matplotlib` figure and toolbar features (with modifications)
+   - Current x and y values are shown in the toolbar
+   - Resetting original view
+   - Going back to previous view
+   - Going forward to next view
+   - Subplot draging
+   - Subplot zooming
+   - Saving the figure
+   - You can easily drag and zoom even the colorbar of the HPLC heatmap
+- Default `matplotlib` feature `Configure subplots` was ommited because it was incompatible
+with constrained layouts.
+   - However, its completelly enough to visualize and analyze HPLC-MS data.
 
 HPLC-MS data file types:
-x The correct file types are provided in data folder.
----They should include previously described file extensions:
-   *chromatogram_file_name_chrom.txt		(_chrom.txt)	
-   *positive_ionization_file_name_ms_+.txt	(_ms_+.txt)	
-   *negative_ionization_file_name_ms_-.txt	(_ms_-.txt)
+- The correct file types are provided in data folder
+- They should include previously described file extensions
+   - `chromatogram_file_name_chrom.txt		(_chrom.txt)`	
+   - `positive_ionization_file_name_ms_+.txt	(_ms_+.txt)`	
+   - `negative_ionization_file_name_ms_-.txt	(_ms_-.txt)`
 
----For optimal functionality of the GUI, the provided file should have the
-   following structure of reference lines:
-   *For HPLC files:
-    -[Header]
-    -[File Information]
-    -[Sample Information]
-    -[Original Files]
-    -[File Description]
-    -[Configuration]
-    -[Peak Table(PDA-Ch1)]
-    -[Compound Results(PDA)]
-    -[PDA 3D]
-   *For MS files:
-    -[MS Spectrum]
-    -One of two possible lines marking the end of the file:
-     #Event	1	(positive ionization)
-     #Event	2	(negative ionization)
+- For optimal functionality of the GUI, the provided files should have the 
+following structure of reference lines:
+   - For HPLC files:
+      - `[Header]`
+      - `[File Information]`
+      - `[Sample Information]`
+      - `[Original Files]`
+      - `[File Description]`
+      - `[Configuration]`
+      - `[Peak Table(PDA-Ch1)]`
+      - `[Compound Results(PDA)]`
+      - `[PDA 3D]`
+   - For MS files:
+      - `[MS Spectrum]`
+      - One of two possible lines marking the end of the file:
+         - `Event	1	(positive ionization)`
+         - `Event	2	(negative ionization)`
 
-Additional information:
-x There is 'data' (by default) folder in the working directory:
----You can test functionality of the GUI by executing these files.
+## ADDITIONAL INFORMATION
+There is `data` (by default) folder in the working directory:
+- You can test functionality of the GUI by executing these files
 
-x The folders 'data' (by default in 'DATA_FOLDER_NAMES' in 
-  'Main_GUI_params.py') and 'my_browsing_history' can be deleted:
----They will be recreated during the program runtime.
----Loss of the old information!!!
+The folders `data` (by default in `DATA_FOLDER_NAMES` in `Main_GUI_params.py`)
+and `my_browsing_history` can be deleted:
+- They will be recreated during the program startup
+- Loss of the old information!!!
 
-x There might be some errors unrelated to data processing.
----Loading files or folders which are currently removed.
----Some bugs of data visualization are possible.
+There might be some errors unrelated to data processing.
+- Loading files or folders which are currently removed.
+- Some bugs of data visualization are possible.
 
 ## AUTHOR
 
