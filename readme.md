@@ -387,7 +387,7 @@ Filtering files by file name using `Find files` entry:
    - E.g.: ".txt", "_chrom.txt", "_ms_+.txt", "_ms_-.txt"
 -You can filter file names by specific name fragments of text and connecting them with "\*" symbol
    - E.g.: by writing "test\*measurement\*2024_\*_10" the corresponding name would be
-found - `test_A_measurement_100_2024_10_10`
+found - "test_A_measurement_100_2024_10_10"
    - Writing "\*\*" (or n times "\*") instead of "\*" will not change the filtering result
    - "\*" can also represent empty string ("")
    - By using "\*" the separated fragments will be searched in files for 
