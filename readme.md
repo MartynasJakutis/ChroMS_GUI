@@ -166,7 +166,7 @@ app.create_application_body()
   - `ChroMS_GUI_MacOS/ChroMS_application.app`
   - `ChroMS_GUI_Linux/chroms_gui/chroms_gui`
 
-- On Linux you can create a YOUR_NAME.desktop file to enable more convenient startup.
+- On Linux you can create a `YOUR_NAME.desktop` file to enable more convenient startup.
 Edit this file by adding the following lines:
 
 ```
@@ -384,7 +384,7 @@ Filtering files by file name using `Find files` entry:
    - result for "ab" is the same as for "AB", "Ab", "aB"
 - You should provide specific part of the file name which is present in the current directory
 - The files can be filtered by writing their extensions inside
-   - E.g.: ".txt", "_chrom.txt", "_ms_+.txt", "_ms_-.txt"
+   - E.g.: ".txt", "_chrom.txt", "\_ms\_+.txt", "\_ms\_-.txt"
 -You can filter file names by specific name fragments of text and connecting them with "\*" symbol
    - E.g.: by writing "test\*measurement\*2024_\*_10" the corresponding name would be
 found - "test_A_measurement_100_2024_10_10"
